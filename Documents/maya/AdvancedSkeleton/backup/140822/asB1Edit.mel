@@ -1,0 +1,252 @@
+//make skinPose
+
+global proc makeSkinPose()
+{
+	string $selControl[] = `ls -sl`;	
+	string $tempArray[];
+	
+	string $skinLocArray[];
+	string $buildLocArray[];
+	int $i = 0;
+	
+	for ( $curCC in $selControl ) {
+		
+		//skinPose가 있는 지 확인. 이미 skinPose가 있으면 pass.
+		//이미 skinPose가 있을 시에 업데이트 확인이 필요?
+		if ( `objExists ($curCC + ".skinPose")`)
+		{
+			print ($curCC + " already has skinPose.\n");
+			continue; //다음 컨트롤러로 넘어간다.
+		}
+		
+		//컨트롤러의 값이 0이면 pass.		
+		string $transformArray[] = {"tx" , "ty" , "tz" , "rx" , "ry" , "rz"};
+		int $move = 0;		
+		for ( $trans in $transformArray ) {
+			if (`getAttr ($curCC + "." + $trans)`)
+				++$move;
+		}
+		if ($move == 0)
+			continue; //다음 컨트롤러로 넘어간다.
+			
+		
+		//constrolType 파악.
+		string $controlType = `substring $curCC 1 2`;
+		if ( !($controlType == "FK" || $controlType == "IK") )
+			$controlType = "Pole";
+		//_L or _R 
+		string $side = `substring $curCC (size($curCC)-1) (size($curCC))`; 				
+		
+		/*offsetConstrol 확인.
+		string $offsetControl = `substitute $controlType $curCC ($controlType + "Offset")`;
+		$tempArray = `listRelatives -p $offsetControl`;
+		string $parentNode = $tempArray[0];
+		*/
+		
+		//ExtraControl 확인.
+		string $extraControl = `substitute $controlType $curCC ($controlType + "Extra")`;
+		$tempArray = `listRelatives -p $extraControl`;
+		string $parentNode = $tempArray[0];
+		
+		//locator 생성.
+		string $buildLoc[] = `spaceLocator -n ("loc_fit_" + $curCC) -p 0 0 0`;		
+		string $skinLoc[] = `duplicate -n ("loc_skin_" + $curCC) $buildLoc[0]`;
+		
+		//Skinpose 그룹 생성.
+		string $skinposeGrp = `substitute $controlType $curCC ($controlType + "Skinpose")`;
+		$skinposeGrp = `createNode "transform" -n $skinposeGrp -p $parentNode`;
+		parent $extraControl $skinposeGrp;
+		
+		parent $buildLoc[0] $skinLoc[0] $parentNode;
+		matchPosition $buildLoc[0] $extraControl;
+		matchPosition $skinLoc[0] $curCC;
+		
+			
+		//constaint 작업.
+		string $constraintNode[];	
+		if ( $controlType == "FK" )	
+			{
+				$constraintNode = `orientConstraint $buildLoc[0] $skinLoc[0] $skinposeGrp`;
+				setAttr ($constraintNode[0] + ".interpType") 2;	
+			}	
+		else if ( $controlType == "IK" )	
+			{
+				$constraintNode = `parentConstraint $buildLoc[0] $skinLoc[0] $skinposeGrp`;
+				setAttr ($constraintNode[0] + ".interpType") 2;	
+			}	
+		else if ( $controlType == "Pole" )	
+			$constraintNode = `pointConstraint $buildLoc[0] $skinLoc[0] $skinposeGrp`;	
+		
+		// add attr & connect	
+		string $setRange = `shadingNode -n ("setRange_skinPose_"+ $curCC) -asUtility setRange`;
+		
+		setAttr ($setRange + ".minY") 1;
+		setAttr ($setRange + ".maxX") 1;
+		setAttr ($setRange + ".oldMaxX") 10;
+		setAttr ($setRange + ".oldMaxY") 10;	
+		
+		addAttr -ln "skinPose" -at double  -min 0 -max 10 -dv 10 $curCC; 
+		setAttr -e -channelBox true ($curCC + ".skinPose");
+		
+		connectAttr -f ($curCC+".skinPose") ($setRange + ".valueX");
+		connectAttr -f ($curCC+".skinPose") ($setRange + ".valueY");
+		
+		connectAttr -f ($setRange + ".outValueY") ($constraintNode[0]+"."+$buildLoc[0]+"W0");
+		connectAttr -f ($setRange + ".outValueX") ($constraintNode[0]+"."+$skinLoc[0]+"W1");
+
+		
+		if ( $controlType != "Pole" )	
+			setAttr ($curCC + ".r") 0 0 0;		
+		if ( $controlType != "FK" )	
+			setAttr ($curCC + ".t") 0 0 0;
+						
+		setAttr ($buildLoc[0] + ".v") 0;	
+		setAttr ($skinLoc[0] + ".v") 0;		
+		
+		print ( $curCC + " has skinPose.\n" ) ;
+		
+		$skinLocArray[$i] = $skinLoc[0];
+		$buildLocArray[$i] = $buildLoc[0];
+		++$i;	
+		
+	}
+}	
+	
+global proc matchPosition(string $a , string $b)
+{	
+	string $ptCsObj[] = `parentConstraint $b $a`;
+
+	string $findPtCns[] = `listRelatives -type parentConstraint $a`;
+
+	select $findPtCns; doDelete;
+}
+
+global proc goSkinPose( int $val )
+{
+	string $listControl[] = `sets -q "ControlSet"`;
+	int $value = (10 * $val);
+	for ($curCon in $listControl)
+		if (`objExists ($curCon + ".skinPose")`)
+			setAttr ($curCon + ".skinPose") $value;
+}
+
+global proc makeFitSkinPose()
+{
+    string $locList[];
+    int $i = 0;
+    string $skinLoc[] = `ls -type "transform" "loc_skin_*"`; 
+    goSkinPose 1;
+    
+    
+    for ( $curLoc in $skinLoc )    
+    {
+        if (`gmatch $curLoc "*_L"`) 
+            continue;        
+        if (`gmatch $curLoc "*IK*"`) 
+            continue;     
+        if (`gmatch $curLoc "*Pole*"`) 
+            continue;     
+                                
+        if ( `objExists ("fit_" + $curLoc)` )
+            delete ("fit_" + $curLoc);
+        string $temp[] = `duplicate -n ("fit_" + $curLoc) $curLoc`;
+        parent -w $temp[0];
+        $locList[$i]= $temp[0];
+        ++$i;   
+    }
+       
+    
+    string $buildLoc[] = `ls -type "transform" "loc_build_*"`; 
+    goSkinPose 0;
+    for ( $curLoc in $buildLoc )    
+    {
+        if (`gmatch $curLoc "*_L"`) 
+            continue;        
+        if (`gmatch $curLoc "*IK*"`) 
+            continue;     
+        if (`gmatch $curLoc "*Pole*"`) 
+            continue; 
+        if ( `objExists ("fit_" + $curLoc)` )
+            delete ("fit_" + $curLoc);
+        string $temp[] = `duplicate -n ("fit_" + $curLoc) $curLoc`;  
+        parent -w $temp[0];
+        $locList[$i]= $temp[0];
+        ++$i;   
+    }
+        
+    
+    for ($curLoc in $locList )
+        setAttr ($curLoc + ".v") 1;
+    
+    goSkinPose 1; 
+    
+    for ($curLoc in $locList )
+        setAttr ($curLoc + ".v") 1;
+    
+    if ( `objExists "fitSkinPose"` )
+        parent  $locList "fitSkinPose";
+    else
+        group -p "FitSkeleton" -n "fitSkinPose" $locList;
+    
+    goSkinPose 1;
+    
+}
+
+global proc goFitSkinPose(string $pose)
+{	
+	// $pose should be "skin" or "build"
+	string $listFitLoc[] =`ls -type "transform" "fit_loc_*_R"`;	
+	string $nodes[] = `ls -dag -typ "joint" "Root"`;
+	print $listFitLoc;
+	print $nodes;
+	for ( $curJoint in $nodes )
+	{			
+		for ($curLoc in $listFitLoc)
+			if (`gmatch $curLoc ("fit_loc_" + $pose + "_FK" + $curJoint + "_R")`)
+				matchPosition $curJoint $curLoc;
+
+	}
+}
+
+
+global proc delSkinPose( int $val )
+{
+	string $listControl[];
+	if ( $val )
+		$listControl= `sets -q "ControlSet"`;
+	else 
+		$listControl = `ls -sl`;
+		
+	for ($curCon in $listControl)
+		if (`objExists ($curCon + ".skinPose")`){
+			setAttr ($curCon + ".skinPose") 0;
+			deleteAttr ($curCon + ".skinPose");
+			if( `objExists ("setRange_" + $curCon)` )
+				delete ("setRange_" + $curCon);
+			
+			string $controlType = `substring $curCon 1 2`;
+			if ( !($controlType == "FK" || $controlType == "IK") )
+				$controlType = "Pole";				
+			string $skinposeControl = `substitute $controlType $curCon ($controlType + "Skinpose")`;			
+			//delete -constraints $skinposeControl;
+			$tempArray = `listRelatives -p $skinposeControl`;
+			string $parentNode = $tempArray[0];
+			
+			string $extraControl = `substitute $controlType $curCon ($controlType + "Extra")`;	
+			parent $extraControl $parentNode;
+			
+			delete $skinposeControl;	
+			
+			if (`objExists ("loc_fit_" + $curCon)` )
+				delete ("loc_fit_" + $curCon);
+			if (`objExists ("loc_skin_" + $curCon)` )
+				delete ("loc_skin_" + $curCon);	
+				
+			print ( "complete to delete skinPose : " + $curCon + "\n" ); 	 
+		}
+		
+		
+		
+		
+}
+// delSkinPose 0;

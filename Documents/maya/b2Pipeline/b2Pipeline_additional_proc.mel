@@ -1,0 +1,644 @@
+//add b2pipeline
+
+
+//지정된 폴더 생성.
+global proc b2makeFolder(string $path) {
+	
+	int $seqExist = `filetest -d $path`;
+		   
+	if ( $seqExist == 0 ){
+		string $result = `confirmDialog -title "Confirm" -message "새로운 폴더를 생성 하시겠습니까?"
+						-button "Yes" -button "No" -defaultButton "Yes"
+						-cancelButton "No" -dismissString "No"`;
+		if ( $result == "Yes" ){
+			sysFile -md $path; 
+			print ("//result : create new folder : " + $path + "\n"); 
+		}
+		else 
+			print ("//cancle.\n");
+		
+	} else
+		print ("//result : " + $path + "already exist.\n");
+		
+}
+
+
+//rocal root를 지정해주는 window.
+global proc b2setLocalRootWin() {
+	
+	if ( `window -exists "b2SubWin1"` )
+		deleteUI "b2SubWin1";
+		
+	string $window = `window -title "b2 set local root" -sizeable false b2SubWin1`;
+	
+	string $rootLayout = `columnLayout -columnWidth 410 -columnAttach "both" 5 -columnAlign "left" -rowSpacing 5`;
+	
+	separator -h 5 -st "none";
+	
+	text -label "set local download dir" -font "boldLabelFont";
+	separator -h 10 -st "doubleDash";
+	text -label "tes";
+	text -label "설정시에 다운로드 경로가 자동으로 생성됩니다.";
+	separator -width 400 -h 5 -st "none";
+	text -label " ex old) localRoot 하위에 assetType과 assetName이 생성됩니다. ";
+	text -label "Asset Root Dir : D:/localDir/ " ;
+	text -label "Download path : D:/localDir/cha/hal01/";
+	separator -width 400 -h 5 -st "none";
+	text -label " ex new) 변수 설정. localRoot 하위에 경로를 자유롭게 변경 가능.";
+	text -label "Asset Root Dir : D:/localDir/$proj/$assetType/$asset/$compo/" ;
+	text -label "Download path : D:/localDir/1304_D40/cha/hal01/mdl/";
+	
+	separator -width 400 -h 20 -st "in";
+	checkBox -label "use new version" setRootPathVerChkBox;
+
+	textFieldButtonGrp -label "Asset Root Dir:" -text "" -buttonLabel " Browse... " 
+						-buttonCommand "b2FileDialog dir maya setAssetRootPathField"
+						-ed 1 
+						//-tcc "optionVar -sv b2AssetRootPath `textFieldButtonGrp -q -tx setAssetRootPathField`" 
+						-columnWidth 1 90 -columnWidth 2 240 -columnWidth 3 70
+						setAssetRootPathField;
+	
+	rowLayout -numberOfColumns 5 -columnWidth 1 100;
+	text -label "add path variable : ";
+	/*
+	button -label "$proj" -c "textFieldButtonGrp -e -it \"$proj\" setAssetRootPathField";
+	button -label "$assetType" -c "textFieldButtonGrp -e -it \"$assetType\" setAssetRootPathField";
+	button -label "$asset" -c "textFieldButtonGrp -e -it \"$asset\" setAssetRootPathField";
+	button -label "$compo" -c "textFieldButtonGrp -e -it \"$compo\" setAssetRootPathField";
+	*/
+	button -label "$proj" -command "b2InsertStringWithSlashToField setAssetRootPathField \"$proj\"";
+	button -label "$assetType" -c "b2InsertStringWithSlashToField setAssetRootPathField \"$assetType\"";
+	button -label "$asset" -c "b2InsertStringWithSlashToField setAssetRootPathField \"$asset\"";
+	button -label "$compo" -c "b2InsertStringWithSlashToField setAssetRootPathField \"$compo\"";
+	setParent ..;
+	separator -h 10 -st "none";
+
+	textFieldButtonGrp -label "Shot Root Dir:" -text "" -buttonLabel " Browse... " 
+						-buttonCommand "b2FileDialog dir maya setShotRootPathField"
+						-ed 1 
+						//-tcc "optionVar -sv b2shotRootPath `textFieldButtonGrp -q -tx setShotRootPathField`" 
+						-columnWidth 1 90 -columnWidth 2 240 -columnWidth 3 70
+						setShotRootPathField;
+
+	rowLayout -numberOfColumns 6 -columnWidth 1 100;
+	text -label "add path variable : ";
+	/*
+	button -label "$proj" -c "textFieldButtonGrp -e -it \"$proj\" setShotRootPathField";
+	button -label "$seq" -c "textFieldButtonGrp -e -it \"$seq\" setShotRootPathField";
+	button -label "$shot" -c "textFieldButtonGrp -e -it \"$shot\" setShotRootPathField";
+	button -label "$compo" -c "textFieldButtonGrp -e -it \"$compo\" setShotRootPathField";
+	button -label "$layer" -c "textFieldButtonGrp -e -it \"$layer\" setShotRootPathField";
+	*/
+	button -label "$proj" -c "b2InsertStringWithSlashToField setShotRootPathField \"$proj\"";
+	button -label "$seq" -c "b2InsertStringWithSlashToField setShotRootPathField \"$seq\"";
+	button -label "$shot" -c "b2InsertStringWithSlashToField setShotRootPathField \"$shot\"";
+	button -label "$compo" -c "b2InsertStringWithSlashToField setShotRootPathField \"$compo\"";
+	button -label "$layer" -c "b2InsertStringWithSlashToField setShotRootPathField \"$layer\"";
+	setParent ..;
+
+	separator -width 400 -h 10 -st "in";				
+	
+	rowLayout -numberOfColumns 2 -columnWidth2 300 100;
+	separator ;
+	button -label "save" -width 90 -c "optionVar -iv b2RootPathVer `checkBox -q -v setRootPathVerChkBox`; optionVar -sv b2AssetRootPath `textFieldButtonGrp -q -tx setAssetRootPathField`; optionVar -sv b2shotRootPath `textFieldButtonGrp -q -tx setShotRootPathField`;";
+	setParent ..;
+
+	separator -h 5 -st "none" ;
+
+	setParent ..;
+	showWindow $window;
+	
+	//edit
+
+	if ( `optionVar -ex "b2RootPathVer"`)
+		checkBox -e -v `optionVar -q "b2RootPathVer"` setRootPathVerChkBox;
+
+	if ( `optionVar -ex "b2AssetRootPath"` )
+		textFieldButtonGrp -e -tx `optionVar -q "b2AssetRootPath"` setAssetRootPathField;
+	
+	if ( `optionVar -ex "b2shotRootPath"` )
+		textFieldButtonGrp -e -tx `optionVar -q "b2shotRootPath"` setShotRootPathField;
+	
+	
+	
+}
+
+global proc b2InsertStringWithSlashToField( string $fieldName, string $newString)
+{
+	string $fieldType;
+
+	if (`textFieldGrp -exists $fieldName`)
+	{
+		$fieldType = "textFieldGrp";
+	}
+	else if (`textFieldButtonGrp -exists $fieldName`)
+	{
+		$fieldType = "textFieldButtonGrp";
+	}
+	else
+	{
+		$fieldType = "textField";
+	}
+
+	string $currentString = eval ($fieldType + " -q -text " + $fieldName);
+	$newString = `b2AddSlash $newString`;
+
+	if (!endsWith ($currentString, "/"))
+	{
+		$newString = "/"+ $newString;
+	}
+
+	eval ($fieldType + " -edit -it \"" + $newString + "\" " + $fieldName);
+}
+
+// 자동으로 다운로드 경로 생성.
+global proc b2autoLocalDir( string $type ){
+	string $dirPath;
+	string $uiFieldCommand;
+
+	//detect type of ui "setPathField"
+	if ( `textField -ex "setPathField"` )
+		$uiFieldCommand = "textField";
+	else if ( `textFieldGrp -ex "setPathField"` )
+		$uiFieldCommand = "textFieldGrp";
+	else if (`textFieldButtonGrp -ex "setPathField"`)
+		$uiFieldCommand = "textFieldButtonGrp";
+
+	string $evalCommand = $uiFieldCommand + " -edit -text \"$pathVar\" setPathField";
+
+	if ( $type == "asset" ) {
+		string $localRoot = "";	
+		if ( `optionVar -ex "b2AssetRootPath"` )
+			$localRoot = b2AddSlash (`optionVar -q "b2AssetRootPath"`);
+
+		//info.	
+		string $selItem[] = `b2GetCurrentlySelectedItem 2 3`;	
+		string $proj = `optionMenu -q -v projList`;
+
+		//version Check
+		int $ver = 0; //±aº≫ old
+		if ( `optionVar -ex "b2RootPathVer"`){
+			$ver = `optionVar -q "b2RootPathVer"`;
+		}		
+
+		if ($ver)	
+		{
+			//newVer		
+			if (`gmatch $localRoot "*$proj*"`)		
+				$localRoot = `substitute "$proj" $localRoot $proj`;
+			if (`gmatch $localRoot "*$assetType*"`)		
+				$localRoot = `substitute "$assetType" $localRoot $selItem[0]`;
+			if (`gmatch $localRoot "*$asset*"`)		
+				$localRoot = `substitute "$asset" $localRoot $selItem[1]`;					
+			if (`gmatch $localRoot "*$compo*"`)		
+				$localRoot = `substitute "$compo" $localRoot $selItem[2]`;	
+
+			textFieldButtonGrp -e -text $localRoot setPathField;			
+		}
+		else	
+		{
+			//oldVer
+			if ($localRoot != "" )
+				$dirPath = ($localRoot + $selItem[0] + "/" + $selItem[1] + "/" );
+			textFieldButtonGrp -e -text $dirPath setPathField;	
+		}
+	}
+
+	if ( $type == "shot" ) {	
+		string $localRoot = "";	
+		if ( `optionVar -ex "b2shotRootPath"` )
+			$localRoot = `optionVar -q "b2shotRootPath"`;
+		string $selItem[] = `b2GetCurrentlySelectedItem 3 4`;
+		string $proj = `optionMenu -q -v projList`;
+
+		//version Check
+		int $ver = 0; //±aº≫ old
+		if ( `optionVar -ex "b2RootPathVer"`){
+			$ver = `optionVar -q "b2RootPathVer"`;
+		}	
+		if ($ver)	
+		{
+			$evalCommand = `substitute "$pathVar" $evalCommand $localRoot`;
+			//newVer		
+			if (`gmatch $evalCommand "*$proj*"`)		
+				$evalCommand = `substitute "$proj" $evalCommand $proj`;
+			if (`gmatch $evalCommand "*$seq*"`)		
+				$evalCommand = `substitute "$seq" $evalCommand $selItem[0]`;
+			if (`gmatch $evalCommand "*$shot*"`)		
+				$evalCommand = `substitute "$shot" $evalCommand $selItem[1]`;					
+			if (`gmatch $evalCommand "*$compo*"`)		
+				$evalCommand = `substitute "$compo" $evalCommand $selItem[2]`;	
+			if (`gmatch $evalCommand "*$layer*"`)		
+				$evalCommand = `substitute "$layer" $evalCommand $selItem[3]`;				
+
+			//textFieldButtonGrp -e -text $localRoot setPathField;
+			eval $evalCommand;
+		}
+		else
+		{
+			//oldVer
+			if ($localRoot != "" )
+			$dirPath = ($localRoot + $selItem[0] + "/" + $selItem[1] + "/" );	
+			$evalCommand = `substitute "$pathVar" $evalCommand $dirPath`;
+			
+			//textFieldButtonGrp -e -text $dirPath setPathField;
+			eval $evalCommand;
+		}
+		
+			
+	}
+	
+	if ( $type == "new" ) {	
+		string $localRoot = "";	
+		if ( `optionVar -ex "b2shotRootPath"` )
+			$localRoot = `optionVar -q "b2shotRootPath"`;
+		string $selItem[] = `b2GetCurrentlySelectedItem 3 4`;
+		string $proj = `optionMenu -q -v projList`;
+
+		//version Check
+		int $ver = 0; //±aº≫ old
+		if ( `optionVar -ex "b2RootPathVer"`){
+			$ver = `optionVar -q "b2RootPathVer"`;
+		}	
+		if ($ver)	
+		{
+			$evalCommand = `substitute "$pathVar" $evalCommand $localRoot`;
+			//newVer		
+			if (`gmatch $evalCommand "*$proj*"`)		
+				$evalCommand = `substitute "$proj" $evalCommand $proj`;
+			if (`gmatch $evalCommand "*$seq*"`)		
+				$evalCommand = `substitute "$seq" $evalCommand $selItem[0]`;
+			if (`gmatch $evalCommand "*$shot*"`)		
+				$evalCommand = `substitute "$shot" $evalCommand $selItem[1]`;					
+			if (`gmatch $evalCommand "*$compo*"`)		
+				$evalCommand = `substitute "$compo" $evalCommand $selItem[2]`;	
+			if (`gmatch $evalCommand "*$master*"`)		
+				$evalCommand = `substitute "$master" $evalCommand $selItem[3]`;				
+
+			//textFieldButtonGrp -e -text $localRoot setPathField;
+			eval $evalCommand;
+		}
+		else
+		{
+			//oldVer
+			if ($localRoot != "" )
+			$dirPath = ($localRoot + $selItem[0] + "/" + $selItem[1] + "/" );
+			$evalCommand = `substitute "$pathVar" $evalCommand $dirPath`;
+
+			//textField -e -text $dirPath saveLocField;
+			eval $evalCommand;
+		}		
+		
+	}
+		
+}
+
+// 자동으로 경로 체크.
+//if current file has right name than select scrollList automatically.
+global proc b2autoSelectDir() {
+
+	//current fileName
+    string $filePath = `file -q -sn`;
+	string $baseName = `basenameEx($filePath)`;
+   
+	string $tokenTemp[];
+	int $tokenSize = `tokenize $baseName "_" $tokenTemp`;
+	
+	//variable.
+	string $val1,$val2,$val3,$val4;		
+	if ( $tokenSize > 0 ){
+		$val1 = $tokenTemp[0];
+		$val2 = $tokenTemp[1];
+		$val3 = $tokenTemp[2];		
+		$val4 = $tokenTemp[3];	
+		
+		//asset or shot
+		//get AssetTypelist and ShotList
+		string $assetTypeList[];
+		string $seqList[];	
+		if ( `textScrollList -ex assetTypeList` )
+			$assetTypeList = `textScrollList -q -allItems assetTypeList`;
+		if ( `textScrollList -ex shotList` )
+			$seqList = `textScrollList -q -allItems seqList`;	
+		
+		//asset browser
+		if (stringArrayContains( $val1 , $assetTypeList)){		
+			tabLayout -e -sti 1 mainTabLayout; 
+			textScrollList -e -si $val1 assetTypeList;	
+			b2UpdAssetNameList $val2;
+			b2UpdAssetCompoList $val3;
+			b2UpdAssetCompoSelected;
+		} 
+		
+		//shot browser	
+		else if (stringArrayContains( $val1 , $seqList)) {
+			tabLayout -e -sti 2 mainTabLayout; 
+			textScrollList -e -si $val1 seqList;	
+			b2UpdShotList $val2;
+			b2UpdShotCompoList $val3;
+			b2UpdShotCompoLayerList $val4;
+			b2UpdShotCompoLayerSelected ;		
+		}
+		else
+			print "//result : autoSelect  - filename is not matching.\n";
+	}
+	else
+	{
+		print "//result : autoSelect  -  filename has not right convention.\n";	
+		// error "save file first. no information.\n";
+		//	confirmDialog -title "Warning" -message ("현재 파일명이 규격에 맞지 않아 develop/release를 위한 자동설정을 할 수 없습니다.\n"
+		//		+ "develop이나 release를 하기 위해서는 사용자가 직접 UI에서 필요한 요소를 선택하셔야 합니다.");
+	}
+	
+}
+
+
+//develop 또는 release 시에 현재 마야파일이 있는 폴더의 최신버전 mov를 찾아서 field에 넣어준다.
+global proc int b1GetAutoPlayblast(){
+
+	// 현재 마야 파일이 있는 경로에서 가장 마지막 날짜의 mov 파일을 get합니다.
+
+	string $curFilePath = `file -q -sn`;
+	string $currentDir = `dirname ($curFilePath)`;  //dir 경로
+	string $currentFileName = basenameEx($curFilePath);  // file 명
+
+	string $movList[] = `getFileList -folder ($currentDir + "/") -fs ($currentFileName + "*.mov")`;
+
+	if( size($movList) == 1 ){
+		textFieldButtonGrp -e -text ($currentDir + "/" + $movList[0]) selectMovField;
+		return 1;	
+	}
+	else if ( size($movList) == 0 )	{
+		$movList = `getFileList -folder ($currentDir + "/") -fs "*.mov"`;
+		
+		if ( size($movList) == 0 ){
+			print "//result : no mov file in current dir ";
+			return 0;	
+		}
+		
+	}
+
+	//날짜 확인. - 최종파일로 결정.
+	string $movDateList[];
+	python("import os");
+	int $i = 0;
+	for ( $curFile in $movList ) {
+		float $secSinceEpoch = python("os.path.getmtime('" + ($currentDir + "/" + $curFile)  + "')");
+		$movDateList[$i] = ($secSinceEpoch + "#$%^" + $curFile);
+		$i++;	
+	}
+	$movDateList = sort($movDateList);
+	print $movDateList;
+	string $lastMov = $movDateList[size($movDateList)-1];
+	string $tokenTemp[] = stringToStringArray($lastMov, "#$%^");
+	textFieldButtonGrp -e -text ($currentDir + "/" + $tokenTemp[1]) selectMovField;
+	
+	return 1;	
+
+}
+
+
+// delivery copy - 선택한 버전을 딜리버리에 copy 해줍니다.
+global proc b2deliveryCopy(){
+
+	//현재 씬 보호.
+	if (`file -q -amf`){
+		string $result =  `confirmDialog -title "save" -message "현재 열려있는 scene을 save 하겟습니까?"
+		    -button "Yes" -button "No" -button "Cancel" -defaultButton "Yes"
+		    -cancelButton "No" -dismissString "No"`;
+		    
+		if ($result == "Yes") 
+		    file -force -save -options "v=0";
+		else if ($result == "Cancel") 
+		    error "cancled";
+	}
+	
+	//delivery Path 
+	string $proj = `optionMenu -q -v projList`;
+	string $prjToken[];
+	tokenize $proj "_" $prjToken;
+	string $deliveryPath = "V:/delivery/" + $prjToken[1] + "_delivery/";
+
+	if (!`filetest -d $deliveryPath`){
+		error "delivery path is not exist.";
+	}
+
+	string $curDate = `date -f YYMMDD`;
+
+	//source Item
+	string $selItem[] = `b2GetCurrentlySelectedItem 2 3`;
+	string $selVerStr = `textField -q -text selectedAssetVersionField`;
+	string $srcPath = `textFieldButtonGrp -q -text astFileLocField`;
+
+	string $assetName = $selItem[1];
+	string $compo = $selItem[2];
+
+	if ($compo == "mdl"){
+		$compo = "mdl";
+	}
+
+
+	string $folderFilter = ("*_" + $assetName + "_" + $compo + "_*");
+	string $history[] = `getFileList -folder $deliveryPath -filespec $folderFilter`;
+	$history = sort($history);
+
+	string $curVer;
+
+	if (size($history) == 0)
+		$curVer = "1st";
+	else if ((size($history) > 0)){
+		
+		string $lastHistroy = $history[size($history)-1];		
+
+		string $token[];
+		int $tokenSize = `tokenize $lastHistroy "_" $token`;
+		string $lastVer = $token[size($token)-1];
+
+		if (`gmatch $lastVer "*th"`){
+			int $i_lastVer = `substitute "th" $lastVer ""`;
+			$curVer = (($i_lastVer + 1) + "th");
+		}
+		else if ($lastVer == "1st")
+			$curVer = "2nd";
+		else if ($lastVer == "2nd")
+			$curVer = "3rd";		
+		else if ($lastVer == "3rd")
+			$curVer = "4th";
+		else if ($lastVer == "4th")
+			$curVer = "5th";
+		else if ($lastVer == "5th")
+			$curVer = "6th";
+		else if ($lastVer == "6th")
+			$curVer = "7th";
+		else if ($lastVer == "7th")
+			$curVer = "8th";
+		else if ($lastVer == "8th")
+			$curVer = "9th";
+		else if ($lastVer == "9th")
+			$curVer = "10th";
+	}
+	
+
+	string $folderName = ($curDate + "_" + $prjToken[1] + "_" + $assetName + "_" + $compo + "_" + $curVer);
+
+	string $fullPath = ($deliveryPath + $folderName + "/");
+	sysFile -md $fullPath;
+	print ("//result : create new folder : " + $fullPath + "\n"); 
+
+	//fileCopy and open
+	string $maList[] = `getFileList -folder $srcPath -filespec "*.ma"`;
+	string $texFolder[] = `getFileList -folder $srcPath -filespec "tex"`;
+
+	//tex copy
+	if ( size($texFolder) > 0 ){
+		//sysFile -cp ($fullPath + $texFolder[0]) ($srcPath + $texFolder[0]);
+		string $sourceDir = substituteAllString( ($srcPath + $texFolder[0] + "/*.*") , "/" , "\\");
+		print ($sourceDir + "\n");
+		string $targetDir = substituteAllString( ($fullPath + $texFolder[0] + "/") , "/" , "\\");
+		print ($targetDir + "\n");
+		string $copyResult = `system ("xcopy /e /h /k " + $sourceDir + " " + $targetDir )`;
+		print $copyResult;
+		print ("//result : copy tex folder to: " + ($fullPath + $texFolder[0]) + "\n"); 	
+	}	
+
+	string $mayaFile;
+
+	//ma to mb
+	if ( size($maList) == 1 ){
+
+		$mayaFile = $maList[0];
+
+	}
+	else if ( size($maList) > 1 ){
+
+		for ($curMa in $maList){
+			if (`gmatch $curMa "*_lod03_*.ma"`)
+				$mayaFile = $curMa;
+		}
+
+		if ($mayaFile == ""){
+			error "more than one maya files. no lod03 file.";
+		}
+
+	}
+	else {
+		error "ma file is not exist.";
+	}	
+
+	//save to MB		
+	file -f -open ($srcPath + $mayaFile);
+
+	python("import tak_b2Pipeline_add");
+	python("reload(tak_b2Pipeline_add)");
+	string $pythonStr = `format -stringArg $prjToken[1] -stringArg $mayaFile "tak_b2Pipeline_add.niceNameForDeliver(\"^1s\", \"^2s\")"`;
+	$mayaFile = `python($pythonStr)`;
+	print ($mayaFile + "\n");
+	
+	string $mbFile = `substitute ".ma#" ($fullPath + $mayaFile + "#") ".mb"`;
+	
+	file -rename $mbFile;   
+	file -type "mayaBinary";
+	file -save -type "mayaBinary" ;
+	print ("//result : create mb file: " + $mbFile + "\n"); 
+
+	system ("explorer /select,\"" + toNativePath($mbFile) + "\"");		
+
+
+}
+
+
+// Open Selected History //
+global proc openHistory(){
+	//현재 씬 보호.
+	if (`file -q -amf`){
+		string $result =  `confirmDialog -title "save" -message "현재 열려있는 scene을 save 하겟습니까?"
+		    -button "Yes" -button "No" -button "Cancel" -defaultButton "Yes"
+		    -cancelButton "No" -dismissString "No"`;
+		    
+		if ($result == "Yes") 
+		    file -force -save -options "v=0";
+		else if ($result == "Cancel") 
+		    error "cancled";
+	}
+
+	string $srcPath = `textFieldButtonGrp -q -text astFileLocField`;
+	string $maList[] = `getFileList -folder $srcPath -filespec "*.ma"`;
+
+	// Find maya file to open.
+	string $mayaFile;
+
+	if ( size($maList) == 1 ){
+
+		$mayaFile = $maList[0];
+	// Open the maya file.
+	print ("//" + "Open " + "\""+ $srcPath + $mayaFile + "\"" + "\n");
+	file -f -open ($srcPath + $mayaFile);
+	}
+
+	else if ( size($maList) > 1 ){
+		selLodUI();
+	}
+
+	else {
+		error "ma file is not exist.";
+	}
+}
+
+global proc selLodUI(){
+	string $srcPath = `textFieldButtonGrp -q -text astFileLocField`;
+	string $maList[] = `getFileList -folder $srcPath -filespec "*.ma"`;
+
+	string $win = "selLodWin";
+	if(`window -exists $win`){
+		deleteUI $win;
+	}
+	window -title "Select LOD" $win;
+	columnLayout -adj true;
+	rowColumnLayout -numberOfColumns 2;
+	text "Select LOD: ";
+
+	optionMenu "lodSelOptMenu";
+	for ($ma in $maList){
+		if (`gmatch $ma "*_lod01_*.ma"`)
+			menuItem "lod01";
+		if (`gmatch $ma "*_lod02_*.ma"`)
+			menuItem "lod02";
+		if (`gmatch $ma "*_lod03_*.ma"`)
+			menuItem "lod03";
+	}
+	optionMenu -e -v "lod03" "lodSelOptMenu";
+
+	setParent "..";
+	button -label "Open" -c "openSelLod";
+	window -e -w 100 -h 10 $win;
+	showWindow $win;
+}
+
+global proc openSelLod(){
+	string $srcPath = `textFieldButtonGrp -q -text astFileLocField`;
+	string $maList[] = `getFileList -folder $srcPath -filespec "*.ma"`;
+
+	string $maFile = "";
+	string $selLod = `optionMenu -q -v "lodSelOptMenu"`;
+	for ($curMa in $maList){
+		if (`gmatch $curMa ("*_" + $selLod + "_*.ma")`)
+			$maFile = $curMa;
+	}
+
+	if ($maFile == ""){
+		error "more than one maya files. no lod03 file.";
+	}
+	print ("//" + "Open " + "\""+ $srcPath + $maFile + "\"" + "\n");
+	deleteUI "selLodWin";
+	file -f -open ($srcPath + $maFile);
+}
+
+
+// Delete developed or released data
+global proc b2DelReDev(){
+	string $selHistoryPath = `textFieldButtonGrp -q -text astFileLocField`;
+	python("import tak_b2Pipeline_add");
+	python("reload(tak_b2Pipeline_add)");
+	python("tak_b2Pipeline_add.deleteHistory('" + $selHistoryPath + "')");
+	// b2UpdAssetCompoSelected();
+}

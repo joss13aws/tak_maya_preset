@@ -2772,3 +2772,14 @@ def selAffectedVertex(inf):
 		OpenMaya.MGlobal.select(geoDagPath, vertices, OpenMaya.MGlobal.kAddToList)
 
 		selLs.clear()
+
+
+def copyUVRiggedMesh(source, target):
+    targetShapes = target.getChildren(shapes=True)
+    if len(targetShapes) > 2:
+        pm.error('Target has too many shapes')
+    targetOrigShape = [shape for shape in targetShapes if 'Orig' in shape.name()][0]
+    targetOrigShape.intermediateObject.set(False)
+    pm.transferAttributes(source, targetOrigShape, transferUVs=2, transferColors=0, sampleSpace=5)
+    pm.delete(targetOrigShape, ch=True)
+    targetOrigShape.intermediateObject.set(True)

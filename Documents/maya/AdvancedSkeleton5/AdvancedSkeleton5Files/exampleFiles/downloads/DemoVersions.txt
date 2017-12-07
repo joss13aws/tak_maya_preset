@@ -1,0 +1,8 @@
+chubby 5.312
+cody 5.312
+conan 5.312
+creature 5.316
+max 5.312
+skateboard 5.312
+snook 5.312
+tuna 5.312
