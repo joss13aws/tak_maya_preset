@@ -653,8 +653,8 @@
 					//모든 어셋을 lod03으로 변경
 					print "Changing all assets to lod03...\n";
 					b2ChangeLodToHi;
-					print "All assets are now lod03\n";			
-
+					print "All assets are now lod03\n";
+                    
 					// Disalbe viewport update
 					refresh -su true;
 
@@ -1203,10 +1203,7 @@
 				print ("result of b2BakeAssetTransform is " + $result + "\n");
 				if ($result == 1)
 				{
-					string $exportResult = `exportEdits 
-						-force -onReferenceNode $refNode 
-						-includeAnimation -includeNetwork -includeShaders -includeDeformers -type "editMA" -includeSetAttrs true
-						$fileName`;
+					string $exportResult = `exportEdits -f -type "editMA" -onReferenceNode $refNode -includeNetwork -includeAnimation -includeShaders -includeConstraints -includeSetDrivenKeys -includeSetAttrs 1 $fileName`;
 					$exportResult = basename ($exportResult, "");
 					$offlineList[size($offlineList)] = $astName;
 					$offlineList[size($offlineList)] = $exportResult;
@@ -1775,7 +1772,7 @@
 			string $pythonStr = `format -stringArg $eachFile "tak_b2Pipeline_add.fileNameIntoBuffer(\"^1s\")"`;		
 			//string $buffer[] = `stringToStringArray $eachFile "_"`;
 			string $listStr = `python($pythonStr)`;
-			string $buffer[] = stringToStringArray($listStr, ",");
+			string $buffer[] = stringToStringArray($listStr, ","); // Information in buffer: {sequence, shotName, component, layer, assetType, assetName}
 			
 			string $verDir = $buffer[size($buffer) - 1];//파일명에서 릴리즈 번호 확인
 				$verDir = `basenameEx $verDir`;
@@ -1790,14 +1787,6 @@
 			
 			//확장자 확인 후 레퍼런싱 할 어셋 경로 설정
 			string $ext = `match ".[a-zA-Z]*$" $eachFile`;
-
-				print "\n>>> buffer[4]: ";
-				print $buffer[4];
-				print "\n";
-
-				print "\n>>> buffer[5]: ";
-				print $buffer[5];
-				print "\n";
 
 			if( $ext == ".ma") // 마야 파일이라면 릴리즈 파일 자체가 어셋(카메라 등등...)
 			{
@@ -1819,12 +1808,15 @@
                 string $pythonCmdStr = `format -stringArg ($relDirPath + $verDir) -stringArg $buffer[5] "tak_b2Pipeline_add.getFilePathUsedInAni(\"^1s\", \"^2s\")"`;
                 $astFileName = `python($pythonCmdStr)`;
 
-				// 최신 어셋으로 설정.
-                // $astFileName = `b2GetFileName 2 $buffer[4] $buffer[5] "mdl" 0 "release" 0`;
+                if (!`filetest -f $astFileName`)
+                {
+                    // 애니메이션에서 사용된 릴리즈 어셋이 없다면(해당 릴리즈 버전이 지워진 경우 등) 최신 어셋으로 설정.
+                    $astFileName = `b2GetFileName 2 $buffer[4] $buffer[5] "mdl" 0 "release" 0`;
+                }
 			}
 			
 			if (!`filetest -f $astFileName`)
-			{	
+			{
 				confirmDialog -title "Error!" -message ($eachFile + " 에 대해서 릴리즈 된 모델이 없습니다.");
 				continue;
 			}
@@ -2879,15 +2871,20 @@
 			string $filename = $prefix + $selectedSeq[0] + "_" + $selectedShot[$i] + $suffix;
 			// print "$filename =\n";
 			// print $filename;
-			// print "\n";			
+			// print "\n";
 			
-			string $trgDevFile = $targetDir + $selectedShot[$i] + "/Src/" + $filename + ".ma";
+			string $ext = `fileExtension($srcDevFile)`;
+            string $trgDevFile = $targetDir + $selectedShot[$i] + "/Src/" + $filename + "." + $ext;
 			// print "$trgDevFile =\n";
 			// print $trgDevFile;
 			// print "\n";
 
 			string $srcClipFile = `substituteAllString $srcDevFile ".ma" ".mov"`;
-			// print "$srcClipFile =\n";
+			if ($srcDevFile == $srcClipFile)
+            {
+                $srcClipFile = `substituteAllString $srcDevFile ".mb" ".mov"`;
+            }
+            // print "$srcClipFile =\n";
 			// print $srcClipFile;
 			// print "\n";
 

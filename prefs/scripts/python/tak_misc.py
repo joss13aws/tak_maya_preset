@@ -2775,6 +2775,23 @@ def selAffectedVertex(inf):
 
 
 def copyUVRiggedMesh(source, target):
+    """
+    Copy source mesh uv to rigged target mesh
+
+    Args:
+        source: Source mesh
+        target: Target mesh
+
+    Usage:
+        import pymel.core as pm
+        import tak_misc
+
+        sels = pm.ls(sl=True)
+        src = sels[0]
+        trg = sels[1]
+
+        tak_misc.copyUVRiggedMesh(src, trg)
+    """
     targetShapes = target.getChildren(shapes=True)
     if len(targetShapes) > 2:
         pm.error('Target has too many shapes')

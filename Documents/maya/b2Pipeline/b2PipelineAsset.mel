@@ -1614,7 +1614,7 @@
 										string $textureButton = `checkBox -label "Submit Textures" -value 1 optCheck1`;
 										string $submitXgenChkBox = `checkBox -label "Submit XGen" -v 1 xgChkBox`;
 										string $cacheButton = `checkBox	-label "Submit Caches" optCheck2`;
-										string $checkLOD02Export = `checkBox -v 1 -label "Separate Lod" optCheck3`;
+										string $checkLOD02Export = `checkBox -v 0 -label "Separate Lod" optCheck3`;
 										string $emailNotification = `checkBox -label "Send Email notification" -value 0 cb_emailNotification`;
 										button -label "Send Message Maya" -width 190 -height 25 -backgroundColor 0.2 0.2 0.4 -command "SendMessageMaya()";
 										//string $relMdlOpt = `checkBox -label "Release Model(When Release Rig)" relMdlChkBox`;

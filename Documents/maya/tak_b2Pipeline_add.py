@@ -9,13 +9,11 @@ b2Pipeline Additional python functions.
 """
 
 
-
 import maya.cmds as cmds
 import pymel.core as pm
 import maya.OpenMaya as OpenMaya
 import re, os, sys, shutil, glob
 import pprint
-
 
 
 def customAttrAbcMel(assetNamespace):
@@ -572,7 +570,7 @@ def deleteHistory(historyPath):
             shutil.rmtree(histoyBackupFldr, ignore_errors = True)
         shutil.copytree(historyPath, histoyBackupFldr, ignore = shutil.ignore_patterns('*.db', 'tmp*'))
 
-        #Back up info folder
+        # Back up info folder
         componentPath = '/'.join(historyPath.rsplit('/')[:-3])
         infoFldr = componentPath + '/_info/'
         infoBackupFldr = re.sub(r'(.+?/.+?/)(.*)', r'\1backup/\2', infoFldr)
@@ -595,7 +593,6 @@ def deleteHistory(historyPath):
         for historyInfo in historyInfoLs:
             result = re.search(r'.*%s.*%s.*' %(publishedType, verNum), historyInfo, re.DOTALL)
             if result:
-                # newXmlCntns = re.sub(historyInfo, '', xmlCntns)
                 newXmlCntns = xmlCntns.replace(historyInfo, '')
             else:
                 pass
@@ -711,7 +708,7 @@ def getReferenceInfo(maFilePath):
         tmpDict['referenceNode'] = matchObj.group(2)
         tmpDict['filePath'] = matchObj.group(3)
         
-        assetName = matchObj.group(1).split('_')[0]
+        assetName = matchObj.group(1).rsplit('_', 1)[0]
         refInfoDict[assetName] = tmpDict
     
     return refInfoDict
