@@ -701,7 +701,7 @@ def getReferenceInfo(maFilePath):
                 refInfos.remove(refInfo)
 
     for refInfo in refInfos:
-        matchObj = re.search(r'-ns "(.+)" -rfn "(.+)".+?".+".+"(.+)"', refInfo, re.DOTALL)
+        matchObj = re.search(r'-ns "(.+?)" -rfn "(.+?)".+"(.+?)"', refInfo, re.DOTALL)
         
         tmpDict = {}
         tmpDict['namespace'] = matchObj.group(1)

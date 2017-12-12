@@ -744,7 +744,9 @@ select(ikhs, r=True)
 
 
 
-# Sticky Lip #
+# Zip Lip #
+
+import pymel.core as pm
 
 # Distribute constraint weight #
 selJnts = sorted(pm.ls(sl=True), reverse=True)
@@ -754,19 +756,43 @@ increment = fullWeight/len(selJnts)
 
 weight = 1
 for jnt in selJnts:
-	weight -= increment
-	parentConstraintNode = jnt.getChildren()[0]
-	parentConstraintNode.Jaw_MW1.set(weight*weight)
+    weight -= increment
+    parentConstraintNode = jnt.getChildren()[0]
+    parentConstraintNode.jaw_lockW0.set(weight*weight)
+
+# Lip Zip Joints rampValsNode Set Up #
+import pymel.core as pm
+jnts = pm.selected()
+
+driverJnts = ['jaw_ctrl', 'jaw_lock_jnt']
+drivenAttr = 'jaw_ctrlW1'
+
+rampValsNode = pm.createNode('rampValuesNode')
+rampValsNode.inValue.set(1.0)
+rampValsNode.numSamples.set(len(jnts))
+rampValsNode.ramp01[0].ramp01_Interp.set(3)
+rampValsNode.ramp01[0].ramp01_Position.set(0)
+rampValsNode.ramp01[0].ramp01_FloatValue.set(0)
+rampValsNode.ramp01[1].ramp01_Interp.set(3)
+rampValsNode.ramp01[1].ramp01_Position.set(0.6)
+rampValsNode.ramp01[1].ramp01_FloatValue.set(0.4)
+rampValsNode.ramp01[2].ramp01_Interp.set(3)
+rampValsNode.ramp01[2].ramp01_Position.set(1.0)
+rampValsNode.ramp01[2].ramp01_FloatValue.set(1.0)
+
+for jnt in jnts:
+    parentConst = pm.parentConstraint(driverJnts, jnt, mo=True)
+    rampValsNode.outValues[jnts.index(jnt)] >> parentConst.attr(drivenAttr)
 
 # Copy left constraint weight to right #
 selJnts = pm.ls(sl=True)
 for jnt in selJnts:
-	parentConstraintNode = jnt.getChildren()[0]
-	weightList = parentConstraintNode.getWeightAliasList()
-	for weight in weightList:
-		val = weight.get()
-		oppositeWeight = pm.PyNode(weight.name().replace('lf_', 'rt_'))
-		oppositeWeight.set(val)
+    parentConstraintNode = jnt.getChildren()[0]
+    weightList = parentConstraintNode.getWeightAliasList()
+    for weight in weightList:
+        val = weight.get()
+        oppositeWeight = pm.PyNode(weight.name().replace('lf_', 'rt_'))
+        oppositeWeight.set(val)
 
 # Distribute SDK end value #
 selStickyJnts = pm.ls(os=True)
@@ -774,9 +800,9 @@ maxValue = 10.0
 increment = maxValue / len(selStickyJnts)
 zipValue = 0
 for jnt in selStickyJnts:
-	parentConst = jnt.getChildren()[0]
-	weightList = parentConst.getWeightAliasList()
-	zipValue += increment
-	for weight in weightList:
-		animCurve = weight.connections(type='animCurve')[0]
-		animCurve.setUnitlessInput(1, zipValue)
+    parentConst = jnt.getChildren()[0]
+    weightList = parentConst.getWeightAliasList()
+    zipValue += increment
+    for weight in weightList:
+        animCurve = weight.connections(type='animCurve')[0]
+        animCurve.setUnitlessInput(1, zipValue)

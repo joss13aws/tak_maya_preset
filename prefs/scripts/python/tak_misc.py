@@ -2386,43 +2386,50 @@ def cutGeoWithJnts():
 
 
 def simplePropAutoRigging():
-	'''
-	Auto rigging function for simple props like sword, gun... etc.
-	'''
+    """
+    Auto rigging function for simple props like sword, gun... etc.
+    """
 
-	jntLs = cmds.ls(sl=True)
+    jntLs = cmds.ls(sl=True)
 
-	srchStr = '_jnt'
-	rplcStr = '_ctrl'
+    srchStr = '_jnt'
+    rplcStr = '_ctrl'
 
-	ctrlZeroGrpLs = []
+    ctrlZeroGrpLs = []
 
-	for jnt in jntLs:
-		crv = tak_createCtrl.createCurve('circle')
-		ctrlName = re.sub(srchStr, rplcStr, jnt)
-		cmds.rename(crv, ctrlName)
+    for jnt in jntLs:
+        crv = tak_createCtrl.createCurve('circleX')
+        ctrlName = re.sub(srchStr, rplcStr, jnt)
+        cmds.rename(crv, ctrlName)
 
-		ctrlZeroGrp = createCtrlGrp(ctrlName)
+        ctrlZeroGrp = createCtrlGrp(ctrlName)
 
-		cmds.delete(cmds.parentConstraint(jnt, ctrlZeroGrp, mo=False))
+        cmds.delete(cmds.parentConstraint(jnt, ctrlZeroGrp, mo=False))
 
-		cmds.parentConstraint(ctrlName, jnt, mo=True)
+        cmds.parentConstraint(ctrlName, jnt, mo=True)
 
-		lockAndHideAttr(ctrlName)
+        lockAndHideAttr(ctrlName)
 
-		ctrlZeroGrpLs.append(ctrlZeroGrp)
+        ctrlZeroGrpLs.append(ctrlZeroGrp)
 
-	glbCtrl = tak_createCtrl.createCurve('masterAnim')
-	glbCtrlName = cmds.rename(glbCtrl, 'global_ctrl')
-	doGroup(glbCtrlName, '_zero')
+    glbACtrl = tak_createCtrl.createCurve('circleY')
+    glbACtrlName = cmds.rename(glbACtrl, 'global_a_ctrl')
+    doGroup(glbACtrlName, '_zero')
 
-	doNotTouchGrp = cmds.group(jntLs, n='doNotTouch_grp')
-	ctrlGrp = cmds.group(ctrlZeroGrpLs, n='ctrl_grp')
-	cmds.parent(doNotTouchGrp, ctrlGrp, glbCtrlName)
+    glbBCtrl = tak_createCtrl.createCurve('circleY')
+    glbBCtrlName = cmds.rename(glbBCtrl, 'global_b_ctrl')
+    glbBCtrlZeroGrp = doGroup(glbBCtrlName, '_zero')
+    cmds.parent(glbBCtrlZeroGrp, glbACtrlName)
 
-	rigGrp = cmds.group(glbCtrlName + '_zero', n='rig_grp')
+    doNotTouchGrp = cmds.group(jntLs, n='doNotTouch_grp')
+    ctrlGrp = cmds.group(ctrlZeroGrpLs, n='ctrl_grp')
+    cmds.parent(doNotTouchGrp, ctrlGrp, glbBCtrlName)
 
-	cmds.parent(rigGrp, 'root')
+    rigGrp = cmds.group(glbACtrlName + '_zero', n='rig')
+
+    cmds.parent(rigGrp, 'root')
+
+    lockAndHideAttr(glbBCtrlName)
 
 
 def createCtrlGrp(ctrl):

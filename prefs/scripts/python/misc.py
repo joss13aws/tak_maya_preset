@@ -752,3 +752,23 @@ def findMirrorVtx(mirrorPoint, vtxList, searchTolerance):
             minDistance = vec.length()
             resultVtx = vtx
     return resultVtx
+
+
+# Add Control Curve to the Joints #
+import pymel.core as pm
+import takAutoRig
+import re
+import tak_misc
+
+search = '_bnd_jnt'
+replace = '_ctrl'
+shape = 'circleX'
+
+jnts = pm.selected()
+for jnt in jnts:
+    ctrlName = re.sub(search, replace, jnt.name())
+    controller = takAutoRig.base.control.Controller(ctrlName, shape)
+    controller.create()
+    controller.parentShape(jnt)
+    jnt.rename(ctrlName)
+    tak_misc.doGroup(jnt.name(), '_zero')
