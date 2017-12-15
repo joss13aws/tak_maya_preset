@@ -17,10 +17,12 @@ tak_ribbonIKFK.ribbonIKFK()
 import maya.cmds as cmds
 import maya.mel as mel
 import tak_misc
+reload(tak_misc)
 import re
 
 # Load matrixNodes plug in for using decompose matrix node
-cmds.loadPlugin('matrixNodes.mll')
+if not cmds.pluginInfo('matrixNodes.mll', q=True, loaded=True):
+    cmds.loadPlugin('matrixNodes.mll')
 
 
 
@@ -44,8 +46,8 @@ class ribbonIKFK(object):
 		cls.uiWdgDic['mainColLo'] = cmds.columnLayout(p = cls.uiWdgDic['winName'], adj = True)
 
 		cls.uiWdgDic['preChkBoxGrp'] = cmds.checkBoxGrp(p = cls.uiWdgDic['mainColLo'], label = "Preview Options: ", numberOfCheckBoxes = 2, labelArray2 = ['Rebuild Curve', 'Auto Orient Controls and Joints'], v1 = True, v2 = True)
-		cls.uiWdgDic['numCtrlIntSldrGrp'] = cmds.intSliderGrp(p = cls.uiWdgDic['mainColLo'], label = 'Number of Controls: ', field = True, min = 3, max = 50, v = 5, cc = cls.numCtrlCC)
-		cls.uiWdgDic['numJntIntSldrGrp'] = cmds.intSliderGrp(p = cls.uiWdgDic['mainColLo'], label = 'Number of Joints: ', field = True, min = 5, max = 200, v = 9, cc = cls.numJntsCC)
+		cls.uiWdgDic['numCtrlIntSldrGrp'] = cmds.intSliderGrp(p = cls.uiWdgDic['mainColLo'], label = 'Number of Controls: ', field = True, min = 3, max = 50, v = 1, step=2, cc = cls.numCtrlCC)
+		cls.uiWdgDic['numJntIntSldrGrp'] = cmds.intSliderGrp(p = cls.uiWdgDic['mainColLo'], label = 'Number of Joints: ', field = True, min = 5, max = 200, v = 1, cc = cls.numJntsCC)
 
 		cmds.separator(p = cls.uiWdgDic['mainColLo'], style = 'in', h = 10)
 
