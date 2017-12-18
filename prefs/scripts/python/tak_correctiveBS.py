@@ -1530,7 +1530,7 @@ class Functions(object):
 
 		# Create combo expression
 		exprNodeName = drvnAttrName + '_expr'
-		exprStr = '{0}.{1} = `clamp 0 2 ('.format(drvnName, drvnAttrName)
+		exprStr = '{0}.{1} = '.format(drvnName, drvnAttrName)
 
 		# Convert driver data to string for expression
 		for i in xrange(len(drvrDatas)):
@@ -1538,10 +1538,9 @@ class Functions(object):
 			drvrAttrName = drvrDatas[i][1]
 			drvrStartVal = drvrDatas[i][2]
 			drvrEndVal = drvrDatas[i][3]
-			drvrDatas[i] = '(%s.%s / (%s - %s))' %(drvrName, drvrAttrName, drvrEndVal, drvrStartVal)
+			drvrDatas[i] = '`clamp 0 1 (%s.%s / (%s - %s))`' %(drvrName, drvrAttrName, drvrEndVal, drvrStartVal)
 
 		exprStr += ' * '.join(drvrDatas)
-		exprStr += ')`;'
 		cmds.expression(s = exprStr, ae = True, uc = 'all', n = exprNodeName)
 
 		cls.populateCorrectiveTrgList()
