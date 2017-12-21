@@ -995,7 +995,7 @@ def wireOnOff():
 
 
 def plcHldr():
-    selList = cmds.ls(sl=True)
+    selList = cmds.ls(sl=True, fl=True)
     for sel in selList:
         loc = cmds.spaceLocator(n='%s_plcHldr_loc' % (sel))
         if '[' in sel:

@@ -794,15 +794,16 @@ for jnt in selJnts:
         oppositeWeight = pm.PyNode(weight.name().replace('lf_', 'rt_'))
         oppositeWeight.set(val)
 
-# Distribute SDK end value #
-selStickyJnts = pm.ls(os=True)
+# Distribute SDK End Value #
+zipperLipJnts = pm.selected()
+zipperLipJnts.sort(key=lambda x:x.tx.get(), reverse=True)
 maxValue = 10.0
-increment = maxValue / len(selStickyJnts)
-zipValue = 0
-for jnt in selStickyJnts:
-    parentConst = jnt.getChildren()[0]
+increment = maxValue / len(zipperLipJnts)
+endValue = 0
+for jnt in zipperLipJnts:
+    parentConst = jnt.getChildren(type='parentConstraint')[0]
     weightList = parentConst.getWeightAliasList()
-    zipValue += increment
     for weight in weightList:
         animCurve = weight.connections(type='animCurve')[0]
-        animCurve.setUnitlessInput(1, zipValue)
+        animCurve.setUnitlessInput(1, endValue)
+    endValue += increment
