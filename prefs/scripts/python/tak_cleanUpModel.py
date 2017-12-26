@@ -36,49 +36,50 @@ def UI():
     if cmds.window(winName, exists = True):
         cmds.deleteUI(winName)
     cmds.window(winName, title = 'Cleanup Model', mnb = False, mxb = False)
-    
+
     cmds.tabLayout('mainTab', tv = False)
     cmds.columnLayout('procColLay', adj = True)
 
     # unique name section
-    cmds.setParent('procColLay') 
+    cmds.setParent('procColLay')
     cmds.frameLayout(label = 'Correct Naming', collapsable = True, collapse = True)
-    cmds.rowColumnLayout('uniqNameRowColLay', w = 400, numberOfColumns = 2, columnWidth = [(1, 195), (2, 195)], columnSpacing = [(2, 5), (3, 5)])
-    cmds.button('uniqTransformButt', label = 'Unique Transform Name', c = uniqTransformName)
-    cmds.button('autoUniqButt', label = 'Auto Unique Name', c = autoUniqName)
+    cmds.rowColumnLayout('uniqNameRowColLay', numberOfColumns=2, columnSpacing=[(2, 5), (3, 5)])
+    cmds.button('uniqTransformButt', w=194, label='Unique Transform Name', c=uniqTransformName)
+    cmds.button('autoUniqButt', w=194, label='Auto Unique Name', c=autoUniqName)
 
     # Check the mesh errors
-    cmds.setParent('procColLay') 
+    cmds.setParent('procColLay')
     cmds.separator(h = 5, style = 'in')
     cmds.frameLayout(label = 'Polygon Error Check', collapsable = True, collapse = True)
-    cmds.rowColumnLayout('mdlErrChkRowColLay', numberOfColumns = 4, columnSpacing = [(2, 5), (3, 5), (4, 5)])
-    cmds.button(label = 'Nonmanifold Geometry', c = '''mel.eval('polyCleanupArgList 3 { "0","2","1","0","0","0","0","0","0","1e-005","0","1e-005","0","1e-005","0","1","0" };selectMode -component;selectType -pv true;string $selLs[] = `ls -sl`;if(size($selLs) == 0){selectMode -object;}')''')
-    cmds.button(label = '5+ Sided Face', c = '''mel.eval('polyCleanupArgList 3 { "0","2","1","0","1","0","0","0","0","1e-005","0","1e-005","0","1e-005","0","-1","0" };')''')
-    cmds.button(label = 'Overlaped Vertex', c = '''mel.eval('polyCleanupArgList 3 { "0","2","1","0","0","0","0","0","0","1e-005","1","1e-005","0","1e-005","0","-1","0" };setComponentPickMask "Point" true;PolySelectConvert 3;')''')
-    cmds.button(label = 'Default Material', c = 'import tak_misc\nreload(tak_misc)\ntak_misc.useDfltMat()')
+    cmds.rowColumnLayout('mdlErrChkRowColLay', numberOfColumns = 2, columnSpacing = [(2, 5), (3, 5)])
+    cmds.button(label = 'Nonmanifold Geometry', w=194, c='''mel.eval('polyCleanupArgList 3 { "0","2","1","0","0","0","0","0","0","1e-005","0","1e-005","0","1e-005","0","1","0" };selectMode -component;selectType -pv true;string $selLs[] = `ls -sl`;if(size($selLs) == 0){selectMode -object;}')''')
+    cmds.button(label = 'Overlapped Vertex', w=194, c='''mel.eval('polyCleanupArgList 3 { "0","2","1","0","0","0","0","0","0","1e-005","1","1e-005","0","1e-005","0","-1","0" };setComponentPickMask "Point" true;PolySelectConvert 3;')''')
 
     cmds.setParent('procColLay')
     cmds.separator(h = 5, style = 'in')
     cmds.frameLayout(label = 'Manual Check List', collapsable = True, collapse = True)
-    cmds.checkBox('combineChkBox', label = '좌우대칭 모델( 눈썹, 속눈썹, 손... ) Material 같다면 Combine', cc = partial(chkBoxCC, 'combineChkBox'))    
-    cmds.checkBox('mdlGridChkBox', label = '모델위치 Front/Side에서 Grid 중앙, Grid 바닥 위', cc = partial(chkBoxCC, 'mdlGridChkBox'))
+    cmds.checkBox('mdlGridChkBox', label = '모델위치 Front/Side 에서 Grid 중앙, Grid 바닥 위', cc = partial(chkBoxCC, 'mdlGridChkBox'))
     cmds.checkBox('scaleChkBox', label = '스케일(실크기(성인남성 180cm), 다른캐릭터와 비례)', cc = partial(chkBoxCC, 'scaleChkBox'))
-    cmds.checkBox('dfltStateChkBox', label = 'Deform 된 형태가 아니라 Default 형태( 팔/다리 직선, 발 Z-Axis에 맞춤, 무표정 )', cc = partial(chkBoxCC, 'dfltStateChkBox'))
+    cmds.checkBox('dfltStateChkBox', label = 'Deform 된 형태가 아니라 Default 형태( 팔/다리 직선, 발 Z-Axis 에 맞춤, 무표정 )', cc = partial(chkBoxCC, 'dfltStateChkBox'))
     cmds.checkBox('designCheck', label = '움직였을 때 무리가 없는 구조(관절 등 움직임이 많은 부위 주의)', cc = partial(chkBoxCC, 'designCheck'))
     cmds.checkBox('topoChkBox', label = 'Topology(Flow/Loop, 겹치거나 이어진 파츠(가면, 눈썹, 속눈썹, 신발..) 주의)', cc = partial(chkBoxCC, 'topoChkBox'))
     cmds.checkBox('hiddenChkBox', label = '안보이는 부분( 입 안쪽 피부, 치아, 혀, 눈알... )구조, 텍스쳐', cc = partial(chkBoxCC, 'hiddenChkBox'))
-    cmds.checkBox('OutlinerChkBox', label = 'Outliner 정리( Grouping, Naiming )', cc = partial(chkBoxCC, 'OutlinerChkBox'))
+    cmds.checkBox('combineChkBox', label = '좌우대칭 모델( 눈썹, 속눈썹, 손... ) Material 같다면 Combine', cc = partial(chkBoxCC, 'combineChkBox'))
+    cmds.checkBox('OutlinerChkBox', label = 'Outliner 정리( Grouping, Naming )', cc = partial(chkBoxCC, 'OutlinerChkBox'))
 
     cmds.setParent('procColLay')
     cmds.separator(h = 5, style = 'in')
     cmds.frameLayout('symFrameLo', label = 'Symmetry', collapsable = True, collapse = True)
     cmds.columnLayout('symColLo', adj = True)
-    cmds.rowColumnLayout('checkSymRowColLo', numberOfColumns=4, columnSpacing=[(3, 3), (4, 3)])
-    cmds.text(label='Symmetry Vertex Search Tolerance: ')
+    cmds.rowColumnLayout('checkSymRowColLo', numberOfColumns=3, columnSpacing=[(2, 3), (3, 3)])
+    cmds.text(label='Search Tolerance: ')
     cmds.floatField('ctVtxTolFltFld', v = 0.001)
     cmds.button('symChkButton', label = 'Check Symmetry', c = checkSym)
     cmds.setParent('symColLo')
-    cmds.floatSliderGrp(label='Match Mirror Vertex: ', field=True, value=0.001, min=0.001, max=3.000, step=0.001, cc=matchMirrorVtxPosition)
+    cmds.rowColumnLayout(numberOfColumns=2)
+    cmds.floatSliderGrp(label='Match Sym Vertex: ', field=True, value=0.001, min=0.001, max=3.000, step=0.001, columnWidth=[(1, 93), (2, 40), (3, 150)], cc=matchMirrorVtxPosition)
+    cmds.button(label='translateX to Zero', c=tak_misc.zeroVtx)
+    cmds.setParent('symColLo')
     cmds.separator()
     cmds.text(label = 'Warning! Check uv is correctly copied.\nFor uv comparison recommended to duplicate original mesh.')
     cmds.radioButtonGrp('symSmpSpcRdoBtn', label = 'Sample Space for UV Copy: ', numberOfRadioButtons = 3, labelArray3 = ['World', 'Component', 'Topology'], select = 1, columnWidth = [(2, 70), (3, 100), (4, 70)])
@@ -100,7 +101,7 @@ def UI():
     cmds.button(label = 'Delete History', c = delHis)
     cmds.button('intermButton', label = 'Delete Intermediate Object', c = delInterMediObj)
     cmds.button(label = 'Off Drawing Override of Shape, Double Sided On, Primary visibility On', c = setShpAttrs)
-    cmds.button(label = 'Set Subdivision Method to Maya Catmull-Clark', c = setSubdMayaCatmullClark)
+    # cmds.button(label = 'Set Subdivision Method to Maya Catmull-Clark', c = setSubdMayaCatmullClark)
     cmds.button(label = 'Set Texture Channel to Combined Texture', c = combinedTexture)
     cmds.button(label = 'Into Default Display Layer', c = intoDfltDisLyr)
     cmds.button(label = 'Remove MI Label', c = rmvMILabel)
@@ -111,8 +112,8 @@ def UI():
     cmds.separator(h = 5, style = 'in')
     cmds.text(label = 'facial_grp 정리', bgc = [0.2, 0.5, 0.2], h = 25)
 
-    # Shader Clean Up
-    cmds.setParent('procColLay') 
+    # Material Clean Up
+    cmds.setParent('procColLay')
     cmds.separator(h = 5, style = 'in')
     cmds.frameLayout(label = 'Material Clean Up', collapsable = True, collapse = False)
     cmds.rowColumnLayout('viewShaderRowColLay', numberOfColumns = 3, columnWidth = [(1, 135), (2, 135), (3, 120)], columnSpacing = [(2, 2), (3, 2)])
@@ -128,7 +129,7 @@ def UI():
     cmds.button(label = 'Delete Empty Transform', c = delEmptyTrnsf)
     cmds.button('layerButton', label = 'Delete Display and Render Layers', c = delLayer)
     cmds.button(label = 'Set Up Group Hierarchy Structure for Pipeline', c = pipeHier)
-    
+
     cmds.window(winName, edit = True, w = 400, h = 300)
     cmds.showWindow(winName)
 
@@ -150,7 +151,7 @@ def combineObjByMat(*args):
     matLs = getMatLs(selLs)
 
     # Iterate for materials
-    for mat in matLs:     
+    for mat in matLs:
         # Select by material
         cmds.hyperShade(objects = mat)
 
@@ -186,7 +187,7 @@ def getTrsfLs(selLs):
     '''
 
     trsfLs = []
-    
+
     for sel in selLs:
         objType = cmds.objectType(sel)
         if objType == 'transform':
@@ -230,11 +231,11 @@ def sepCombineByMat(mode, *args):
 
                     shpCorFaces = getCorrespondFaces(faceShp, faces)
                     dupGeoFaces = replaceGeoName(dupGeo[0], shpCorFaces)
-                    
+
                     cmds.select(dupGeoFaces, r = True)
                     cmds.InvertSelection()
                     cmds.delete()
-                    
+
                     # Remove faces from shading group
                     shapeName = cmds.listRelatives(dupGeo, ni = True, path = True, s = True)
                     sgName = list(set(cmds.listConnections('%s.instObjGroups.objectGroups' %shapeName[0], d = True, type = "shadingEngine")))
@@ -280,7 +281,7 @@ def faceAssignedMat(geoLs):
             sgName = cmds.listConnections('%s.instObjGroups.objectGroups' %shapeName[0], d = True, type = "shadingEngine")
             matName = cmds.ls(cmds.listConnections(sgName), materials = True)
             matLs.extend(matName)
-    
+
     return list(set(matLs))
 
 
@@ -340,12 +341,12 @@ def assignSurfMatWithFileTex(*args):
     cmds.connectAttr('%s.outColor' %lamShd, '%s.surfaceShader' %shadingEngine, f = True)
 
 
-def assignSurfMatWithPickColor(*args):   
+def assignSurfMatWithPickColor(*args):
     selGeo = cmds.ls( sl=True )[0]
-    
+
     shapeName = cmds.ls( selGeo, s=True, dag=True )
     shadingEngine = cmds.listConnections( shapeName, d=True, type="shadingEngine" )[0]
-    
+
     color = cmds.grabColor(rgb = True)
 
     shaderName = cmds.shadingNode( 'lambert', n='%s_solCol_mat' %selGeo, asShader=True )
@@ -388,7 +389,7 @@ def uniqTransformName(*args):
     cmds.menuItem(label = 'Refresh List', c = utnPopuTexScr)
     cmds.menuItem(label = 'Delete Selected', c = utnDelSel)
     cmds.window('utnWin', e = True, w = 300, h = 300)
-    
+
     result = notUniqNameExsistChk()
 
     if result:
@@ -412,10 +413,10 @@ def utnDoubClicCmd(*args):
     origName = cmds.textScrollList('utnTexScr', q = True, selectItem = True)[0]
     origNiceName = origName.rsplit('|')[-1]
     result = cmds.promptDialog(title = 'Rename Object',
-                               message = 'Enter Name:', 
-                               button = ['OK', 'Cancel'], 
-                               defaultButton = 'OK', 
-                               cancelButton = 'Cancel', 
+                               message = 'Enter Name:',
+                               button = ['OK', 'Cancel'],
+                               defaultButton = 'OK',
+                               cancelButton = 'Cancel',
                                dismissString = 'Cancel',
                                text = origNiceName)
     if result == 'OK':
@@ -436,11 +437,11 @@ def notUniqNameExsistChk():
     else:
         return False
 
-	
+
 def texScrListSelCmd(widgetName, *args):
     selItem = cmds.textScrollList(widgetName, q = True, selectItem = True)
     cmds.select(selItem, r = True)
-    
+
 def autoUniqName(*args):
     sceneList = cmds.ls()
     notUniqTranList = []
@@ -469,14 +470,14 @@ def autoUniqName(*args):
 	notUniqTranDic.pop(k)
 	i -= 1
 	n += 1
-    
+
 def matchShape(*args):
     selList = cmds.ls(sl = True, type = 'transform')
 
     for sel in selList:
         # Get shape name
         shpLs = cmds.listRelatives(sel, s = True, fullPath = True)
-        
+
         if shpLs:
             shapName = shpLs[0]
 
@@ -502,7 +503,7 @@ def selVtx(*args):
 	numOfVtx = len(sel)
     threshold = cmds.floatField('mergeVtxThres', q = True, v = True)
     matchingVtxList = []
-    
+
     # progressionBar
     if cmds.window('progWin', exists = True): cmds.deleteUI('progWin')
     cmds.window('progWin', title = 'Searching vertices...')
@@ -510,12 +511,12 @@ def selVtx(*args):
     cmds.progressBar('vtxProgBar', minValue = 0, maxValue = numOfVtx, width = 300, isMainProgressBar = True, beginProgress = True, isInterruptable = True)
     cmds.window('progWin', e = True, w = 300, h = 10)
     cmds.showWindow('progWin')
-    
+
     for i in xrange(numOfVtx):
-        if cmds.progressBar('vtxProgBar', q = True, isCancelled = True): 
+        if cmds.progressBar('vtxProgBar', q = True, isCancelled = True):
             break
         cmds.progressBar('vtxProgBar', e = True, step = 1)
-        
+
         if not 'vtx' in str(sel):
 	    vtxPosA = cmds.pointPosition('%s.vtx[%d]' %(sel, i), world = True)
 	else:
@@ -535,7 +536,7 @@ def selVtx(*args):
 		else:
 		    matchingVtxList.append(sel[i])
 		    matchingVtxList.append(sel[v])
-                
+
     cmds.progressBar('vtxProgBar', e = True, endProgress = True)
     cmds.deleteUI('progWin')
     # remove repeated items
@@ -546,7 +547,7 @@ def selVtx(*args):
     else:
 	cmds.select(cl = True)
         mel.eval('print "No vertices to match."')
-            
+
 def mergeVtx(*args):
     threshold = cmds.floatField('mergeVtxThres', q = True, v = True)
     cmds.polyMergeVertex(distance = threshold)
@@ -581,7 +582,7 @@ def getVtxInfo(sel):
     	if iPos[0] > 0:
     	    leftVtxDic['%s.vtx[%d]' %(sel, i)] = tuple(iPos)
     	if iPos[0] < 0:
-    	    rightVtxDic['%s.vtx[%d]' %(sel, i)] = tuple(iPos)	
+    	    rightVtxDic['%s.vtx[%d]' %(sel, i)] = tuple(iPos)
     return leftVtxDic, rightVtxDic, centerVtxDic
 
 def getSidestVtx(vtxInfoDic):
@@ -671,7 +672,7 @@ def makeSym(*args):
 
         cmds.select(centerEdgeLoop, r = True)
         cmds.DetachComponent()
-       
+
         leftVtxDic, rightVtxDic, centerVtxDic = getVtxInfo(objName)
 
         symOpt = cmds.radioButtonGrp('symOptRadButGrp', q = True, select = True)
@@ -690,7 +691,7 @@ def makeSym(*args):
             # mirror geometry
             mirrorNode = cmds.polyMirrorFace(objName, ws = True, direction = 1, mergeMode = 0, mergeThreshold = 0.001, ch = True)
             cmds.polyMirrorFace(mirrorNode, e = True, pivotX = 0.0)
-        
+
         # If user select '-x to x' mean right to left.
         if symOpt == 2:
             leftestVtx = getSidestVtx(leftVtxDic)
@@ -710,9 +711,9 @@ def makeSym(*args):
     else:
         objName = selLs[0]
         uvKeepGeo = cmds.duplicate(objName, n = '{0}_uvKeep_geo'.format(objName))
-       
+
         leftVtxDic, rightVtxDic, centerVtxDic = getVtxInfo(objName)
-        
+
         symOpt = cmds.radioButtonGrp('symOptRadButGrp', q = True, select = True)
 
         if centerVtxDic.keys():
@@ -731,7 +732,7 @@ def makeSym(*args):
             # mirror geometry
             mirrorNode = cmds.polyMirrorFace(objName, ws = True, direction = 1, ch = True)
             cmds.polyMirrorFace(mirrorNode, e = True, pivotX = 0.0)
-        
+
         # If user select 'x to -x' mean right to left.
         if symOpt == 2:
             cmds.select(leftVtxDic.keys(), r = True)
@@ -742,13 +743,13 @@ def makeSym(*args):
             mirrorNode = cmds.polyMirrorFace(objName, ws = True, direction = 1, ch = True)
             cmds.polyMirrorFace(mirrorNode, e = True, pivotX = 0.0)
 
-    
+
     leftVtxDic, rightVtxDic, centerVtxDic = getVtxInfo(objName)
     if centerVtxDic.keys():
         cmds.select(centerVtxDic.keys(), r = True)
         cmds.polyMergeVertex(distance = 0.001)
 
-  
+
     # Copy uv from uv keeped geometry to new symmetrized geometry.
     smpSpc = cmds.radioButtonGrp('symSmpSpcRdoBtn', q = True, select = True)
     if smpSpc == 2:
@@ -759,7 +760,7 @@ def makeSym(*args):
 
     # cmds.select(objName, r = True)
     # mel.eval("SoftPolyEdgeElements 1;")
-    
+
     # cmds.select(objName, r = True)
     # mel.eval('polyNormalPerVertex -ufn true;')
 
@@ -777,7 +778,7 @@ def tglTwoSidedLit(*args):
     hudWdgName = 'twoSidedHud'
 
     curPanel = cmds.paneLayout('viewPanes', q = True, pane1= True)
-    if cmds.modelEditor(curPanel, q = True, twoSidedLighting = True):        
+    if cmds.modelEditor(curPanel, q = True, twoSidedLighting = True):
         cmds.modelEditor(curPanel, e = True, twoSidedLighting = False)
         cmds.headsUpDisplay(hudWdgName, remove = True)
     else:
@@ -787,12 +788,12 @@ def tglTwoSidedLit(*args):
 
 
 
-        
+
 def cleanChBox(*args):
     mel.eval('source channelBoxCommand;')
     attrList = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ', 'visibility']
     selList = cmds.ls(sl = True)
-    
+
     for sel in selList:
         # If sel is shape, skip sel.
         if cmds.objectType(sel) == 'mesh' or "Shape" in sel:
@@ -858,7 +859,7 @@ def freTranPopuTexScr(nonFreTranList):
     if cmds.textScrollList('freTranTexScr', q = True, allItems = True):
         cmds.textScrollList('freTranTexScr', e = True, removeAll = True)
     # populate scroll list with nonFreTranList
-    cmds.textScrollList('freTranTexScr', e = True, append = nonFreTranList)    
+    cmds.textScrollList('freTranTexScr', e = True, append = nonFreTranList)
 
 def freTranSel(*args):
     cmds.makeIdentity(apply = True)
@@ -876,7 +877,7 @@ def resetVtx(*args):
 
     # progress window
     cmds.progressWindow(title = 'Reset Vertex', minValue = 0, maxValue = len(selList), progress = 0, status = 'Stand by', isInterruptable = True)
-    
+
     for sel in selList:
         if cmds.progressWindow(q = True, isCancelled = True):
         	break
@@ -894,7 +895,7 @@ def resetVtx(*args):
 
     cmds.progressWindow(e = True, progress = 0, status = 'Reset Vertex Work Done.')
     cmds.progressWindow(endProgress = True)
-    
+
     cmds.select(selList, r = True)
 
 
@@ -915,7 +916,7 @@ def delInterMediObj(*args):
 	    itmdShapList = cmds.ls(sel, dag = True, s = True, io = True)
 	    for shap in itmdShapList:
 		    intmResult = cmds.getAttr('%s.intermediateObject' %(shap))
-		    if intmResult: 
+		    if intmResult:
 			cmds.delete(shap)
 			print 'Intermediate object "%s" is deleted.' %shap
 
@@ -977,7 +978,7 @@ def delUnused(*args):
 
 
 
-		    
+
 def delNamespace(*args):
     namespaceList = cmds.namespaceInfo(lon = True)
     ignoreNamespaces = ['UI', 'shared']
@@ -985,28 +986,28 @@ def delNamespace(*args):
 	if not _namespace in ignoreNamespaces:
             cmds.NamespaceEditor()
             break
-	    
 
 
 
-		    
+
+
 def delLayer(*args):
     cmds.editRenderLayerGlobals(currentRenderLayer = 'defaultRenderLayer')
     disLayList = cmds.ls(type = 'displayLayer')
     renLayList = cmds.ls(type = 'renderLayer')
-    
+
     for disLay in disLayList:
 	if disLay != 'defaultLayer':
 	    cmds.delete(disLay)
-	    
+
     for renLay in renLayList:
 	if renLay != 'defaultRenderLayer':
 	    cmds.delete(renLay)
 
 
-	    
 
-	    
+
+
 def pipeHier(*args):
     '''
     Build group hierarchy structure depend on pipeline.
@@ -1014,9 +1015,9 @@ def pipeHier(*args):
 
     # Create pipeline hierarchy structure.
     hierDic = { 'wip_GRP': ['base_body_grp', 'light_cam_grp'],
-                'root': ['geometry'], 
-                'geometry': ['lod03_GRP', 'hair_fur_grp'], 
-                'lod03_GRP': ['facial_grp', 'body_grp', 'cloth_grp', 'polyHair_grp'], 
+                'root': ['geometry'],
+                'geometry': ['lod03_GRP', 'hair_fur_grp'],
+                'lod03_GRP': ['facial_grp', 'body_grp', 'cloth_grp', 'polyHair_grp'],
                 'hair_fur_grp': ['renderHair_grp', 'hairSystem_grp', 'input_crv_grp', 'output_crv_grp']}
 
     for item in hierDic.keys():

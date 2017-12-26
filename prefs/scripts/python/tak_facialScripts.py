@@ -744,7 +744,7 @@ select(ikhs, r=True)
 
 
 
-# Zip Lip #
+# Zipper Lip #
 
 import pymel.core as pm
 
@@ -760,7 +760,7 @@ for jnt in selJnts:
     parentConstraintNode = jnt.getChildren()[0]
     parentConstraintNode.jaw_lockW0.set(weight*weight)
 
-# Lip Zip Joints rampValsNode Set Up #
+# Zipper Lip Joints rampValuesNode Set Up #
 import pymel.core as pm
 jnts = pm.selected()
 
@@ -807,3 +807,51 @@ for jnt in zipperLipJnts:
         animCurve = weight.connections(type='animCurve')[0]
         animCurve.setUnitlessInput(1, endValue)
     endValue += increment
+
+
+
+# Facial Tertiary #
+def createProjectedCurve(locators, nurbsSurface, name='projected_crv'):
+    follicles = []
+    positions = []
+    for locator in locators:
+        follicleTransform = createProjectedFollicle(locator, nurbsSurface)
+        follicles.append(follicleTransform)
+        positions.append(follicleTransform.getTranslation(space='world'))
+
+    curve = pm.curve(d=3, p=positions, n=name)
+
+    for follicle in follicles:
+        decomposeMatrix = pm.createNode('decomposeMatrix', n='%s_decomposeMatrix' % follicle)
+        follicle.worldMatrix >> decomposeMatrix.inputMatrix
+        decomposeMatrix.outputTranslate >> curve.getShape().controlPoints[follicles.index(follicle)]
+
+
+def createProjectedFollicle(locator, nurbsSurface):
+    nurbsSurfaceShape = nurbsSurface.getShape()
+
+    # Create nodes
+    closestPointOnSurface = pm.createNode('closestPointOnSurface', n='%s_ClstPntOnSrfc' % locator.name())
+    multiplyDivide = pm.createNode('multiplyDivide', n='%s_munDiv' % locator.name())
+    follicleShape = pm.createNode('follicle', n='%s_follicleShape' % locator.name())
+    follicleTransform = follicleShape.getTransform()
+
+    # Connect nodes
+    locator.getShape().worldPosition >> closestPointOnSurface.inPosition
+    nurbsSurfaceShape.worldSpace >> closestPointOnSurface.inputSurface
+
+    closestPointOnSurface.parameterU >> multiplyDivide.input1X
+    closestPointOnSurface.parameterV >> multiplyDivide.input1Y
+    nurbsSurfaceShape.minMaxRangeU.maxValueU >> multiplyDivide.input2X
+    nurbsSurfaceShape.minMaxRangeV.maxValueV >> multiplyDivide.input2Y
+    multiplyDivide.operation.set(2)
+
+    multiplyDivide.outputX >> follicleShape.parameterU
+    multiplyDivide.outputY >> follicleShape.parameterV
+    nurbsSurfaceShape.worldSpace >> follicleShape.inputSurface
+    nurbsSurfaceShape.worldMatrix >> follicleShape.inputWorldMatrix
+
+    follicleShape.outTranslate >> follicleTransform.translate
+    follicleShape.outRotate >> follicleTransform.rotate
+
+    return follicleTransform

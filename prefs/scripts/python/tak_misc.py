@@ -1094,7 +1094,7 @@ def crvFromSels(*args):
         cmds.closeCurve(crv, ps=1, rpo=1, bb=0.5, bki=0, p=0.1)
 
 
-def zeroVtx():
+def zeroVtx(*args):
     selVtxs = cmds.ls(sl=True, fl=True)
     for vtx in selVtxs:
         vtxPos = cmds.pointPosition(vtx, world=True)
