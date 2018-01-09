@@ -43,9 +43,10 @@ def UI():
     # unique name section
     cmds.setParent('procColLay')
     cmds.frameLayout(label = 'Correct Naming', collapsable = True, collapse = True)
-    cmds.rowColumnLayout('uniqNameRowColLay', numberOfColumns=2, columnSpacing=[(2, 5), (3, 5)])
-    cmds.button('uniqTransformButt', w=194, label='Unique Transform Name', c=uniqTransformName)
-    cmds.button('autoUniqButt', w=194, label='Auto Unique Name', c=autoUniqName)
+    cmds.rowColumnLayout('uniqNameRowColLay', numberOfColumns=3, columnSpacing=[(2, 5), (3, 5)])
+    cmds.button(label="Check Namespace", w=127, c=chkNamespace)
+    cmds.button('uniqTransformButt', w=127, label='Unique Transform Name', c=uniqTransformName)
+    cmds.button('autoUniqButt', w=127, label='Auto Unique Name', c=autoUniqName)
 
     # Check the mesh errors
     cmds.setParent('procColLay')
@@ -59,10 +60,10 @@ def UI():
     cmds.separator(h = 5, style = 'in')
     cmds.frameLayout(label = 'Manual Check List', collapsable = True, collapse = True)
     cmds.checkBox('mdlGridChkBox', label = '모델위치 Front/Side 에서 Grid 중앙, Grid 바닥 위', cc = partial(chkBoxCC, 'mdlGridChkBox'))
-    cmds.checkBox('scaleChkBox', label = '스케일(실크기(성인남성 180cm), 다른캐릭터와 비례)', cc = partial(chkBoxCC, 'scaleChkBox'))
-    cmds.checkBox('dfltStateChkBox', label = 'Deform 된 형태가 아니라 Default 형태( 팔/다리 직선, 발 Z-Axis 에 맞춤, 무표정 )', cc = partial(chkBoxCC, 'dfltStateChkBox'))
-    cmds.checkBox('designCheck', label = '움직였을 때 무리가 없는 구조(관절 등 움직임이 많은 부위 주의)', cc = partial(chkBoxCC, 'designCheck'))
-    cmds.checkBox('topoChkBox', label = 'Topology(Flow/Loop, 겹치거나 이어진 파츠(가면, 눈썹, 속눈썹, 신발..) 주의)', cc = partial(chkBoxCC, 'topoChkBox'))
+    cmds.checkBox('scaleChkBox', label = '스케일( 실크기(성인남성 180cm), 다른캐릭터와 비례(Rig 이용) )', cc = partial(chkBoxCC, 'scaleChkBox'))
+    cmds.checkBox('dfltStateChkBox', label = 'Default Pose( 팔/다리 직선, 발 Z-Axis 에 맞춤, 무표정 )', cc = partial(chkBoxCC, 'dfltStateChkBox'))
+    cmds.checkBox('designCheck', label = '움직였을 때 무리가 없는 디자인( 관절 등 움직임이 큰 부분 주의 )', cc = partial(chkBoxCC, 'designCheck'))
+    cmds.checkBox('topoChkBox', label = 'Topology( Anatomical/Continuous Flow, Proper Resolution, Quad )', cc = partial(chkBoxCC, 'topoChkBox'))
     cmds.checkBox('hiddenChkBox', label = '안보이는 부분( 입 안쪽 피부, 치아, 혀, 눈알... )구조, 텍스쳐', cc = partial(chkBoxCC, 'hiddenChkBox'))
     cmds.checkBox('combineChkBox', label = '좌우대칭 모델( 눈썹, 속눈썹, 손... ) Material 같다면 Combine', cc = partial(chkBoxCC, 'combineChkBox'))
     cmds.checkBox('OutlinerChkBox', label = 'Outliner 정리( Grouping, Naming )', cc = partial(chkBoxCC, 'OutlinerChkBox'))
@@ -125,7 +126,6 @@ def UI():
     cmds.separator(h = 5, style = 'in')
     cmds.frameLayout(label = 'Extra Procedures', collapsable = True, collapse = True)
     cmds.columnLayout(adj = True)
-    cmds.button('namespaceButton', label = 'Check Namespace', c = delNamespace)
     cmds.button(label = 'Delete Empty Transform', c = delEmptyTrnsf)
     cmds.button('layerButton', label = 'Delete Display and Render Layers', c = delLayer)
     cmds.button(label = 'Set Up Group Hierarchy Structure for Pipeline', c = pipeHier)
@@ -377,6 +377,17 @@ def uninstance(*args):
 
 
 
+def chkNamespace(*args):
+    '''
+    Check unused namespace.
+    '''
+
+    namespaceList = cmds.namespaceInfo(lon=True)
+    ignoreNamespaces = ['UI', 'shared']
+    for _namespace in namespaceList:
+        if not _namespace in ignoreNamespaces:
+            cmds.NamespaceEditor()
+            break
 
 def uniqTransformName(*args):
     # UI
@@ -979,17 +990,6 @@ def delUnused(*args):
 
 
 
-def delNamespace(*args):
-    namespaceList = cmds.namespaceInfo(lon = True)
-    ignoreNamespaces = ['UI', 'shared']
-    for _namespace in namespaceList:
-	if not _namespace in ignoreNamespaces:
-            cmds.NamespaceEditor()
-            break
-
-
-
-
 
 def delLayer(*args):
     cmds.editRenderLayerGlobals(currentRenderLayer = 'defaultRenderLayer')
@@ -1074,7 +1074,6 @@ def freezeTrnf(*args):
 
     # Get place3dTexture nodes.
     plc3dTexLs = cmds.ls(sl = True, dag = True, type = 'place3dTexture')
-    print plc3dTexLs
 
     # Get place3dTexture nodes's parent group.
     plc3dTexGrpLs = []
@@ -1083,7 +1082,6 @@ def freezeTrnf(*args):
 
     plc3dTexGrpLs = list(set(plc3dTexGrpLs))
 
-    print plc3dTexGrpLs
 
     # Get ordered list for group.
     plc3dTexDic = {}
@@ -1098,7 +1096,6 @@ def freezeTrnf(*args):
 
     # Remove place3dTexture in selection list.
     for plce3dTex in plc3dTexLs:
-        print plce3dTex
         sels.remove(plce3dTex)
 
     # Freeze transform.

@@ -129,3 +129,11 @@ class Controller(object):
             pm.parent(shape, target, s=True, r=True)
 
         pm.delete(self.controller)
+
+    def setScale(self, scale):
+        """ Multiply to current scale """
+        controlShapes = self.controller.getShapes()
+        for shape in controlShapes:
+            for cv in shape.cv:
+                cv.setPosition(cv.getPosition() * scale)
+            shape.updateCurve()

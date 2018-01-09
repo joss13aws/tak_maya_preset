@@ -24,6 +24,8 @@ import pymel.core as pm
 import tak_cleanUpModel
 import tak_createCtrl
 import tak_lib
+from OBB.api import OBB
+from takAutoRig.base import control
 
 
 def mirJntUi():
@@ -144,12 +146,12 @@ def mirrorObj(*args):
     selList = cmds.ls(sl=True)
 
     for each in selList:
+        dupObjLs = []
 
-        # Determine duplicated object's name.
         newName = re.sub(srchTxt, rplcTxt, each)
 
         # Duplicate
-        cmds.duplicate(each, n=newName, renameChildren=True)
+        dupObjLs.extend(cmds.duplicate(each, n=newName, renameChildren=True))
 
         if selType == 1:  # In case selected object is mesh.
             # Filp duplicated object to opposite x side.
@@ -175,11 +177,9 @@ def mirrorObj(*args):
 
             # Rename child objects
             newChldLs = cmds.listRelatives(newName, ad=True, type='transform')
-            dupObjLs = []
             if newChldLs:
                 for chld in newChldLs:
                     newName = re.sub(srchTxt, rplcTxt, chld)
-                    # Clear int if exists.
                     try:
                         newName = re.match(r'(.*)(\d+)', newName).group(1)
                     except:
@@ -2337,7 +2337,7 @@ def copyTexRename(*args):
     cmds.deleteUI('copyTexWin')
     return subprocess.call(
         ['C:/Python27/python.exe', 'D:/Tak/Program_Presets/tak_scripts/python_scripts/cliResizeImage.py', trgDir,
-         '0.25'])
+         '0.1'])
 
 
 def cntShpGeo():
@@ -2394,27 +2394,48 @@ def simplePropAutoRigging():
     Auto rigging function for simple props like sword, gun... etc.
     """
 
-    jntLs = cmds.ls(sl=True)
-
-    srchStr = '_jnt'
-    rplcStr = '_ctrl'
+    sels = pm.selected()
 
     ctrlZeroGrpLs = []
+    jntLs = []
 
-    for jnt in jntLs:
-        crv = tak_createCtrl.createCurve('circleX')
-        ctrlName = re.sub(srchStr, rplcStr, jnt)
-        cmds.rename(crv, ctrlName)
+    for sel in sels:
+        if isinstance(sel, pm.nodetypes.Joint):
+            srchStr = '_jnt'
+            rplcStr = '_ctrl'
 
-        ctrlZeroGrp = createCtrlGrp(ctrlName)
+            crv = tak_createCtrl.createCurve('circleX')
+            ctrlName = re.sub(srchStr, rplcStr, str(sel))
+            cmds.rename(crv, ctrlName)
 
-        cmds.delete(cmds.parentConstraint(jnt, ctrlZeroGrp, mo=False))
+            ctrlZeroGrp = createCtrlGrp(ctrlName)
 
-        cmds.parentConstraint(ctrlName, jnt, mo=True)
+            cmds.delete(cmds.parentConstraint(str(sel), ctrlZeroGrp, mo=False))
 
-        lockAndHideAttr(ctrlName)
+            cmds.parentConstraint(ctrlName, str(sel), mo=True)
 
-        ctrlZeroGrpLs.append(ctrlZeroGrp)
+            lockAndHideAttr(ctrlName)
+
+            ctrlZeroGrpLs.append(ctrlZeroGrp)
+            jntLs.append(str(sel))
+        else:
+            pm.select(cl=True)
+            jnt = pm.joint(n='%s_jnt' % sel.name(), p=sel.getBoundingBox().center())
+
+            crv = tak_createCtrl.createCurve('circleX')
+            ctrlName = str(sel) + '_ctrl'
+            cmds.rename(crv, ctrlName)
+
+            ctrlZeroGrp = createCtrlGrp(ctrlName)
+
+            cmds.delete(cmds.parentConstraint(str(jnt), ctrlZeroGrp, mo=False))
+
+            cmds.parentConstraint(ctrlName, str(jnt), mo=True)
+
+            lockAndHideAttr(ctrlName)
+
+            ctrlZeroGrpLs.append(ctrlZeroGrp)
+            jntLs.append(str(jnt))
 
     glbACtrl = tak_createCtrl.createCurve('circleY')
     glbACtrlName = cmds.rename(glbACtrl, 'global_a_ctrl')

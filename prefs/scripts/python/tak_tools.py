@@ -52,7 +52,7 @@ def UI():
     cmds.menu('editMenu', label = 'Edit', p = 'takToolWin')
     cmds.menuItem(label = 'Add Tool', c = addToolUi, p = 'editMenu')
 
-    cmds.paneLayout('mainPaneLo', configuration = 'horizontal2', paneSize = [(2, 63, 37)])
+    cmds.paneLayout('mainPaneLo', configuration = 'horizontal2', paneSize = [(2, 50, 50)])
 
     cmds.formLayout('mainFormLo', p = 'mainPaneLo')
 
@@ -200,7 +200,6 @@ def UI():
     cmds.shelfButton(annotation = 'Soft Cluster EX', width = 35, height = 35, imageOverlayLabel = '', image1 = 'softClusterEXIcon.png', command = 'import SoftClusterEX\nSoftClusterEX.launch()', sourceType = 'python')
     cmds.shelfButton(annotation = 'cluster on edge loop', width = 35, height = 35, imageOverlayLabel = '', image1 = 'clusterOnEdgeLoop.bmp', command = 'source tak_ClusterOnEdgeLoop;\nClusterOnEdgeLoop;', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Auto rigging function for simple props like sword, gun... etc.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'simplePropAutoRigging.png', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.simplePropAutoRigging()', sourceType = 'python')
-    cmds.shelfButton(annotation = "def buildGlobalCtrl():\n\t'''\n\tBuild global control with selected ...", width = 35, height = 35, imageOverlayLabel = 'global', image1 = 'pythonFamily.png', command = "def buildGlobalCtrl():\n\t'''\n\tBuild global control with selected control curve.\n\t'''\n\t\n\tsrcCtrl = cmds.ls(sl = True)[0]\t\n\tglobalCtrls = ['global_A_ctrl', 'global_B_ctrl']\n\t\n\tfor globalCtrl in globalCtrls:\n\t\tcmds.duplicate(srcCtrl, n = globalCtrl)\n\t\tglobalCtrlZero = tak_misc.doGroup(globalCtrl, '_zero')\n\t\tpreCtrlIndex = globalCtrls.index(globalCtrl)-1\n\t\tif preCtrlIndex != -1:\n\t\t\tcmds.parent(globalCtrlZero, globalCtrls[preCtrlIndex])\n\nbuildGlobalCtrl()", sourceType = 'python')
 
     cmds.frameLayout('riggingDeformationFrameLo', label = 'Deformation', collapse = False, collapsable = True, p = 'riggingScrLo')
     cmds.shelfLayout('Rigging_Deformation', h = (40 * 3), p = 'riggingDeformationFrameLo')
@@ -235,7 +234,7 @@ def UI():
     cmds.shelfButton(annotation = 'Select affected vertices by a selected influence', width = 35, height = 35, imageOverlayLabel = '', image1 = 'selAffectedVertex.png', command = 'import tak_misc\nreload(tak_misc)\ninf = cmds.ls(sl=True)[0]\ntak_misc.selAffectedVertex(inf)', sourceType = 'python')
 
     cmds.frameLayout('riggingExtraFrameLo', label = 'Extra Tools', collapse = False, collapsable = True, p = 'riggingScrLo')
-    cmds.shelfLayout('Rigging_Extra_Tools', h = (40 * 2), p = 'riggingExtraFrameLo')
+    cmds.shelfLayout('Rigging_Extra_Tools', h = (40 * 3), p = 'riggingExtraFrameLo')
     cmds.shelfButton(annotation = 'makeFolding', width = 35, height = 35, imageOverlayLabel = 'Fold', image1 = 'commandButton.png', command = 'source makeFoldingRig.mel;', sourceType = 'mel')
     cmds.shelfButton(annotation = 'set up auto swim', width = 35, height = 35, imageOverlayLabel = '', image1 = 'autoSwim.bmp', command = 'import tak_autoSwim\nreload(tak_autoSwim)\ntak_autoSwim.UI()', sourceType = 'python')
     cmds.shelfButton(annotation = 'nCloth set up with skined geometry.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'nClothSetUp.png', command = 'import tak_nClothSetUp\nreload(tak_nClothSetUp)\ntak_nClothSetUp.nClothSetUp()', sourceType = 'python')
@@ -260,6 +259,10 @@ def UI():
     cmds.shelfButton(annotation = 'Duplicate Special', width = 35, height = 35, imageOverlayLabel = 'DupS', image1 = 'menuIconEdit.png', command = 'duplicatePreset(1,1,2,0,0,0,1,0,0,0,0,0,0,0,1,1,1)', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Duplicate selected objects with original state and assign unique name.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'dupNoDefUniqName.png', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.dupNoDefUniqName()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Clean up rig to publish.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'cleanUpRig.png', command = 'import tak_cleanUpRig\nreload(tak_cleanUpRig)\ntak_cleanUpRig.ui()', sourceType = 'python')
+    cmds.shelfButton(annotation = 'OBB_BoundingBox', width = 35, height = 35, imageOverlayLabel = '', image1 = 'OBB_boundingBox.png', command = 'from maya import cmds\nfrom OBB.api import OBB\nmeshes = cmds.ls(selection=True)\nif len(meshes) == 0:\n   raise RuntimeError("Nothing selected!")\nfor mesh in meshes:\n    obbBoundBoxPnts = OBB.from_points(mesh)\n    obbCube = cmds.polyCube(ch=False, name="pointMethod_GEO")[0]\n    cmds.xform(obbCube, matrix=obbBoundBoxPnts.matrix)\n    cmds.rename(obbCube, mesh + \'_OBB\')', sourceType = 'python')
+    cmds.shelfButton(annotation = 'OBB_Lattice', width = 35, height = 35, imageOverlayLabel = '', image1 = 'OBB_lattice.png', command = 'from maya import cmds\nfrom OBB.api import OBB\nmesh = cmds.ls(selection=True)\nif len(mesh) == 0:\n   raise RuntimeError("Nothing selected!")\nobbBoundBoxPnts = OBB.from_points(mesh)\nlattice = cmds.lattice(dv=(2, 2, 2),\n                       objectCentered=True,\n                       name="pointMethod_LATTICE\t")\ncmds.xform(lattice[1], matrix=obbBoundBoxPnts.matrix)\ncmds.xform(lattice[2], matrix=obbBoundBoxPnts.matrix)', sourceType = 'python')
+    cmds.shelfButton(annotation = 'documentation', width = 35, height = 35, imageOverlayLabel = '', image1 = 'OBB_docs.png', command = "import webbrowser\nwebbrowser.open('https://obb.readthedocs.org')", sourceType = 'python')
+
 
 
     # animation tab
@@ -277,6 +280,7 @@ def UI():
     cmds.shelfButton(annotation = 'Convert selected keyframe(s) into breakdown tick(s).', width = 35, height = 35, imageOverlayLabel = 'breakdown', image1 = 'breakdown.png', command = 'keyframe -tds on;', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Convert selected keyframe(s) into key tick(s).', width = 35, height = 35, imageOverlayLabel = 'key', image1 = 'key.png', command = 'keyframe -tds off;', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Create ouline.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'bhGhostIcon.png', command = 'source bhGhost.mel;\nbhGhost;', sourceType = 'mel')
+    cmds.shelfButton(annotation = 'Onion Skin Renderer', width = 35, height = 35, imageOverlayLabel = '', image1 = 'D:/Tak/Program_Presets/tak_maya_preset/prefs/icons/onionskin_renderer_icon_32.png', command = 'import onionSkinRenderer.onionSkinRendererWindow as onionWindow\nimport onionSkinRenderer.onionSkinRendererCore as onionCore\nif __name__ == "__main__":\n    try:\n        onionUI.close()\n    except:\n        pass\n\n\n\treload(onionCore)\n\n    onionUI = onionWindow.OnionSkinRendererWindow()\n    onionUI.show()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Create arc of selection.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'arcTracer.bmp', command = 'import ml_arcTracer\nml_arcTracer.ui()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Select object(s) to generate a motion trail over time.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'motionTrail.png', command = 'doMotionTrail 2 { "snapshot  -motionTrail 1  -increment 1 -startTime `playbackOptions -query -min` -endTime `playbackOptions -query -max`", "1","0","0","1","1","1"}', sourceType = 'mel')
 
@@ -331,6 +335,7 @@ def UI():
     cmds.shelfButton(annotation = 'Normals Size...', width = 35, height = 35, imageOverlayLabel = 'NS', image1 = 'menuIconDisplay.png', command = 'ChangeNormalSize', sourceType = 'mel')
     cmds.shelfButton(annotation = '', width = 35, height = 35, imageOverlayLabel = '', image1 = 'polyNormal.png', command = 'ReversePolygonNormals', sourceType = 'mel')
     cmds.shelfButton(annotation = '', width = 35, height = 35, imageOverlayLabel = '', image1 = 'polySoftEdge.png', command = 'SoftPolyEdgeElements 1', sourceType = 'mel')
+    cmds.shelfButton(annotation = 'Harden Edge', width = 35, height = 35, imageOverlayLabel = '', image1 = 'polyHardEdge.png', command = 'SoftPolyEdgeElements 0', sourceType = 'mel')
     cmds.shelfButton(annotation = '', width = 35, height = 35, imageOverlayLabel = '', image1 = 'polyNormalUnlock.png', command = 'polyNormalPerVertex -ufn true', sourceType = 'mel')
 
     cmds.frameLayout('mdlSelFrameLo', label = 'Selection', collapse = False, collapsable = True, p = 'mdlScrLo')

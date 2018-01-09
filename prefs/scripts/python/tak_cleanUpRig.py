@@ -589,17 +589,15 @@ def allInOne(*args):
 	for ncls in nclsLs:
 		cmds.setAttr('%s.visibility' % ncls, False)
 
-	# Turn on smooth preview for render geometry group.
-	if cmds.objExists('lod03_GRP'):
-		cmds.select("lod03_GRP", r=True)
-		mel.eval('setDisplaySmoothness 3;')
-
-	# Turn off smooth preview for low poly group.
+	# Turn off smooth preview
 	if cmds.objExists('lod01_GRP'):
 		cmds.select("lod01_GRP", r=True)
 		mel.eval('setDisplaySmoothness 1;')
 	if cmds.objExists('lod02_GRP'):
 		cmds.select("lod02_GRP", r=True)
+		mel.eval('setDisplaySmoothness 1;')
+	if cmds.objExists('lod03_GRP'):
+		cmds.select("lod03_GRP", r=True)
 		mel.eval('setDisplaySmoothness 1;')
 
 	# Delete Animation Layer #
