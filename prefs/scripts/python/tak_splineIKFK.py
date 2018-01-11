@@ -137,15 +137,15 @@ class SplineIKFK(object):
 			cmds.rebuildCurve(crv, ch = 1, rpo = 1, rt = 0, end = 1, kr = 0, kcp = 0, kep = 1, kt = 0, s = numOfSpan, d = 3, tol = 0)
 
 		# Delete curve bind joint chain if exists it.
-		if cmds.objExists('%s_*_crv_bnd_jnt' %crv):
-			cmds.delete('%s_*_crv_bnd_jnt' %crv)
+		if cmds.objExists('%s_*_crv_jnt' %crv):
+			cmds.delete('%s_*_crv_jnt' %crv)
 
 		# Build joint chain hierarchy for orient joints.
 		cmds.select(cl = True)
 		cls.crvBndJntLs = []
 		for i in xrange(numOfCtrl):
 			crvBndJntPos = cmds.pointPosition('%s.un[%f]' %(crv, unNum), w = True)
-			crvBndJnt = cmds.joint(p = crvBndJntPos, n = '%s_%d_crv_bnd_jnt' %(crv, i), radius = 10)
+			crvBndJnt = cmds.joint(p = crvBndJntPos, n = '%s_%d_crv_jnt' %(crv, i), radius = 10)
 			cls.crvBndJntLs.append(crvBndJnt)
 			unNum += increNum
 		cmds.CompleteCurrentTool()
@@ -189,15 +189,15 @@ class SplineIKFK(object):
 		unNum = 0
 
 		# Delete joint chain if exists it.
-		if cmds.objExists('%s_0_bnd_jnt' %crv):
-			cmds.delete('%s_0_bnd_jnt' %crv)
+		if cmds.objExists('%s_0_jnt' %crv):
+			cmds.delete('%s_0_jnt' %crv)
 
 		# Build joint chain
 		cls.bndJntLs = []
 		cmds.select(cl = True)
 		for i in xrange(numOfJnt):
 			jntPos = cmds.pointPosition('%s.un[%f]' %(crv, unNum), w = True)
-			bndJnt = cmds.joint(p = jntPos, n = '%s_%d_bnd_jnt' %(crv, i))
+			bndJnt = cmds.joint(p = jntPos, n = '%s_%d_jnt' %(crv, i))
 			cls.bndJntLs.append(bndJnt)
 			unNum += increNum
 		cmds.CompleteCurrentTool()
@@ -231,7 +231,7 @@ class SplineIKFK(object):
 		# Create each joint control
 		for jnt in jntLs:
 			# Create cube shape control
-			ctrl = cmds.curve(n = jnt.rsplit('_crv_bnd_jnt')[0] + '_ctrl', d = 1, p = [(-1, 1, 1),(1, 1, 1),(1, 1, -1),(-1, 1, -1),(-1, 1, 1),(-1, -1, 1),(-1, -1, -1),(1, -1, -1),(1, -1, 1),(-1, -1, 1),(1, -1, 1),(1, 1, 1),(1, 1, -1),(1, -1, -1),(-1, -1, -1),(-1, 1, -1)], k = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
+			ctrl = cmds.curve(n = jnt.rsplit('_crv_jnt')[0] + '_ctrl', d = 1, p = [(-1, 1, 1),(1, 1, 1),(1, 1, -1),(-1, 1, -1),(-1, 1, 1),(-1, -1, 1),(-1, -1, -1),(1, -1, -1),(1, -1, 1),(-1, -1, 1),(1, -1, 1),(1, 1, 1),(1, 1, -1),(1, -1, -1),(-1, -1, -1),(-1, 1, -1)], k = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
 			ctrlLs.append(ctrl)
 
 			# Lock and hide unused attributes of control.
@@ -397,7 +397,7 @@ class SplineIKFK(object):
 
 		allGrp = cmds.createNode('transform', n = crv + '_splineIKFK_grp')
 		
-		chldGrpNameLs = ['doNotTouch_grp', 'crv_bnd_jnt_grp', 'bnd_jnt_grp', 'ctrl_grp']
+		chldGrpNameLs = ['doNotTouch_grp', 'crv_jnt_grp', 'bnd_jnt_grp', 'ctrl_grp']
 		hideObjLs = []
 
 		# Create group and parent related nodes.
@@ -407,7 +407,7 @@ class SplineIKFK(object):
 			if grpName == 'doNotTouch_grp':
 				cmds.parent(chldGrp, allGrp)
 
-			if grpName == 'crv_bnd_jnt_grp':
+			if grpName == 'crv_jnt_grp':
 				cmds.parent(crvBndJntLs, chldGrp)
 				cmds.parent(chldGrp, crv + '_doNotTouch_grp')
 				hideObjLs.append(chldGrp)
@@ -437,7 +437,7 @@ class SplineIKFK(object):
 
 		allCtrl = crv + '_all_ctrl'
 
-		cmds.connectAttr('%s.bindJointsVis' %allCtrl, '%s_bnd_jnt_grp.visibility' %crv, f = True)
+		cmds.connectAttr('%s.bindJointsVis' %allCtrl, '%s_jnt_grp.visibility' %crv, f = True)
 
 		for bndJnt in bndJntLs:
 			cmds.connectAttr('%s.scaleY' %allCtrl, '%s.scaleY' %bndJnt, f = True)
@@ -459,7 +459,7 @@ class SplineIKFK(object):
 		geoLs = selLs[1:]
 
 		crv = re.match(r'(.+)_.+_ctrl', ctrl).group(1)
-		bndJntRoot = crv + '_0_bnd_jnt'
+		bndJntRoot = crv + '_0_jnt'
 		bndJnts = cmds.listRelatives(bndJntRoot, ad = True, type = 'joint')
 
 		for geo in geoLs:

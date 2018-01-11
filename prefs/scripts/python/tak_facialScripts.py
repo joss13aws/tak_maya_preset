@@ -6,27 +6,27 @@ reload(tak_lib)
 
 ### Connect Facial Control to ROM Facial Locator with SDK ###
 def cntFacCtrlLocUI():
-	'''
-	UI for connect facial control to range of motion animated locators.
-	'''
+    '''
+    UI for connect facial control to range of motion animated locators.
+    '''
 
-	winName = 'cntFacCtrlLocWin'
+    winName = 'cntFacCtrlLocWin'
 
-	if cmds.window(winName, exists = True):
-		cmds.deleteUI(winName)
+    if cmds.window(winName, exists = True):
+        cmds.deleteUI(winName)
 
-	cmds.window(winName, title = 'Connect Facial Control to Facial Locators')
+    cmds.window(winName, title = 'Connect Facial Control to Facial Locators')
 
-	cmds.columnLayout('mainColLo', adj = True)
-	cmds.rowColumnLayout('drvrRowColLo', p = 'mainColLo', numberOfColumns = 5)
-	cmds.textField('drvrTxtFld', p = 'drvrRowColLo', text = 'Driver Object')
-	cmds.text(p = 'drvrRowColLo', label = '.')
-	cmds.textField('drvrAttrTxtFld', p = 'drvrRowColLo', text = 'Driver Attribute')
-	cmds.textField('drvrMinValTxtFld', p = 'drvrRowColLo', text = 'Min Value')
-	cmds.textField('drvrMaxTxtFld', p = 'drvrRowColLo', text = 'Max Value')
+    cmds.columnLayout('mainColLo', adj = True)
+    cmds.rowColumnLayout('drvrRowColLo', p = 'mainColLo', numberOfColumns = 5)
+    cmds.textField('drvrTxtFld', p = 'drvrRowColLo', text = 'Driver Object')
+    cmds.text(p = 'drvrRowColLo', label = '.')
+    cmds.textField('drvrAttrTxtFld', p = 'drvrRowColLo', text = 'Driver Attribute')
+    cmds.textField('drvrMinValTxtFld', p = 'drvrRowColLo', text = 'Min Value')
+    cmds.textField('drvrMaxTxtFld', p = 'drvrRowColLo', text = 'Max Value')
 
-	cmds.window(winName, e = True, w = 300, h = 300)
-	cmds.showWindow(winName)
+    cmds.window(winName, e = True, w = 300, h = 300)
+    cmds.showWindow(winName)
 
 
 
@@ -35,108 +35,108 @@ def cntFacCtrlLocUI():
 selLs = cmds.ls(sl = True)
 cmds.autoKeyframe(state = False)
 for sel in selLs:	
-	loc = sel
-	prnt = cmds.listRelatives(loc, p = True)[0]
-	attrList = cmds.listAttr(loc, keyable = True)
-	for attr in attrList:
-	    locAttrVal = cmds.getAttr('%s.%s' %(loc, attr))
-	    cmds.setAttr('%s.%s' %(prnt, attr), locAttrVal)
-	    
-	    # Set default value for locator attribute
-	    if 'scale' in attr or 'visibility' in attr:
-	        dftVal = 1
-	    else:
-	        dftVal = 0
-	    cmds.setAttr('%s.%s' %(loc, attr), dftVal)
+    loc = sel
+    prnt = cmds.listRelatives(loc, p = True)[0]
+    attrList = cmds.listAttr(loc, keyable = True)
+    for attr in attrList:
+        locAttrVal = cmds.getAttr('%s.%s' %(loc, attr))
+        cmds.setAttr('%s.%s' %(prnt, attr), locAttrVal)
+        
+        # Set default value for locator attribute
+        if 'scale' in attr or 'visibility' in attr:
+            dftVal = 1
+        else:
+            dftVal = 0
+        cmds.setAttr('%s.%s' %(loc, attr), dftVal)
 
 
 ### Eyebrows ###
 
 def extractShp(normalPoseFrame, downPoseFrame, upPoseFrame, geo):
-	'''
-	Description:
-	Main function.
-	Extract target shape for selected controls.
-	Select controls and select geometry last.
+    '''
+    Description:
+    Main function.
+    Extract target shape for selected controls.
+    Select controls and select geometry last.
 
-	Arguments:
-	normalPoseFrame(int)
-	downPoseFrame(int)
-	upPoseFrame(int)
-	geo(string)
+    Arguments:
+    normalPoseFrame(int)
+    downPoseFrame(int)
+    upPoseFrame(int)
+    geo(string)
 
-	Returns:
-	Nothing
-	'''
+    Returns:
+    Nothing
+    '''
 
-	cmds.autoKeyframe(state = False)
+    cmds.autoKeyframe(state = False)
 
-	ctrls = cmds.ls(sl = True)
+    ctrls = cmds.ls(sl = True)
 
-	# Unlock translate attribute of geo
-	cmds.setAttr('%s.translate' %geo, lock = False)
+    # Unlock translate attribute of geo
+    cmds.setAttr('%s.translate' %geo, lock = False)
 
-	for ctrl in ctrls:
-		# Go to the down pose frame and get translate and rotate
-		ctrlTrns, ctrlRo = getTrRo(ctrl, downPoseFrame)
-		
-		# Back to the normal pose frame and extract target
-		duplicateGeo(normalPoseFrame, ctrl, ctrlTrns, ctrlRo, geo, 'down')
-		
-		# Go to the up pose frame and get translate and rotate
-		ctrlTrns, ctrlRo = getTrRo(ctrl, upPoseFrame)
-		
-		# Back to the normal pose frame and extract target
-		duplicateGeo(normalPoseFrame, ctrl, ctrlTrns, ctrlRo, geo, 'up')
+    for ctrl in ctrls:
+        # Go to the down pose frame and get translate and rotate
+        ctrlTrns, ctrlRo = getTrRo(ctrl, downPoseFrame)
+        
+        # Back to the normal pose frame and extract target
+        duplicateGeo(normalPoseFrame, ctrl, ctrlTrns, ctrlRo, geo, 'down')
+        
+        # Go to the up pose frame and get translate and rotate
+        ctrlTrns, ctrlRo = getTrRo(ctrl, upPoseFrame)
+        
+        # Back to the normal pose frame and extract target
+        duplicateGeo(normalPoseFrame, ctrl, ctrlTrns, ctrlRo, geo, 'up')
 
 
 def getTrRo(ctrl, poseFrame):
-	'''
-	Description:
-	Go to the pose frame and get translate, rotate values.
-	
-	Arguments: 
-	ctrl(string)
-	poseFrame(int)
-	
-	Returns:
-	translateVal(float)
-	rotateVal(float)
-	'''
-	
-	cmds.currentTime(poseFrame)
-	translateVal = cmds.getAttr('%s.translate' %ctrl)
-	rotateVal = cmds.getAttr('%s.rotate' %ctrl)
-	
-	return translateVal, rotateVal
+    '''
+    Description:
+    Go to the pose frame and get translate, rotate values.
+    
+    Arguments: 
+    ctrl(string)
+    poseFrame(int)
+    
+    Returns:
+    translateVal(float)
+    rotateVal(float)
+    '''
+    
+    cmds.currentTime(poseFrame)
+    translateVal = cmds.getAttr('%s.translate' %ctrl)
+    rotateVal = cmds.getAttr('%s.rotate' %ctrl)
+    
+    return translateVal, rotateVal
 
 
 def duplicateGeo(normalPoseFrame, ctrl, trnsVal, roVal, geo, direction):
-	'''
-	Description:
-	Go to the normal pose frame and set translate, rotate then duplicate geometry.
+    '''
+    Description:
+    Go to the normal pose frame and set translate, rotate then duplicate geometry.
 
-	Argumens:
-	normalPoseFrame(int)
-	trnsVal(float)
-	roVal(float)
-	geo(string)
+    Argumens:
+    normalPoseFrame(int)
+    trnsVal(float)
+    roVal(float)
+    geo(string)
 
-	Retruns:
-	Nothing
-	'''
+    Retruns:
+    Nothing
+    '''
 
-	suffix = '_crv_bnd_jnt_loc'
+    suffix = '_crv_jnt_loc'
 
-	cmds.currentTime(normalPoseFrame)
-	cmds.setAttr('%s.translate' %ctrl, trnsVal[0][0], trnsVal[0][1], trnsVal[0][2])
-	cmds.setAttr('%s.rotate' %ctrl, roVal[0][1], roVal[0][1], roVal[0][2])
-	shpName = ctrl.rsplit(suffix)[0] + '_' + direction
-	cmds.duplicate(geo, n = shpName)
-	try:
-		cmds.parent(shpName, world = True)
-	except:
-		pass
+    cmds.currentTime(normalPoseFrame)
+    cmds.setAttr('%s.translate' %ctrl, trnsVal[0][0], trnsVal[0][1], trnsVal[0][2])
+    cmds.setAttr('%s.rotate' %ctrl, roVal[0][1], roVal[0][1], roVal[0][2])
+    shpName = ctrl.rsplit(suffix)[0] + '_' + direction
+    cmds.duplicate(geo, n = shpName)
+    try:
+        cmds.parent(shpName, world = True)
+    except:
+        pass
 
 extractShp(normalPoseFrame = 1, downPoseFrame = 31, upPoseFrame = 11, geo = 'face6')
 
@@ -144,12 +144,12 @@ extractShp(normalPoseFrame = 1, downPoseFrame = 31, upPoseFrame = 11, geo = 'fac
 
 # Select eyebrow locators
 select -cl;
-catch (`select -add "rt_out_eyebrow_crv_bnd_jnt_loc"`);
-catch (`select -add "rt_mid_eyebrow_crv_bnd_jnt_loc"`);
-catch (`select -add "rt_in_eyebrow_crv_bnd_jnt_loc"`);
-catch (`select -add "lf_in_eyebrow_crv_bnd_jnt_loc"`);
-catch (`select -add "lf_mid_eyebrow_crv_bnd_jnt_loc"`);
-catch (`select -add "lf_out_eyebrow_crv_bnd_jnt_loc"`);
+catch (`select -add "rt_out_eyebrow_crv_jnt_loc"`);
+catch (`select -add "rt_mid_eyebrow_crv_jnt_loc"`);
+catch (`select -add "rt_in_eyebrow_crv_jnt_loc"`);
+catch (`select -add "lf_in_eyebrow_crv_jnt_loc"`);
+catch (`select -add "lf_mid_eyebrow_crv_jnt_loc"`);
+catch (`select -add "lf_out_eyebrow_crv_jnt_loc"`);
 
 
 
@@ -161,9 +161,9 @@ catch (`select -add "lf_out_eyebrow_crv_bnd_jnt_loc"`);
 selList = cmds.ls(sl = True)
 baseJntSrc = selList.pop(-1)
 for sel in selList:
-	dupBaseJntSrc = cmds.duplicate(baseJntSrc, n = sel + '_base')[0]
-	cmds.parent(sel, dupBaseJntSrc)
-	cmds.ikHandle(sj = dupBaseJntSrc, ee = sel, solver = 'ikSCsolver', n = sel + '_ikh')
+    dupBaseJntSrc = cmds.duplicate(baseJntSrc, n = sel + '_base')[0]
+    cmds.parent(sel, dupBaseJntSrc)
+    cmds.ikHandle(sj = dupBaseJntSrc, ee = sel, solver = 'ikSCsolver', n = sel + '_ikh')
 
 
 # Aim constraint with last selected object
@@ -171,7 +171,7 @@ selList = cmds.ls(sl = True)
 trgs = selList[0:-1]
 aimObj = selList[-1]
 for trg in trgs:
-	cmds.aimConstraint(aimObj, trg, weight = 1, aimVector = [0, 0, -1], upVector = [0, 1, 0], worldUpType = 'vector', worldUpVector = [0, 1, 0], mo = True)
+    cmds.aimConstraint(aimObj, trg, weight = 1, aimVector = [0, 0, -1], upVector = [0, 1, 0], worldUpType = 'vector', worldUpVector = [0, 1, 0], mo = True)
 
 
 
@@ -181,23 +181,23 @@ prefix = ['lf', 'rt']
 sides = ['up', 'dn']
 
 for i in xrange(len(eyeJnts)):
-	attrExst = cmds.objExists('FK%s.fleshyEye' %eyeJnts[i])
-	if not attrExst:
-		cmds.addAttr('FK' + eyeJnts[i], ln = 'fleshyEye', at = 'double', defaultValue = 0.5, minValue = 0.0, maxValue = 1.0, keyable = True)
+    attrExst = cmds.objExists('FK%s.fleshyEye' %eyeJnts[i])
+    if not attrExst:
+        cmds.addAttr('FK' + eyeJnts[i], ln = 'fleshyEye', at = 'double', defaultValue = 0.5, minValue = 0.0, maxValue = 1.0, keyable = True)
 
-	for j in xrange(len(sides)):
-		flshEyeMul = cmds.shadingNode('multiplyDivide', asUtility = True, n = '%s_%s_eyelids_fleshy_mul' %(prefix[i], sides[j]))
-		cmds.setAttr('%s.input2X' %flshEyeMul, 0.25)
-		cmds.setAttr('%s.input2Y' %flshEyeMul, 0.25)
-		cmds.setAttr('%s.input2Z' %flshEyeMul, 0.75)
-		cmds.connectAttr('%s.rotate' %eyeJnts[i], '%s.input1' %flshEyeMul, f = True)
+    for j in xrange(len(sides)):
+        flshEyeMul = cmds.shadingNode('multiplyDivide', asUtility = True, n = '%s_%s_eyelids_fleshy_mul' %(prefix[i], sides[j]))
+        cmds.setAttr('%s.input2X' %flshEyeMul, 0.25)
+        cmds.setAttr('%s.input2Y' %flshEyeMul, 0.25)
+        cmds.setAttr('%s.input2Z' %flshEyeMul, 0.75)
+        cmds.connectAttr('%s.rotate' %eyeJnts[i], '%s.input1' %flshEyeMul, f = True)
 
-		flshEyeAmountMul = cmds.shadingNode('multiplyDivide', asUtility = True, n = '%s_%s_eyelids_fleshy_amount_mul' %(prefix[i], sides[j]))
-		cmds.connectAttr('%s.output' %flshEyeMul, '%s.input1' %flshEyeAmountMul, f = True)
-		cmds.connectAttr('FK%s.fleshyEye' %eyeJnts[i], '%s.input2X' %flshEyeAmountMul, f = True)
-		cmds.connectAttr('FK%s.fleshyEye' %eyeJnts[i], '%s.input2Y' %flshEyeAmountMul, f = True)
-		cmds.connectAttr('FK%s.fleshyEye' %eyeJnts[i], '%s.input2Z' %flshEyeAmountMul, f = True)
-		cmds.connectAttr('%s.output' %flshEyeAmountMul, '%s_%s_eyelid_base_jnt_loc_auto.rotate' %(prefix[i], sides[j]), f = True)
+        flshEyeAmountMul = cmds.shadingNode('multiplyDivide', asUtility = True, n = '%s_%s_eyelids_fleshy_amount_mul' %(prefix[i], sides[j]))
+        cmds.connectAttr('%s.output' %flshEyeMul, '%s.input1' %flshEyeAmountMul, f = True)
+        cmds.connectAttr('FK%s.fleshyEye' %eyeJnts[i], '%s.input2X' %flshEyeAmountMul, f = True)
+        cmds.connectAttr('FK%s.fleshyEye' %eyeJnts[i], '%s.input2Y' %flshEyeAmountMul, f = True)
+        cmds.connectAttr('FK%s.fleshyEye' %eyeJnts[i], '%s.input2Z' %flshEyeAmountMul, f = True)
+        cmds.connectAttr('%s.output' %flshEyeAmountMul, '%s_%s_eyelid_base_jnt_loc_auto.rotate' %(prefix[i], sides[j]), f = True)
 
 
 
@@ -207,22 +207,22 @@ catch (`select -add "rt_up_eyelid_base_jnt_loc"`);
 catch (`select -add "rt_dn_eyelid_base_jnt_loc"`);
 catch (`select -add "lf_up_eyelid_base_jnt_loc"`);
 catch (`select -add "lf_dn_eyelid_base_jnt_loc"`);
-catch (`select -add "rt_up_out_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "rt_up_mid_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "rt_up_in_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "rt_dn_out_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "rt_dn_mid_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "rt_dn_in_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "rt_out_corner_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "rt_in_corner_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "lf_up_out_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "lf_up_mid_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "lf_up_in_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "lf_dn_out_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "lf_dn_mid_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "lf_dn_in_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "lf_out_corner_eyelid_crv_bnd_jnt_ikh_loc"`);
-catch (`select -add "lf_in_corner_eyelid_crv_bnd_jnt_ikh_loc"`);
+catch (`select -add "rt_up_out_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "rt_up_mid_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "rt_up_in_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "rt_dn_out_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "rt_dn_mid_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "rt_dn_in_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "rt_out_corner_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "rt_in_corner_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "lf_up_out_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "lf_up_mid_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "lf_up_in_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "lf_dn_out_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "lf_dn_mid_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "lf_dn_in_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "lf_out_corner_eyelid_crv_jnt_ikh_loc"`);
+catch (`select -add "lf_in_corner_eyelid_crv_jnt_ikh_loc"`);
 
 
 
@@ -233,12 +233,12 @@ catch (`select -add "lf_in_corner_eyelid_crv_bnd_jnt_ikh_loc"`);
 # Select nose cheek locators
 select -cl;
 catch (`select -add "nose_ikh_loc"`);
-catch (`select -add "rt_cheek_puff_bnd_jnt_loc"`);
-catch (`select -add "rt_sneer_bnd_jnt_loc"`);
-catch (`select -add "lf_sneer_bnd_jnt_loc"`);
-catch (`select -add "lf_cheek_puff_bnd_jnt_loc"`);
-catch (`select -add "lf_flare_bnd_jnt_loc"`);
-catch (`select -add "rt_flare_bnd_jnt_loc"`);
+catch (`select -add "rt_cheek_puff_jnt_loc"`);
+catch (`select -add "rt_sneer_jnt_loc"`);
+catch (`select -add "lf_sneer_jnt_loc"`);
+catch (`select -add "lf_cheek_puff_jnt_loc"`);
+catch (`select -add "lf_flare_jnt_loc"`);
+catch (`select -add "rt_flare_jnt_loc"`);
 
 
 
@@ -273,33 +273,33 @@ cnst = 'parentConstraint'
 weightList = ['Jaw_MW0', 'Jaw_lockW1']
 
 for sel in selList:
-	symObj = re.sub(srch, rplc, sel)
-	for weight in weightList:
-		val = cmds.getAttr('%s_%s1.%s' %(sel, cnst, weight))
-		cmds.setAttr('%s_%s1.%s' %(symObj, cnst, weight), val)
+    symObj = re.sub(srch, rplc, sel)
+    for weight in weightList:
+        val = cmds.getAttr('%s_%s1.%s' %(sel, cnst, weight))
+        cmds.setAttr('%s_%s1.%s' %(symObj, cnst, weight), val)
 
 
 # parent constraint interpolation set to shortest
 selList = cmds.ls(sl = True)
 for sel in selList:
-	prntCnst = cmds.listRelatives(sel, c = True, type = 'parentConstraint')[0]
-	cmds.setAttr('%s.interpType' %prntCnst, 2)
+    prntCnst = cmds.listRelatives(sel, c = True, type = 'parentConstraint')[0]
+    cmds.setAttr('%s.interpType' %prntCnst, 2)
 
 
 # Select lip locators
 select -cl;
-catch (`select -add "rt_up_mid_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "rt_dn_mid_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "rt_dn_in_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "rt_corner_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "rt_up_in_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "lf_up_mid_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "lf_dn_mid_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "lf_dn_in_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "ct_dn_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "lf_corner_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "lf_up_in_lip_crv_bnd_jnt_loc"`);
-catch (`select -add "ct_up_lip_crv_bnd_jnt_loc"`);
+catch (`select -add "rt_up_mid_lip_crv_jnt_loc"`);
+catch (`select -add "rt_dn_mid_lip_crv_jnt_loc"`);
+catch (`select -add "rt_dn_in_lip_crv_jnt_loc"`);
+catch (`select -add "rt_corner_lip_crv_jnt_loc"`);
+catch (`select -add "rt_up_in_lip_crv_jnt_loc"`);
+catch (`select -add "lf_up_mid_lip_crv_jnt_loc"`);
+catch (`select -add "lf_dn_mid_lip_crv_jnt_loc"`);
+catch (`select -add "lf_dn_in_lip_crv_jnt_loc"`);
+catch (`select -add "ct_dn_lip_crv_jnt_loc"`);
+catch (`select -add "lf_corner_lip_crv_jnt_loc"`);
+catch (`select -add "lf_up_in_lip_crv_jnt_loc"`);
+catch (`select -add "ct_up_lip_crv_jnt_loc"`);
 
 
 
@@ -312,41 +312,41 @@ catch (`select -add "ct_up_lip_crv_bnd_jnt_loc"`);
 # Script Job for Facial Controls Symmetry Selection #
 // scriptNodeName: 'facialCtrl_scriptNode'
 global proc facialCtrlSymSel(){
-	string $namespace = "";
+    string $namespace = "";
 
-	// Get selected objects namespace
-	string $sel[] = `ls -sl`;
-	string $buffer[] = `stringToStringArray $sel[0] ":"`;
-	if (`size($buffer)` > 1){
-		$namespace = $buffer[0] + ":";
-	}
+    // Get selected objects namespace
+    string $sel[] = `ls -sl`;
+    string $buffer[] = `stringToStringArray $sel[0] ":"`;
+    if (`size($buffer)` > 1){
+        $namespace = $buffer[0] + ":";
+    }
 
-	string $facialCtrlList[] = {$namespace + "rt_in_eyebrow_ctrl", $namespace + "rt_mid_eyebrow_ctrl", $namespace + "rt_out_eyebrow_ctrl", $namespace + "lf_in_eyebrow_ctrl", $namespace + "lf_mid_eyebrow_ctrl", $namespace + "lf_out_eyebrow_ctrl", $namespace + "lf_in_corner_eyelid_ctrl", $namespace + "lf_out_corner_eyelid_ctrl", $namespace + "lf_up_in_eyelid_ctrl", $namespace + "lf_up_mid_eyelid_ctrl", $namespace + "lf_up_out_eyelid_ctrl", $namespace + "lf_dn_in_eyelid_ctrl", $namespace + "lf_dn_mid_eyelid_ctrl", $namespace + "lf_dn_out_eyelid_ctrl", $namespace + "rt_in_corner_eyelid_ctrl", $namespace + "rt_out_corner_eyelid_ctrl", $namespace + "rt_up_in_eyelid_ctrl", $namespace + "rt_up_mid_eyelid_ctrl", $namespace + "rt_up_out_eyelid_ctrl", $namespace + "rt_dn_in_eyelid_ctrl", $namespace + "rt_dn_mid_eyelid_ctrl", $namespace + "rt_dn_out_eyelid_ctrl", $namespace + "lf_eyelid_blink_ctrl", $namespace + "rt_eyelid_blink_ctrl", $namespace + "lf_eyelid_smile_ctrl", $namespace + "rt_eyelid_smile_ctrl", $namespace + "lf_eyelid_crunch_ctrl", $namespace + "rt_eyelid_crunch_ctrl", $namespace + "lf_eyelid_squint_ctrl", $namespace + "rt_eyelid_squint_ctrl", $namespace + "rt_nose_sneer_ctrl", $namespace + "lf_nose_sneer_ctrl", $namespace + "lf_nose_flare_ctrl", $namespace + "rt_nose_flare_ctrl", $namespace + "rt_cheek_puff_ctrl", $namespace + "lf_cheek_puff_ctrl", $namespace + "rt_corner_lip_ctrl", $namespace + "rt_up_lip_ctrl", $namespace + "rt_dn_lip_ctrl", $namespace + "lf_corner_lip_ctrl", $namespace + "lf_up_lip_ctrl", $namespace + "lf_dn_lip_ctrl"};
-	string $lfPrefix = $namespace + "lf_";
-	string $rtPrefix = $namespace + "rt_";
+    string $facialCtrlList[] = {$namespace + "rt_in_eyebrow_ctrl", $namespace + "rt_mid_eyebrow_ctrl", $namespace + "rt_out_eyebrow_ctrl", $namespace + "lf_in_eyebrow_ctrl", $namespace + "lf_mid_eyebrow_ctrl", $namespace + "lf_out_eyebrow_ctrl", $namespace + "lf_in_corner_eyelid_ctrl", $namespace + "lf_out_corner_eyelid_ctrl", $namespace + "lf_up_in_eyelid_ctrl", $namespace + "lf_up_mid_eyelid_ctrl", $namespace + "lf_up_out_eyelid_ctrl", $namespace + "lf_dn_in_eyelid_ctrl", $namespace + "lf_dn_mid_eyelid_ctrl", $namespace + "lf_dn_out_eyelid_ctrl", $namespace + "rt_in_corner_eyelid_ctrl", $namespace + "rt_out_corner_eyelid_ctrl", $namespace + "rt_up_in_eyelid_ctrl", $namespace + "rt_up_mid_eyelid_ctrl", $namespace + "rt_up_out_eyelid_ctrl", $namespace + "rt_dn_in_eyelid_ctrl", $namespace + "rt_dn_mid_eyelid_ctrl", $namespace + "rt_dn_out_eyelid_ctrl", $namespace + "lf_eyelid_blink_ctrl", $namespace + "rt_eyelid_blink_ctrl", $namespace + "lf_eyelid_smile_ctrl", $namespace + "rt_eyelid_smile_ctrl", $namespace + "lf_eyelid_crunch_ctrl", $namespace + "rt_eyelid_crunch_ctrl", $namespace + "lf_eyelid_squint_ctrl", $namespace + "rt_eyelid_squint_ctrl", $namespace + "rt_nose_sneer_ctrl", $namespace + "lf_nose_sneer_ctrl", $namespace + "lf_nose_flare_ctrl", $namespace + "rt_nose_flare_ctrl", $namespace + "rt_cheek_puff_ctrl", $namespace + "lf_cheek_puff_ctrl", $namespace + "rt_corner_lip_ctrl", $namespace + "rt_up_lip_ctrl", $namespace + "rt_dn_lip_ctrl", $namespace + "lf_corner_lip_ctrl", $namespace + "lf_up_lip_ctrl", $namespace + "lf_dn_lip_ctrl"};
+    string $lfPrefix = $namespace + "lf_";
+    string $rtPrefix = $namespace + "rt_";
 
-	string $ctrlList[] = `ls -sl`;
-	for ($ctrl in $ctrlList){
-		// Check if selection is facial control
-		int $found = stringArrayContains($ctrl, $facialCtrlList);
+    string $ctrlList[] = `ls -sl`;
+    for ($ctrl in $ctrlList){
+        // Check if selection is facial control
+        int $found = stringArrayContains($ctrl, $facialCtrlList);
 
-		if ($found){
-			// Check if symmetry selection option is on
-			string $facialSymSelState = `getAttr ($namespace + "facial_opt_ctrl.symmetrySelection")`;	
+        if ($found){
+            // Check if symmetry selection option is on
+            string $facialSymSelState = `getAttr ($namespace + "facial_opt_ctrl.symmetrySelection")`;	
 
-			if ($facialSymSelState == 1){
-				if (`gmatch $ctrl ($namespace + "lf_*")`){
-					string $rtCtrl = `substitute $lfPrefix $ctrl $rtPrefix`;
-					select -add $rtCtrl;
-				}
-				else if (`gmatch $ctrl ($namespace + "rt_*")`){
-					string $lfCtrl = `substitute $rtPrefix $ctrl $lfPrefix`;
-					select -add $lfCtrl;
-					
-				}
-			}
-		}
-	}
+            if ($facialSymSelState == 1){
+                if (`gmatch $ctrl ($namespace + "lf_*")`){
+                    string $rtCtrl = `substitute $lfPrefix $ctrl $rtPrefix`;
+                    select -add $rtCtrl;
+                }
+                else if (`gmatch $ctrl ($namespace + "rt_*")`){
+                    string $lfCtrl = `substitute $rtPrefix $ctrl $lfPrefix`;
+                    select -add $lfCtrl;
+                    
+                }
+            }
+        }
+    }
 }
 
 
@@ -357,16 +357,16 @@ int $foundJob = 0;
 string $look_for;
 
 for($j = 0; $j < size($all_jobs); $j++){
-	string $current_job = $all_jobs[$j];
-	$look_for = "facialCtrlSymSel";
-	string $match_result = `match $look_for $current_job`;
-	if($match_result != ""){
-		$foundJob = 1;
-		break;
-	}
+    string $current_job = $all_jobs[$j];
+    $look_for = "facialCtrlSymSel";
+    string $match_result = `match $look_for $current_job`;
+    if($match_result != ""){
+        $foundJob = 1;
+        break;
+    }
 }
 if($foundJob == 0){
-	scriptJob -kws -e "SelectionChanged" facialCtrlSymSel;
+    scriptJob -kws -e "SelectionChanged" facialCtrlSymSel;
 }
 
 
@@ -460,22 +460,22 @@ for attr in attrLs:
 # SDK
 prefixLs = ["_L", "_R"]
 for prefix in prefixLs:
-	cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballUpDown" %prefix, cd = "Eye%s.rz" %prefix, dv = -45, v = -20)
-	cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballUpDown" %prefix, cd = "Eye%s.rz" %prefix, dv = 0, v = 0)
-	cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballUpDown" %prefix, cd = "Eye%s.rz" %prefix, dv = 20, v = 10)
+    cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballUpDown" %prefix, cd = "Eye%s.rz" %prefix, dv = -45, v = -20)
+    cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballUpDown" %prefix, cd = "Eye%s.rz" %prefix, dv = 0, v = 0)
+    cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballUpDown" %prefix, cd = "Eye%s.rz" %prefix, dv = 20, v = 10)
 
-	cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballLfRt" %prefix, cd = "Eye%s.ry" %prefix, dv = -45, v = -10)
-	cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballLfRt" %prefix, cd = "Eye%s.ry" %prefix, dv = 0, v = 0)
-	cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballLfRt" %prefix, cd = "Eye%s.ry" %prefix, dv = 50, v = 10)
+    cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballLfRt" %prefix, cd = "Eye%s.ry" %prefix, dv = -45, v = -10)
+    cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballLfRt" %prefix, cd = "Eye%s.ry" %prefix, dv = 0, v = 0)
+    cmds.setDrivenKeyframe("eyeball%s_GRP.eyeballLfRt" %prefix, cd = "Eye%s.ry" %prefix, dv = 50, v = 10)
 
 
 # Parent each joint to the duplicated base joint
 selList = cmds.ls(sl = True)
 baseJntSrc = selList.pop(-1)
 for sel in selList:
-	prntGrp = cmds.listRelatives(sel, p = True)[0]
-	dupBaseJntSrc = cmds.duplicate(baseJntSrc, n = sel + '_base')[0]
-	cmds.parent(sel, dupBaseJntSrc)
+    prntGrp = cmds.listRelatives(sel, p = True)[0]
+    dupBaseJntSrc = cmds.duplicate(baseJntSrc, n = sel + '_base')[0]
+    cmds.parent(sel, dupBaseJntSrc)
 
 
 
@@ -509,25 +509,25 @@ interval = 20
 cmds.currentTime(startFrame)
 
 while startFrame <= endFrame:
-	lfFacialLocLs = cmds.ls(sl = True)
-	for lfFacialLoc in lfFacialLocLs:
-		trg = re.sub(srchStr, rplcStr, lfFacialLoc)
-	
-		selTr = cmds.getAttr('%s.translate' %(lfFacialLoc))[0]
-		selRo = cmds.getAttr('%s.rotate' %(lfFacialLoc))[0]
-		selSc = cmds.getAttr('%s.scale' %(lfFacialLoc))[0]
-	
-		selTr = (-selTr[0], selTr[1], selTr[2])
-		selRo = (selRo[0], -selRo[1], -selRo[2])
-		selSc = (selSc[0], selSc[1], selSc[2])
-	
-		cmds.setAttr('%s.translate' %(trg), *selTr)
-		cmds.setAttr('%s.rotate' %(trg), *selRo)
-		cmds.setAttr('%s.scale' %(trg), *selSc)
-	
-	# Go to the next expression frame
-	startFrame += interval
-	cmds.currentTime(startFrame, e = True)
+    lfFacialLocLs = cmds.ls(sl = True)
+    for lfFacialLoc in lfFacialLocLs:
+        trg = re.sub(srchStr, rplcStr, lfFacialLoc)
+    
+        selTr = cmds.getAttr('%s.translate' %(lfFacialLoc))[0]
+        selRo = cmds.getAttr('%s.rotate' %(lfFacialLoc))[0]
+        selSc = cmds.getAttr('%s.scale' %(lfFacialLoc))[0]
+    
+        selTr = (-selTr[0], selTr[1], selTr[2])
+        selRo = (selRo[0], -selRo[1], -selRo[2])
+        selSc = (selSc[0], selSc[1], selSc[2])
+    
+        cmds.setAttr('%s.translate' %(trg), *selTr)
+        cmds.setAttr('%s.rotate' %(trg), *selRo)
+        cmds.setAttr('%s.scale' %(trg), *selSc)
+    
+    # Go to the next expression frame
+    startFrame += interval
+    cmds.currentTime(startFrame, e = True)
 cmds.currentTime(1)
 
 
@@ -558,8 +558,8 @@ for facial in facialLs:
     # Delete base geometries
     dupFacialChlds = cmds.listRelatives(facial, path = True, type = 'transform')
     for chld in dupFacialChlds:
-    	if 'Base' in chld:
-    		cmds.delete(chld)
+        if 'Base' in chld:
+            cmds.delete(chld)
 
     # Go to the next expression frame
     startFrame += 20
@@ -576,28 +576,28 @@ facialCtrlLs = cmds.ls(sl = True)
 facialBsName = 'facial_bs'
 
 for facialCtrl in facialCtrlLs:
-	facialAttrLs = cmds.listAttr(facialCtrl, keyable = True)
-	for facialAttr in facialAttrLs:
-		facialBsTrgName = re.sub(r'ctrl', facialAttr, facialCtrl)
-		
-		if cmds.objExists(facialBsName + '.' + facialBsTrgName):
-			try:
-				cmds.connectAttr(facialCtrl + '.' + facialAttr, facialBsName + '.' + facialBsTrgName, f = True)
-			except:
-				pass
-		
-		if 'lip' in facialCtrl:
-			facialBsTrgName = re.sub(r'ctrl', facialAttr, facialCtrl)
-			if 'lip_lf' in facialBsTrgName:
-				facialBsTrgName = re.sub(r'lip_lf', 'lf_lip', facialBsTrgName)
-			elif 'lip_rt' in facialBsTrgName:
-				facialBsTrgName = re.sub(r'lip_rt', 'rt_lip', facialBsTrgName)
-			
-			if cmds.objExists(facialBsName + '.' + facialBsTrgName):
-				try:
-					cmds.connectAttr(facialCtrl + '.' + facialAttr, facialBsName + '.' + facialBsTrgName, f = True)
-				except:
-					pass
+    facialAttrLs = cmds.listAttr(facialCtrl, keyable = True)
+    for facialAttr in facialAttrLs:
+        facialBsTrgName = re.sub(r'ctrl', facialAttr, facialCtrl)
+        
+        if cmds.objExists(facialBsName + '.' + facialBsTrgName):
+            try:
+                cmds.connectAttr(facialCtrl + '.' + facialAttr, facialBsName + '.' + facialBsTrgName, f = True)
+            except:
+                pass
+        
+        if 'lip' in facialCtrl:
+            facialBsTrgName = re.sub(r'ctrl', facialAttr, facialCtrl)
+            if 'lip_lf' in facialBsTrgName:
+                facialBsTrgName = re.sub(r'lip_lf', 'lf_lip', facialBsTrgName)
+            elif 'lip_rt' in facialBsTrgName:
+                facialBsTrgName = re.sub(r'lip_rt', 'rt_lip', facialBsTrgName)
+            
+            if cmds.objExists(facialBsName + '.' + facialBsTrgName):
+                try:
+                    cmds.connectAttr(facialCtrl + '.' + facialAttr, facialBsName + '.' + facialBsTrgName, f = True)
+                except:
+                    pass
 
 
 
@@ -608,15 +608,15 @@ facialCtrlLs = cmds.ls(sl = True)
 facialGrp = 'wrap_head_grp'
 
 for ctrl in facialCtrlLs:
-	attrLs = cmds.listAttr(ctrl, keyable = True)
-	trgNamePrefix = ctrl.rsplit('_ctrl')[0]
-	for attr in attrLs:
-		try:
-			cmds.setAttr('%s.%s' %(ctrl, attr), 1)
-			cmds.duplicate(facialGrp, rr = True, renameChildren = True, n = trgNamePrefix + '_' + attr)
-			cmds.setAttr('%s.%s' %(ctrl, attr), 0)
-		except:
-			pass
+    attrLs = cmds.listAttr(ctrl, keyable = True)
+    trgNamePrefix = ctrl.rsplit('_ctrl')[0]
+    for attr in attrLs:
+        try:
+            cmds.setAttr('%s.%s' %(ctrl, attr), 1)
+            cmds.duplicate(facialGrp, rr = True, renameChildren = True, n = trgNamePrefix + '_' + attr)
+            cmds.setAttr('%s.%s' %(ctrl, attr), 0)
+        except:
+            pass
 
 
 
@@ -628,9 +628,9 @@ trgLs = cmds.listAttr(bsNode + '.w', multi = True)
 facialGrp = 'src_head_grp'
 
 for trg in trgLs:
-	cmds.setAttr(bsNode + '.' + trg, 1)
-	cmds.duplicate(facialGrp, renameChildren = True, n = trg)
-	cmds.setAttr(bsNode + '.' + trg, 0)
+    cmds.setAttr(bsNode + '.' + trg, 1)
+    cmds.duplicate(facialGrp, renameChildren = True, n = trg)
+    cmds.setAttr(bsNode + '.' + trg, 0)
 
 
 
@@ -644,7 +644,7 @@ facialNeedList = ['eyebrow_down', 'eyebrow_up', 'eyebrow_angry',
 facialSrcGrp = cmds.ls(sl = True)
 
 for item in facialNeedList:
-	cmds.duplicate(facialSrcGrp, n = item, renameChildren = True)
+    cmds.duplicate(facialSrcGrp, n = item, renameChildren = True)
 
 
 lod01FacialNeedList = ['eyebrow_angry', 'eyebrow_sad',
@@ -654,7 +654,7 @@ lod01FacialNeedList = ['eyebrow_angry', 'eyebrow_sad',
 facialSrcGrp = cmds.ls(sl = True)
 
 for item in lod01FacialNeedList:
-	cmds.duplicate(facialSrcGrp, n = item, renameChildren = True)
+    cmds.duplicate(facialSrcGrp, n = item, renameChildren = True)
 
 
 
@@ -664,12 +664,12 @@ for item in lod01FacialNeedList:
 selLs = cmds.ls(sl = True)
 
 for sel in selLs:
-	cmds. delete(ch = True)
-	
-	for child in cmds.listRelatives(sel, ad = True):
-		if 'Base' in child:
-			cmds.delete(child)
-			print child
+    cmds. delete(ch = True)
+    
+    for child in cmds.listRelatives(sel, ad = True):
+        if 'Base' in child:
+            cmds.delete(child)
+            print child
 
 
 
@@ -699,13 +699,13 @@ for loc in eyelidLocs:
 # Locator zero group scaleX set to -1 #
 locators = pm.ls(sl=True)
 for locator in locators:
-	locChild = locator.getChildren(type='transform')[0]
-	locChild.setParent(world=True)
+    locChild = locator.getChildren(type='transform')[0]
+    locChild.setParent(world=True)
 
-	zeroGrpName = '%s_zero' % locator.name()
-	pm.setAttr('%s.scaleX' % zeroGrpName, -1)
+    zeroGrpName = '%s_zero' % locator.name()
+    pm.setAttr('%s.scaleX' % zeroGrpName, -1)
 
-	locChild.setParent(locator)
+    locChild.setParent(locator)
 
 
 # Mirror zero group #
@@ -714,16 +714,16 @@ searchStr = 'lf_'
 replaceStr = 'rt_'
 
 for zeroGrp in zeroGrps:
-	zeroGrpTrans = zeroGrp.getTranslation()
-	zeroGrpRotation = zeroGrp.getRotation()
-	zeroGrpScale = zeroGrp.getScale()
+    zeroGrpTrans = zeroGrp.getTranslation()
+    zeroGrpRotation = zeroGrp.getRotation()
+    zeroGrpScale = zeroGrp.getScale()
 
-	otherSideZeroGrpName = zeroGrp.replace(searchStr, replaceStr)
-	otherSideZeroGrp = pm.PyNode(otherSideZeroGrpName)
+    otherSideZeroGrpName = zeroGrp.replace(searchStr, replaceStr)
+    otherSideZeroGrp = pm.PyNode(otherSideZeroGrpName)
 
-	otherSideZeroGrp.setTranslation([-zeroGrpTrans.x, zeroGrpTrans.y, zeroGrpTrans.z])
-	otherSideZeroGrp.setRotation([zeroGrpRotation.x, -zeroGrpRotation.y, -zeroGrpRotation.z])
-	otherSideZeroGrp.setScale([-zeroGrpScale[0], zeroGrpScale[1], zeroGrpScale[2]])
+    otherSideZeroGrp.setTranslation([-zeroGrpTrans.x, zeroGrpTrans.y, zeroGrpTrans.z])
+    otherSideZeroGrp.setRotation([zeroGrpRotation.x, -zeroGrpRotation.y, -zeroGrpRotation.z])
+    otherSideZeroGrp.setScale([-zeroGrpScale[0], zeroGrpScale[1], zeroGrpScale[2]])
 
 
 
@@ -734,10 +734,10 @@ selList = cmds.ls(sl = True)
 baseJntSrc = selList.pop(-1)
 ikhs = []
 for sel in selList:
-	dupBaseJntSrc = cmds.duplicate(baseJntSrc, n = sel + '_base')[0]
-	cmds.parent(sel, dupBaseJntSrc)
-	ikh = cmds.ikHandle(sj=dupBaseJntSrc, ee=sel, solver='ikSCsolver', n=sel+'_ikh')
-	ikhs.append(ikh)
+    dupBaseJntSrc = cmds.duplicate(baseJntSrc, n = sel + '_base')[0]
+    cmds.parent(sel, dupBaseJntSrc)
+    ikh = cmds.ikHandle(sj=dupBaseJntSrc, ee=sel, solver='ikSCsolver', n=sel+'_ikh')
+    ikhs.append(ikh)
 
 select(ikhs, r=True)
 
@@ -811,6 +811,47 @@ for jnt in zipperLipJnts:
 
 
 # Facial Tertiary #
+import pymel.core as pm
+import tak_misc
+
+def createCurveRig(name, numOfControls):
+    # Convert edges to curve
+    rawCurve = pm.PyNode(pm.polyToCurve(n=name+'_crv', form=2, degree=1)[0])
+
+    # Create joints with rawCurve
+    jnts = []
+    for cv in rawCurve.cv:
+        pm.select(cl=True)
+        jnts.append(pm.joint(p=cv.getPosition(space='world'), radius=0.1))
+    jnts = renameByPosition(name, jnts)
+
+    # Rebuild curve and delete history
+    newCrv = pm.rebuildCurve(rawCurve, spans=numOfControls-3, degree=3)[0]
+    pm.delete(newCrv, ch=True)
+
+    # Attach cluster to the curve cvs
+    clusters = [pm.cluster(cv)[1] for cv in newCrv.cv]
+    clusters = renameByPosition(name, clusters, suffix='clst')
+    locators = []
+    for clst in clusters:
+        pm.select(clst, r=True)
+        locators.append(tak_misc.locGrp())
+
+    # Cleanup outliner
+    jntGrp = pm.group(jnts, n=name+'_jnt_grp')
+    locGrp = pm.group(locators, n=name+'_loc_grp')
+    pm.group(jntGrp, locGrp, newCrv, n=name+'_system_grp')
+
+def renameByPosition(name, transformList, suffix='jnt'):
+    renamedList = []
+
+    transformList.sort(key=lambda x:x.tx.get(), reverse=True) if 'rt_' in name else transformList.sort(key=lambda x:x.tx.get())
+    for item in transformList:
+        renamedList.append(item.rename('%s_%02d_%s' % (name, transformList.index(item)+1, suffix)))
+
+    return renamedList
+
+
 def createProjectedCurve(locators, nurbsSurface, name='projected_crv'):
     follicles = []
     positions = []

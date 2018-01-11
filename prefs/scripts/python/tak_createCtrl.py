@@ -98,7 +98,7 @@ def UI():
 
     # search and replace section
     cmds.radioButtonGrp('strModeRdBtnGrp', labelArray2 = ['Search and Replace', 'Prefix and Suffix'], numberOfRadioButtons = 2, columnWidth = [(1, 200)], columnAttach = [(1, 'left', 50), (2, 'left', 50)], select = 1, cc = strModeBtnCc)
-    cmds.textFieldGrp('srchTexGrp', label = 'Search for: ', text = '_bnd_jnt', visible = True)
+    cmds.textFieldGrp('srchTexGrp', label = 'Search for: ', text = '_jnt', visible = True)
     cmds.textFieldGrp('rplcTexGrp', label = 'Replace with: ', text = '_ctrl', visible = True)
     cmds.textFieldGrp('preTexGrp', label = 'Prefix: ', text = '', visible = False)
     cmds.textFieldGrp('sufTexGrp', label = 'Suffix: ', text = '_ctrl', visible = False)
@@ -440,7 +440,7 @@ def scaleCnntChkBokCC(*args):
 
 
 def popCtrlShpOptMenu():
-    ctrlShpLs = ['circle','square','triangle','squareArc','squareRounded','squareDoubleRounded',
+    ctrlShpLs = ['circleX','circleY','circleZ','square','triangle','squareArc','squareRounded','squareDoubleRounded',
                                     'cylinder',
                                     'semiSphere','sphere','cube','pyramid',
                                     'cross','fatCross',

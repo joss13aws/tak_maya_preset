@@ -217,10 +217,10 @@ class ribbonIKFK(object):
 	@classmethod
 	def createBndJnt(cls, crv, numOfJnt, increNum, *args):	
 		# Delete bind joints and pointOnSurfaceInfo node if exists it.
-		if cmds.objExists('%s_*_bnd_jnt' %crv):
-			cmds.delete('%s_*_bnd_jnt' %crv)
-		if cmds.objExists('%s_*_bnd_jnt_pOnSurfInfo' %crv):
-			cmds.delete('%s_*_bnd_jnt_pOnSurfInfo' %crv)
+		if cmds.objExists('%s_*_jnt' %crv):
+			cmds.delete('%s_*_jnt' %crv)
+		if cmds.objExists('%s_*_jnt_pOnSurfInfo' %crv):
+			cmds.delete('%s_*_jnt_pOnSurfInfo' %crv)
 	
 		# Initialize un value.
 		unNum = 0
@@ -230,7 +230,7 @@ class ribbonIKFK(object):
 		cmds.select(cl = True)
 		for i in xrange(numOfJnt):
 			jntPos = cmds.pointPosition('%s.un[%f]' %(crv, unNum), w = True)
-			bndJnt = cmds.joint(p = jntPos, n = '%s_%d_bnd_jnt' %(crv, i))
+			bndJnt = cmds.joint(p = jntPos, n = '%s_%d_jnt' %(crv, i))
 			cls.bndJntLs.append(bndJnt)
 			unNum += increNum
 		cmds.CompleteCurrentTool()
@@ -439,7 +439,7 @@ class ribbonIKFK(object):
 
 		allGrp = cmds.createNode('transform', n = crv + '_ribbonIKFK_grp')
 		
-		chldGrpNameLs = ['doNotTouch_grp', 'crv_bnd_jnt_grp', 'bnd_jnt_grp', 'ctrl_grp']
+		chldGrpNameLs = ['doNotTouch_grp', 'crv_jnt_grp', 'bnd_jnt_grp', 'ctrl_grp']
 		hideObjLs = []
 
 		# Create group and parent related nodes.
@@ -450,7 +450,7 @@ class ribbonIKFK(object):
 				cmds.setAttr('%s.inheritsTransform' %chldGrp, False)
 				cmds.parent(chldGrp, allGrp)
 
-			if grpName == 'crv_bnd_jnt_grp':
+			if grpName == 'crv_jnt_grp':
 				cmds.parent(rbBndJntLs, chldGrp)
 				cmds.parent(chldGrp, crv + '_doNotTouch_grp')
 				hideObjLs.append(chldGrp)
@@ -480,7 +480,7 @@ class ribbonIKFK(object):
 
 		allCtrl = crv + '_all_ctrl'
 
-		cmds.connectAttr('%s.bindJointsVis' %allCtrl, '%s_bnd_jnt_grp.visibility' %crv, f = True)
+		cmds.connectAttr('%s.bindJointsVis' %allCtrl, '%s_jnt_grp.visibility' %crv, f = True)
 		for bndJnt in bndJntLs:
 			cmds.scaleConstraint(allCtrl, bndJnt, mo = True)
 			# cmds.connectAttr('%s.scale' %allCtrl, '%s.scale' %bndJnt, f = True)
@@ -500,7 +500,7 @@ class ribbonIKFK(object):
 		cmds.select(cmds.listRelatives(type = 'joint'))
 
 		crv = re.match(r'(.+)_.+_ctrl', ctrl).group(1)
-		bndJntGrp = crv + '_bnd_jnt_grp'
+		bndJntGrp = crv + '_jnt_grp'
 		bndJnts = cmds.listRelatives(bndJntGrp, ad = True, type = 'joint')
 
 		for geo in geoLs:

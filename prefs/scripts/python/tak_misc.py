@@ -24,8 +24,8 @@ import pymel.core as pm
 import tak_cleanUpModel
 import tak_createCtrl
 import tak_lib
+import json
 from OBB.api import OBB
-from takAutoRig.base import control
 
 
 def mirJntUi():
@@ -487,15 +487,6 @@ def addInfUI():
     cmds.showWindow(winName)
 
 
-# # Populate influences and geometry field with selections
-# selList = cmds.ls(sl = True)
-# if selList:
-# 	infs = selList[0:-1]
-# 	geo = selList[-1]
-# 	cmds.textScrollList('infTxtScrLs', e = True, append = infs)
-# 	cmds.textScrollList('geoTxtScrLs', e = True, append = geo)
-
-
 def addInf(*args):
     infs = cmds.textScrollList('infTxtScrLs', q=True, allItems=True)
     geos = cmds.textScrollList('geoTxtScrLs', q=True, allItems=True)
@@ -509,7 +500,7 @@ def addInf(*args):
 
         if not skinClst:
             cmds.select(cl=True)
-            tmpBndJnt = cmds.joint(n=geo + '_bnd_jnt')
+            tmpBndJnt = cmds.joint(n=geo + '_jnt')
             cmds.skinCluster(tmpBndJnt, geo, mi=4, dr=4, tsb=True, omi=False, nw=1)
             skinClst = mel.eval('findRelatedSkinCluster("%s");' % geo)
 
@@ -906,22 +897,11 @@ def solidColMat():
     cmds.hyperShade(assign=shaderName)
 
 
-# cmds.select(cl = True)
-
-
-
-
-
 def assignLambertWithSelectedTexture():
-    selLs = cmds.ls(sl=True)
-    selectedTexture = selLs[0]
-    selectedGeos = selLs[1:]
+    selectedTexture = cmds.ls(sl=True)[0]
 
     shadingEngine = tak_lib.findShadingEngine(selectedTexture)
     meshes = cmds.listConnections(shadingEngine, d=False, scn=True, type='mesh')
-
-    if selectedGeos:
-        meshes = selectedGeos
 
     shaderName = cmds.shadingNode('lambert', n='%s_lambert' % selectedTexture, asShader=True)
     cmds.connectAttr("%s.outColor" % selectedTexture, "%s.color" % shaderName, f=True)
@@ -1263,6 +1243,8 @@ def locGrp():
         cmds.parent(sel, loc)
         cmds.parent(loc, autoGrp)
         cmds.parent(autoGrp, zroGrp)
+    
+    return zroGrp
 
 
 ### Set Display Type ###
@@ -1833,70 +1815,6 @@ def cnntAttrs():
         cmds.warning('Select attribute in channelbox.')
 
 
-# def cnntAttrUI():
-# 	winName = 'connectAttrWin'
-
-# 	if cmds.window(winName, exists = True):
-# 		cmds.deleteUI(winName)
-
-# 	cmds.window(winName, title = 'Connect Attributes')
-
-# 	cmds.columnLayout(adj = True)
-
-# 	cmds.checkBoxGrp('attrChkBoxGrp', numberOfCheckBoxes = 3, label = 'Attributes: ', labelArray3 = ['Translate', 'Rotate', 'Scale'], columnWidth = [(1, 60), (2, 90), (3, 80)], v1 = True, v2 = True, v3 = True)
-# 	cmds.checkBoxGrp('attrChkBoxGrp1', numberOfCheckBoxes = 3, label = '', labelArray3 = ['Mesh', '', 'Custom'], columnWidth = [(1, 60), (2, 90), (3, 80)], v1 = False, v2 = False, v3 = False)
-
-# 	cmds.textFieldGrp('customAttrTxtFldGrp', label = 'Custom Attributes: ')
-# 	cmds.popupMenu()
-# 	cmds.menuItem(label = 'Load Selected Attributes in Channelbox', c = loadAttrsFromSelChAttrs)
-
-# 	cmds.button(label = 'Apply', h = 50, c = cnntAttr)
-
-# 	cmds.window(winName, e = True, w = 100, h = 50)
-# 	cmds.showWindow(winName)
-
-
-# def cnntAttr(*args):
-# 	'''
-# 	Connect attributes of first selected object to second selected object.
-# 	'''
-
-# 	# Get options.
-# 	tOpt = cmds.checkBoxGrp('attrChkBoxGrp', q = True, v1 = True)
-# 	rOpt = cmds.checkBoxGrp('attrChkBoxGrp', q = True, v2 = True)
-# 	sOpt = cmds.checkBoxGrp('attrChkBoxGrp', q = True, v3 = True)
-# 	mOpt = cmds.checkBoxGrp('attrChkBoxGrp1', q = True, v1 = True)
-# 	customOpt = cmds.checkBoxGrp('attrChkBoxGrp1', q = True, v3 = True)
-
-# 	# Connect first selected object's attribute to second selected object's attribute.
-# 	selList = cmds.ls(sl = True)
-# 	driverObj = selList[0]
-# 	drivenObj = selList[1]
-# 	if tOpt:
-# 		cmds.connectAttr('%s.translate' %driverObj, '%s.translate' %drivenObj, f = True)
-# 	if rOpt:
-# 		cmds.connectAttr('%s.rotate' %driverObj, '%s.rotate' %drivenObj, f = True)
-# 	if sOpt:
-# 		cmds.connectAttr('%s.scale' %driverObj, '%s.scale' %drivenObj, f = True)
-# 	if mOpt:
-# 		drvrShp = cmds.listRelatives(driverObj, s = True)[0]
-# 		drvnShp = cmds.listRelatives(drivenObj, s = True)[0]
-# 		cmds.connectAttr('%s.outMesh' %drvrShp, '%s.inMesh' %drvnShp, f = True)
-
-
-# def loadAttrsFromSelChAttrs(*args):
-# 	'''
-# 	Fill text field with attributes from selected in channelbox.
-# 	'''
-
-# 	selAttrs = tak_lib.getSelAttrsNiceName()
-
-# 	cmds.textFieldGrp('customAttrTxtFldGrp', e = True, text = str(selAttrs))
-
-
-
-
-
 def matchPivot():
     '''
     Match rotate and scale pivot.
@@ -2382,13 +2300,6 @@ def cutGeoWithJnts():
     cmds.select(cutPlaneLs, r=True)
 
 
-# cmds.select(geo, r = True)
-# mel.eval('js_cutPlane_cut 1;')
-
-
-
-
-
 def simplePropAutoRigging():
     """
     Auto rigging function for simple props like sword, gun... etc.
@@ -2419,40 +2330,57 @@ def simplePropAutoRigging():
             ctrlZeroGrpLs.append(ctrlZeroGrp)
             jntLs.append(str(sel))
         else:
+            obbBoundBoxPnts = OBB.from_points(sel.name())
+            
             pm.select(cl=True)
-            jnt = pm.joint(n='%s_jnt' % sel.name(), p=sel.getBoundingBox().center())
+            jnt = pm.joint(n='%s_jnt' % sel.name())
+            cmds.xform(str(jnt), matrix=obbBoundBoxPnts.matrix)
+            geoScale = max(jnt.scale.get())
 
-            crv = tak_createCtrl.createCurve('circleX')
+            crv = tak_createCtrl.createCurve('circleZ')
             ctrlName = str(sel) + '_ctrl'
             cmds.rename(crv, ctrlName)
-
             ctrlZeroGrp = createCtrlGrp(ctrlName)
+            cmds.select(ctrlName+'.cv[*]', r=True)
+            cmds.scale(geoScale, geoScale, geoScale, r=True)
 
             cmds.delete(cmds.parentConstraint(str(jnt), ctrlZeroGrp, mo=False))
 
+            cmds.makeIdentity(jnt.name(), apply=True)
             cmds.parentConstraint(ctrlName, str(jnt), mo=True)
-
+            
             lockAndHideAttr(ctrlName)
 
+            pm.select(jnt, sel, r=True)
+            smoothSkinBind()
+            
             ctrlZeroGrpLs.append(ctrlZeroGrp)
             jntLs.append(str(jnt))
 
+    # Main global control
     glbACtrl = tak_createCtrl.createCurve('circleY')
     glbACtrlName = cmds.rename(glbACtrl, 'global_a_ctrl')
     doGroup(glbACtrlName, '_zero')
 
+    # Sub global control
     glbBCtrl = tak_createCtrl.createCurve('circleY')
     glbBCtrlName = cmds.rename(glbBCtrl, 'global_b_ctrl')
     glbBCtrlZeroGrp = doGroup(glbBCtrlName, '_zero')
     cmds.parent(glbBCtrlZeroGrp, glbACtrlName)
+    cmds.select(glbBCtrlName+'.cv[*]', r=True)
+    cmds.scale(0.9, 0.9, 0.9, r=True)
+
+    # Clean up outliner
+    rigGrp = cmds.group(glbACtrlName + '_zero', n='rig')
+    cmds.parent(rigGrp, 'root')
+    
+    GeometryGrp = pm.group(n='Geometry', empty=True, p=rigGrp)
+    pm.group(n='lod02_GRP', empty=True, p=GeometryGrp)
+    pm.group(n='lod01_GRP', empty=True, p=GeometryGrp)
 
     doNotTouchGrp = cmds.group(jntLs, n='doNotTouch_grp')
     ctrlGrp = cmds.group(ctrlZeroGrpLs, n='ctrl_grp')
-    cmds.parent(doNotTouchGrp, ctrlGrp, glbBCtrlName)
-
-    rigGrp = cmds.group(glbACtrlName + '_zero', n='rig')
-
-    cmds.parent(rigGrp, 'root')
+    cmds.parent(doNotTouchGrp, ctrlGrp, glbBCtrlName)    
 
     lockAndHideAttr(glbBCtrlName)
 
@@ -2701,10 +2629,10 @@ def copySkinByName(dst, prefix="", srchStr="", rplcStr="", copyMatOpt=False):
         None
 
     Examples:
-        tak_misc.copySkinByName(dst = "lod02_GRP", srchStr = "lod02_", rplcStr = "old_lod02_", copyMatOpt = False)
-        tak_misc.copySkinByName(dst = "temp_lod02_hair_bottom", srchStr = "temp_", rplcStr = "")
-        tak_misc.copySkinByName(dst = "lod03_GRP", prefix = "photoBook_001:") # Copy skin 'photoBook_001:lod03_GRP -> lod03_GRP'.
-        tak_misc.copySkinByName(dst = "lod02_GRP", prefix = "old_", copyMatOpt = True) # Copy skin and material 'old_lod02_GRP -> lod02_GRP.'
+        tak_misc.copySkinByName(dst='lod02_GRP', srchStr='lod02_', rplcStr='old_lod02_', copyMatOpt=False)
+        tak_misc.copySkinByName(dst='temp_lod02_hair_bottom', srchStr='temp_', rplcStr='')
+        tak_misc.copySkinByName(dst='lod03_GRP', prefix='photoBook_001:') # Copy skin 'photoBook_001:lod03_GRP -> lod03_GRP'.
+        tak_misc.copySkinByName(dst='lod02_GRP', prefix='old_', copyMatOpt=True) # Copy skin and material 'old_lod02_GRP -> lod02_GRP.'
     """
 
     dstGeos = [x for x in cmds.listRelatives(dst, ad=True, type='shape') if not cmds.getAttr(x + '.intermediateObject')]
@@ -2750,11 +2678,11 @@ def selBndJnt():
 
     sels = cmds.ls(sl=True)
     for sel in sels:
-        if cmds.nodeType(sel) == "joint" and "_bnd" in sel:
+        if cmds.nodeType(sel) == "joint" and "" in sel:
             bndJnts.append(sel)
         chlds = cmds.listRelatives(sel, ad=True, type="joint")
         if chlds:
-            chldBndJnts = [x for x in chlds if "_bnd" in x]
+            chldBndJnts = [x for x in chlds if "" in x]
             if chldBndJnts:
                 bndJnts.extend(chldBndJnts)
 
@@ -2832,3 +2760,52 @@ def copyUVRiggedMesh(source, target):
     pm.transferAttributes(source, targetOrigShape, transferUVs=2, transferColors=0, sampleSpace=5)
     pm.delete(targetOrigShape, ch=True)
     targetOrigShape.intermediateObject.set(True)
+
+
+def saveMatAssignInfo(filePath):
+    """
+    Save material assign information for selected meshes to a file
+
+    Args:
+        filePath: Path to save file
+
+    Returns:
+        None
+    """
+    matAssignInfo = {}
+    shadingEngines = []
+
+    selMeshes = pm.selected()
+    for mesh in selMeshes:
+        shadingEngine = mesh.getShape().connections(s=False, type='shadingEngine')
+        if shadingEngine:
+            shadingEngines.append(shadingEngine[0])
+
+    shadingEngines = list(set(shadingEngines))
+
+    for shadingEngine in shadingEngines:
+      mat = pm.ls(shadingEngine.connections(), materials=True)[0]
+      meshes = shadingEngine.connections(type='mesh')
+      matAssignInfo[mat.name()] = [mesh.name() for mesh in meshes]
+
+    with open(filePath, 'w') as f:
+        json.dump(matAssignInfo, f, indent=4)
+
+
+def loadMatAssignInfo(filePath, namespace=''):
+    """
+    Load material assign information and assign material to meshes
+
+    Args:
+        filePath: File path that have material assign information
+        namespace: Used namespace when import material file
+
+    Returns:
+        None
+    """
+    with open(filePath, 'r') as f:
+        matAssignInfo = json.load(f)
+
+    for mat, meshes in matAssignInfo.items():
+        pm.select(meshes, r=True)
+        pm.hyperShade(assign=namespace+mat)

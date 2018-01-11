@@ -180,7 +180,7 @@ skinNode = OpenMaya.MObject()
 selLs.getDependNode(0, skinNode)
 skinFn = OpenMayaAnim.MFnSkinCluster(skinNode)
 
-selLs.add('nose_primary_bnd_jnt')
+selLs.add('nose_primary_jnt')
 infDagPath = OpenMaya.MDagPath()
 selLs.getDagPath(1, infDagPath)
 

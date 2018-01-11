@@ -530,7 +530,7 @@ for sel in selLs:
 	# Create joint
 	selWsPos = cmds.xform(sel, q = True, rp = True, ws = True)
 	cmds.select(cl = True)
-	bndJnt = cmds.joint(n = sel + '_bnd_jnt', p = selWsPos)
+	bndJnt = cmds.joint(n = sel + '_jnt', p = selWsPos)
 	cmds.CompleteCurrentTool()
 	
 	# Bind
@@ -760,7 +760,7 @@ import takAutoRig
 import re
 import tak_misc
 
-search = '_bnd_jnt'
+search = '_jnt'
 replace = '_ctrl'
 shape = 'circleX'
 
