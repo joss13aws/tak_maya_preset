@@ -547,6 +547,33 @@ global proc b2deliveryCopy(){
 }
 
 
+global proc b2SendAssetUI()
+{
+	string $srcDir = `textFieldButtonGrp -q -text astFileLocField`;
+	b2Print("srcDir: ", $srcDir);
+
+	window -title "Send Asset" -mnb false -mxb false sendAssetWin;
+		columnLayout -adj true;
+			textFieldButtonGrp -label "Target Directory" -buttonLabel "Browse..." -columnWidth3 90 240 100 -buttonCommand "b2FileDialog \"dir\" \"none\" \"setPathField\"" setPathField;
+			button -label "Send" -c `format -stringArg $srcDir "b2SendAsset \"^1s\""`;
+	showWindow sendAssetWin;
+}
+
+global proc b2SendAsset(string $srcDir)
+{
+	string $targetDir = `textFieldButtonGrp -q -text setPathField`;
+
+	b2Print("srcDir: ", $srcDir);
+	b2Print("targetDir: ", $targetDir);
+
+	python("import tak_b2Pipeline_add");
+	python("reload(tak_b2Pipeline_add)");
+	python(`format -stringArg $srcDir -stringArg $targetDir "tak_b2Pipeline_add.sendAsset(\"^1s\", \"^2s\")"`);
+
+	deleteUI sendAssetWin;
+}
+
+
 // Open Selected History //
 global proc openHistory(){
 	//ÇöÀç ¾À º¸È£.

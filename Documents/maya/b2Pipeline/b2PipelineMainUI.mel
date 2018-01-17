@@ -164,14 +164,17 @@
 							
 				//- 어셋 네임 리스트
 				setParent assetManagerArea;
-				string $assetNameSelectorLayout = `columnLayout -columnWidth 151 -columnAttach "both" 0 -columnAlign "left" -rowSpacing 5 assetNameSelectorLayout`;
-					text -font boldLabelFont -label "Asset";
-					string $assetNameList = `textScrollList -sc "b2UpdAssetCompoList \"\"" -width 151 -height 250 assetNameList`;
+				string $assetNameSelectorLayout = `columnLayout -columnWidth 151 -columnAttach "both" 0 -columnAlign "left" assetNameSelectorLayout`;
+					rowLayout -numberOfColumns 2;
+						text -font boldLabelFont -label "Asset";
+						textFieldGrp -tcc refreshAssetList assetSearchTxtFldGrp;
+					setParent ..;
+					string $assetNameList = `textScrollList -sc "b2UpdAssetCompoList \"\"" -width 151 -height 250 -ams true assetNameList`;
 					rowColumnLayout -numberOfColumns 2 -columnWidth 1 75 -columnWidth 2 75 -columnAttach 1 "both" 0 -columnAttach 2 "both" 0;
 						button -label "New..." -backgroundColor 0.5 0.8 0.5 -command "b2NewAssetWin";
 						button -label "Delete" -backgroundColor 0.8 0.5 0.5 -command "b2RemoveSelected 2 2";
 						button -label "Rename" -command "renameAsset";
-						button -label "--";
+						button -label "Utility" -command "assetUtilityUI";
 							
 				//- 어셋 컴포넌트 리스트
 				setParent assetManagerArea;
@@ -310,8 +313,11 @@
 	
 				// 샷 리스트
 				setParent shotManagerArea;
-				string $shotListLayout = `columnLayout -columnAttach "both" 0 -columnAlign "left" -rowSpacing 5 shotListLayout`;
-					text -font boldLabelFont -label "Shot";
+				string $shotListLayout = `columnLayout -columnAttach "both" 0 -columnAlign "left" shotListLayout`;
+					rowLayout -numberOfColumns 2;
+						text -font boldLabelFont -label "Shot";
+						textFieldGrp -tcc refreshShotList shotSearchTxtFldGrp;
+					setParent ..;
 					string $shotList = `textScrollList  -sc "b2UpdShotCompoList \"\"" -width 98 -height 250 -allowMultiSelection true shotList`;
 					rowColumnLayout -numberOfColumns 2 -columnWidth 1 49 -columnWidth 2 49 -columnAttach 1 both 0 -columnAttach 2 both 0;
 						button -label "New" -backgroundColor 0.5 0.8 0.5 -command "b2NewShotWin";
@@ -1110,6 +1116,7 @@
 									popupMenu -parent $historyButtonName;
 									menuItem -label "Open" -c "openHistory";
 									menuItem -label "Send to Delivery" -c "b2deliveryCopy";
+									menuItem -label "Send to ..." -c "b2SendAssetUI";
 									menuItem -label "Delete" -c "b2DelReDev";
 								}
 								if ($type == "sht") 
@@ -1156,6 +1163,7 @@
 										popupMenu -parent $historyButtonName;
 										menuItem -label "Open" -c "openHistory";
 										menuItem -label "Send to Delivery" -c "b2deliveryCopy";
+										menuItem -label "Send to ..." -c "b2SendAssetUI";
 										menuItem -label "Delete" -c "b2DelReDev";
 									}  
 									if ($type == "sht") 
@@ -4206,9 +4214,73 @@
 
 		global proc setUpMdlShot()
 		{
-			python("import tak_b2Pipeline_add");
-			python("reload(tak_b2Pipeline_add)");
-			python("tak_b2Pipeline_add.setUpMdlShot()");
+			if (`file -q -amf`)
+			{
+				string $answer = `confirmDialog -title "Save" -message "현재 열려있는 Scene를 저장 하시겠습니까?" -button "Yes" -button "No" -defaultButton "Yes" -cancelButton "No" -dismissString "No"`;
+				if ($answer == "Yes")
+				{
+					// Save current scene
+					string $currentSceneName = `file -q -sceneName`;
+					file -rename $currentSceneName;
+					file -save -type "mayaAscii";
+					
+					file -force -new;
+				}
+				else
+				{
+					file -force -new;
+				}
+
+			}
+
+			currentUnit -linear "centimeter";
+
+			// Greate default groups
+			group -em -n "root";
+			group -em -n "geometry" -p "root";
+			group -em -n "lod03_GRP" -p "geometry";
+			group -em -n "wip_GRP";
+
+			// Create local directory
+			string $localRoot = "";
+			if ( `optionVar -ex "b2AssetRootPath"` )
+				$localRoot = b2AddSlash (`optionVar -q "b2AssetRootPath"`);
+
+			string $selItem[] = `b2GetCurrentlySelectedItem 2 3`;
+			b2Print("selItem: ", stringArrayToString($selItem, ", "));
+			string $proj = `optionMenu -q -v projList`;
+			b2Print("proj: ", $proj);
+
+			int $ver = 0; 
+			if ( `optionVar -ex "b2RootPathVer"`){
+				$ver = `optionVar -q "b2RootPathVer"`;
+			}		
+
+			if ($ver)	
+			{
+				//newVer		
+				if (`gmatch $localRoot "*$proj*"`)		
+					$localRoot = `substitute "$proj" $localRoot $proj`;
+				if (`gmatch $localRoot "*$assetType*"`)		
+					$localRoot = `substitute "$assetType" $localRoot $selItem[0]`;
+				if (`gmatch $localRoot "*$asset*"`)		
+					$localRoot = `substitute "$asset" $localRoot $selItem[1]`;					
+				if (`gmatch $localRoot "*$compo*"`)		
+					$localRoot = `substitute "$compo" $localRoot $selItem[2]`;	
+			}
+			b2makeFolder $localRoot;
+
+			// Make local file path
+			$filePath = $localRoot + "/" + $selItem[0];
+			$filePath += "_" + $selItem[1];
+			$filePath += "_" + $selItem[2];
+			$filePath += "_" + "v001";
+			$filePath += "_" + `getenv userName`;
+			$filePath += ".ma";
+			
+			// Save file
+			file -rename $filePath;
+			file -save -type "mayaAscii";
 		}
 
 
@@ -4231,6 +4303,81 @@
 			python($pythonCmdStr);
 
 			b2UpdAssetNameList "";
+		}
+
+
+		global proc assetUtilityUI()
+		{
+			if (`window -exists assetUtilsWin`)
+			{
+				deleteUI assetUtilsWin;
+			}
+			window -title "Asset Utils" -mnb false -mxb false assetUtilsWin;
+				columnLayout -adj true;
+					optionMenu -label "Component:" assetCompoOptMenu;
+					textFieldButtonGrp -label "Target Directory" -text "" -buttonLabel "Browse..." 
+										-columnWidth3 90 240 100 -buttonCommand "b2FileDialog \"dir\" \"none\" \"setPathField\"" setPathField;
+					button -label "Send Latest Assets" -c sendLatestAssets;
+			
+			populateAssetCompoOptMenu();
+			
+			window -e -w 10 -h 10 assetUtilsWin;
+			showWindow;
+		}
+
+
+		global proc populateAssetCompoOptMenu()
+		{
+			deleteOldMenuItem("assetCompoOptMenu");
+			
+			// string $assetCompoList[] = `textScrollList -q -allItems assetCompoList`;
+			string $assetCompoList[] = {"mdl", "rig"};
+			for ($item in $assetCompoList)
+			{
+				menuItem -label $item -p assetCompoOptMenu;
+			}
+		}
+
+
+		global proc sendLatestAssets()
+		{
+			string $targetDir = `textFieldButtonGrp -q -text setPathField`;
+			string $selAssets[] = `textScrollList -q -selectItem  assetNameList`;
+			string $selCompo = `optionMenu -q -v assetCompoOptMenu`;
+			
+			// Get Asset Type directory path
+			string $arbitraryAssetDirPath = `textFieldButtonGrp -q -text astFileLocField`;
+			string $tempStrArray[] = stringToStringArray($arbitraryAssetDirPath, "/");
+			stringArrayRemoveAtIndex(4, $tempStrArray);
+			string $assetTypeDir = stringArrayToString($tempStrArray, "/");
+			
+			for ($asset in $selAssets)
+			{
+				string $assetDirPath = $assetTypeDir + "/" + $asset + "/" + $selCompo + "/release";
+				python("import tak_b2Pipeline_add");
+				python("reload(tak_b2Pipeline_add)");
+				python(`format -stringArg $assetDirPath -stringArg $targetDir "tak_b2Pipeline_add.sendLatestAsset(\"^1s\", \"^2s\")"`);
+			}
+			
+			deleteUI assetUtilsWin;
+		}
+
+
+		global proc refreshAssetList()
+		{
+			string $inputStr = `textFieldGrp -q -text assetSearchTxtFldGrp`;
+			python("import tak_b2Pipeline_add");
+			python("reload(tak_b2Pipeline_add)");
+			python(`format -stringArg $inputStr "tak_b2Pipeline_add.refreshAssetNameList(\"^1s\")"`);
+		}
+
+
+		global proc refreshShotList()
+		{
+			string $inputStr = `textFieldGrp -q -text shotSearchTxtFldGrp`;
+			python("import tak_b2Pipeline_add");
+			python("reload(tak_b2Pipeline_add)");
+			python(`format -stringArg $inputStr "tak_b2Pipeline_add.refreshShotList(\"^1s\")"`);
 		}
 
 print "// load b2PipelineMainUI.mel\n";

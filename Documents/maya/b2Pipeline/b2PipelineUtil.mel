@@ -1465,7 +1465,26 @@
 	}
 	//-/
 
-	
+
+	global proc b2Print(string $title, string $statment)
+	{
+		print ("\n# " + $title);
+		print $statment;
+		print "\n";
+	}
+
+
+	global proc deleteOldMenuItem(string $optionMenuWidget)
+	{
+		string $oldMenuItems[] = `optionMenu -q -itemListLong $optionMenuWidget`;
+		if (size($oldMenuItems))
+		{
+			for ($menuItem in $oldMenuItems)
+			{
+				deleteUI $menuItem;
+			}
+		}
+	}	
 //-/
 
 

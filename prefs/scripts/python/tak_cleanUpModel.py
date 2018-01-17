@@ -102,16 +102,12 @@ def UI():
     cmds.button(label = 'Delete History', c = delHis)
     cmds.button('intermButton', label = 'Delete Intermediate Object', c = delInterMediObj)
     cmds.button(label = 'Off Drawing Override of Shape, Double Sided On, Primary visibility On', c = setShpAttrs)
-    # cmds.button(label = 'Set Subdivision Method to Maya Catmull-Clark', c = setSubdMayaCatmullClark)
+    cmds.button(label = 'Set Subdivision Method to Maya Catmull-Clark', c = setSubdMayaCatmullClark)
     cmds.button(label = 'Set Texture Channel to Combined Texture', c = combinedTexture)
     cmds.button(label = 'Into Default Display Layer', c = intoDfltDisLyr)
     cmds.button(label = 'Remove MI Label', c = rmvMILabel)
 
     cmds.button('allButton', label = 'All in One', c = allInOne, h = 40, bgc = [1, 0.5, 0.2])
-
-    cmds.setParent('procColLay')
-    cmds.separator(h = 5, style = 'in')
-    cmds.text(label = 'facial_grp Á¤¸®', bgc = [0.2, 0.5, 0.2], h = 25)
 
     # Material Clean Up
     cmds.setParent('procColLay')

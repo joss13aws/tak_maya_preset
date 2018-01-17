@@ -17,6 +17,7 @@ import maya.mel as mel
 import maya.OpenMaya as OpenMaya
 from functools import partial
 import tak_cleanUpModel, tak_lib, tak_misc
+reload(tak_lib)
 
 reload(tak_cleanUpModel)
 reload(tak_lib)
@@ -721,11 +722,11 @@ def cleanUpMdl(*args):
 	if cmds.objExists('Main.smoothLevel'):
 		cmds.setAttr('Main.smoothLevel', 2)
 
-	# # All deformer's envelope of lod03 set to 0.
-	# lod03GeoLs = cmds.ls('lod03_GRP', dag = True)
-	# lod03GeoLs = [x for x in lod03GeoLs if not 'Shape' in x]
-	# for lod03Geo in lod03GeoLs:
-	# 	tak_lib.setAllDefEnvlope(lod03Geo, 0)
+	# All deformer's envelope of lod03 set to 0.
+	lod03GeoLs = cmds.ls('lod03_GRP', dag = True)
+	lod03GeoLs = [x for x in lod03GeoLs if not 'Shape' in x]
+	for lod03Geo in lod03GeoLs:
+		tak_lib.setAllDefEnvlope(lod03Geo, 0)
 
 	# Clean up render model.
 	cmds.select('lod03_GRP', hi=True, r=True)

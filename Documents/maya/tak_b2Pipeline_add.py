@@ -12,9 +12,17 @@ b2Pipeline Additional python functions.
 import maya.cmds as cmds
 import pymel.core as pm
 import maya.OpenMaya as OpenMaya
-import re, os, sys, shutil, glob
+import re
+import os
+import sys
+import shutil
+import glob
 import pprint
+import logging
 
+logging.basicConfig()
+logger = logging.getLogger('tak_b2Pipeline_add_logger')
+logger.setLevel(logging.DEBUG)
 
 def customAttrAbcMel(assetNamespace):
     '''
@@ -653,10 +661,14 @@ def getDevFilePath(relDirPath):
         devFilePath(str): Animation scene file path that work in progress
     """
     publishedType = relDirPath.rsplit('/')[-2]
+    # print 'publishedType: ', publishedType
     ver = relDirPath.rsplit('/')[-1]
+    # print 'ver: ', ver
     verNum = re.search(r'\D(\d+)', ver).group(1)
+    # print 'verNum: ', verNum
 
     layerPath = '/'.join(relDirPath.rsplit('/')[:-2])
+    # print 'layerPath: ', layerPath
     infoXmlPath = glob.glob(layerPath + '/_info/*.xml')
 
     with open(infoXmlPath[0], 'r') as f:
@@ -665,10 +677,13 @@ def getDevFilePath(relDirPath):
     historyInfoLs = re.findall(r'\t<note>.*?</note>\n', xmlCntns, re.DOTALL)
     devFilePath = ''
     for historyInfo in historyInfoLs:
-        result = re.search(r'.*%s.*%s.*' %(publishedType, verNum), historyInfo, re.DOTALL)
+        result = re.search(r'.*<event>%s</event>.*<version>%s</version>.*' % (publishedType, verNum), historyInfo, re.DOTALL)
         if result:
+            # print 'historyInfo: ', historyInfo
             devSceneFileName = re.search(r'.*\.ma', historyInfo).group()
-            devVer = devSceneFileName.rsplit('_')[-2]
+            # print 'devSceneFileName: ', devSceneFileName
+            devVer = re.search(r'_(v\d{3})_', devSceneFileName).group(1)
+            # print 'devVer: ', devVer
             devFilePath = layerPath + '/develop/%s/' %devVer + devSceneFileName
         else:
             pass
@@ -688,6 +703,7 @@ def getReferenceInfo(maFilePath):
     """
     refInfoDict = {}
 
+    print "maFilePath: ", maFilePath
     with open(maFilePath, 'r') as f:
         contents = f.read()
 
@@ -725,7 +741,9 @@ def getFilePathUsedInAni(relDirPath, assetName):
     filePath = None
 
     devFilePath = getDevFilePath(relDirPath)
+    # print 'devFilePath: ', devFilePath
     refInfoDict = getReferenceInfo(devFilePath)
+    # pprint.pprint(refInfoDict)
     filePath = refInfoDict.get(assetName).get('filePath')
 
     return filePath
@@ -761,8 +779,6 @@ def getNolatestAssets(refInfos, selRelFileLs):
 
 
 def setPivotToWsOrigin():
-    # cmds.select('root', hi = True, r = True)
-    # trsfLs = cmds.ls(sl = True, type = 'transform')
     trsfLs = ['root', 'geometry', 'lod03_GRP']
     for trsf in trsfLs:
         cmds.xform(trsf, rp = [0, 0, 0], ws = True)
@@ -944,3 +960,103 @@ def checkAssetVersion():
             return 0
 
     return 1
+
+
+
+def copyAssetUsedInScene(mayaFilePath, targetDirectoryPath):
+    """
+    Copy referenced assets in maya scene file
+
+    Parameters:
+        mayaFilePath(str): Maya ascii scene file path that contain reference
+        targetDirectoryPath(str): Destination directory path
+    """
+    refInfoDict = getReferenceInfo(mayaFilePath)
+    for assetName, assetInfoDict in refInfoDict.items():
+        src = os.path.dirname(assetInfoDict.get('filePath'))
+        dst = re.sub(r'\w:/', targetDirectoryPath, src)
+        if not os.path.exists(dst):
+            shutil.copytree(src, dst)
+
+
+def sendAsset(src, dst):
+    dst = re.sub(r'\w:/', dst, src)
+    if not os.path.exists(dst):
+        shutil.copytree(src, dst)
+
+
+def sendLatestAsset(releaseDirPath, targetDirPath):
+    if os.path.exists(releaseDirPath):
+        latestReleaseDirPath = '%s/%s' % (releaseDirPath, getLatestVer(releaseDirPath))
+        if os.path.exists(latestReleaseDirPath):
+            sendAsset(latestReleaseDirPath, targetDirPath)
+        else:
+            logger.warning("'%s' is not exists" % latestReleaseDirPath)
+    else:
+        logger.warning("'%s' is not exists" % releaseDirPath)
+
+
+def refreshAssetNameList(searchStr):
+    """
+    Refresh `assetNameList` textScrollList widget by searching string
+    
+    Parameters:
+        searchStr(str): String that user input
+    """
+
+    # Get asset directory path through UI
+    curProjPath = cmds.textFieldButtonGrp('currentProjPath', q=True, text=True)
+    selAssetType = cmds.textScrollList('assetTypeList', q=True, selectItem=True)[0]
+    assetDirPath = os.path.join(curProjPath, '4.Asset', selAssetType)
+    
+    # Delete items in assetNameList before fill in searching result
+    if cmds.textScrollList('assetNameList', q=True, allItems=True):
+        cmds.textScrollList('assetNameList', e=True, removeAll=True)
+     
+    # Get only directories in the asset directory path
+    dirsInAssetDir = [dir for dir in os.listdir(assetDirPath) if os.path.isdir(os.path.join(assetDirPath, dir))]
+    
+    # Filter valid directory. Valid directory contains 'direcotryName_def.xml'
+    assetDirs = [dir for dir in dirsInAssetDir if dir+'_def.xml' in os.listdir(os.path.join(assetDirPath, dir))]
+    
+    for asset in assetDirs:
+        if re.search(searchStr, asset, re.IGNORECASE):
+            cmds.textScrollList('assetNameList', e=True, append=asset)
+
+
+def refreshShotList(searchStr):
+    """
+    Refresh `shotList` textScrollList widget by searching string
+    
+    Parameters:
+        searchStr(str): String that user input
+    """
+
+    # Get asset directory path through UI
+    curProjPath = cmds.textFieldButtonGrp('currentProjPath', q=True, text=True)
+    selSequence = cmds.textScrollList('seqList', q=True, selectItem=True)[0]
+    shotDirPath = os.path.join(curProjPath, '5.Shot', selSequence)
+    
+    # Delete items in assetNameList before fill in searching result
+    if cmds.textScrollList('shotList', q=True, allItems=True):
+        cmds.textScrollList('shotList', e=True, removeAll=True)
+     
+    # Get only directories in the asset directory path
+    dirsInShotDir = [dir for dir in os.listdir(shotDirPath) if os.path.isdir(os.path.join(shotDirPath, dir))]
+    
+    # Filter valid directory. Valid directory contains 'direcotryName_def.xml'
+    shotDirs = [dir for dir in dirsInShotDir if dir+'_def.xml' in os.listdir(os.path.join(shotDirPath, dir))]
+    
+    for shot in shotDirs:
+        if re.search(searchStr, shot, re.IGNORECASE):
+            cmds.textScrollList('shotList', e=True, append=shot)
+
+
+def removeUnusedPluginRequires(filePath):
+    with open(filePath, 'r') as f:
+        fileContents = f.read()
+
+    modifiedFileContents = re.sub(r'requires ".+;', '', fileContents)
+
+    with open(filePath, 'w') as f:
+        f.write(modifiedFileContents)

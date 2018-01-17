@@ -2766,7 +2766,7 @@ def saveMatAssignInfo(filePath):
     """
     Save material assign information for selected meshes to a file
 
-    Args:
+    Parameters:
         filePath: Path to save file
 
     Returns:
@@ -2796,7 +2796,7 @@ def loadMatAssignInfo(filePath, namespace=''):
     """
     Load material assign information and assign material to meshes
 
-    Args:
+    Parameters:
         filePath: File path that have material assign information
         namespace: Used namespace when import material file
 
@@ -2809,3 +2809,15 @@ def loadMatAssignInfo(filePath, namespace=''):
     for mat, meshes in matAssignInfo.items():
         pm.select(meshes, r=True)
         pm.hyperShade(assign=namespace+mat)
+
+
+def setUpDefaultScaleAttr(scaleValue, globalControl='Main'):
+   if isinstance(globalControl, basestring):
+       globalControl = pm.PyNode(globalControl)
+   
+   if not globalControl.hasAttr('DefaultScale'):
+       globalControl.addAttr('DefaultScale', at='enum', enumName='Release:Develop', keyable=True)
+       globalControl.DefaultScale.lock()
+   
+   pm.setDrivenKeyframe(globalControl.getParent().scale, v=scaleValue, cd=globalControl.DefaultScale, dv=0)
+   pm.setDrivenKeyframe(globalControl.getParent().scale, v=1.0, cd=globalControl.DefaultScale, dv=1)

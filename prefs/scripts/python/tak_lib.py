@@ -153,7 +153,7 @@ def setAllDefEnvlope(geo, envVal):
             for deformerType in deformerTypeLs:
                 findDeformer = cmds.ls(allConnections, type = deformerType)
                 if findDeformer:
-                    deformerLs.append(findDeformer[0])
+                    deformerLs.extend(findDeformer)
 
         for dfm in deformerLs:
             cmds.setAttr(dfm + '.envelope', envVal)

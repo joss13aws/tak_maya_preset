@@ -1953,11 +1953,17 @@
 			{
 				print "Asset already exists, updating....\n";
 				//string $astRoot = $conflictingNs + ":lod03_GRP";
+                print "\nrefNodeAst: \n";
+                print $refNodeAst;
+                print "\nastFileName: \n";
+                print $astFileName;
+                print "\next: \n";
+                print $ext;
+                print "\n";
 
 				if( $ext == ".ma" )
 				{
 					file -prompt false -loadReference $refNodeAst -type "mayaAscii" $astFileName;
-
 				}
 				else if( $ext == ".abc" && $buffer[4] == "cam" )
 				{
@@ -1993,13 +1999,6 @@
 
 						python("tak_b2Pipeline_add.disableParallelBlender('" + $namespace + "')");
 
-						// // Delete intermediate objects of render model.
-						// select -hi -r ($namespace + ":lod03_GRP");
-						// python("import tak_b2Pipeline_add");
-						// python("reload(tak_b2Pipeline_add)");
-						// python("tak_b2Pipeline_add.delInterMediObj()");
-						// select -cl;
-
 						if (objExists ($abcNs + ":lod03_GRP.renMdlVer"))
 						{
 							// Load render model matching cache model.
@@ -2022,7 +2021,7 @@
 						b2AttachAbcToModel $namespace $abcNs "lod03_GRP";
 
 						// shave anim update
-						b2AttachShaveToModel $relDirPath $verDir $eachFile $namespace;						
+						b2AttachShaveToModel $relDirPath $verDir $eachFile $namespace;
 					}
 					else
 					{//import 방식인 경우.
@@ -2071,7 +2070,8 @@
 				}
 				else if( $ext == ".editMA" )
 				{
-					file -prompt false -loadReference $refNodeEdit -type "editMA" $relFileName;				
+                    file -prompt false -loadReference $refNodeAst -type "mayaAscii" $astFileName;
+					file -prompt false -loadReference $refNodeEdit -type "editMA" $relFileName;
 				}
 			}
 		}
@@ -2666,8 +2666,6 @@
 	}
 
 
-
-//- 추추를 위한 임시.
 	global proc b2ReferenceDevFile( string $method, string $namespace, string $filePath )
 	{
 		if ($method == "new")
@@ -2692,28 +2690,44 @@
 			deleteUI "b2SubWin1";
 		}
 
-		string $window = `window -title "b2 Shot Utils" -sizeable false b2SubWin1`;
-			columnLayout -columnWidth 300 -columnAttach "left" 5 -columnAlign "left" -rowSpacing 5;
-				rowLayout -numberOfColumns 2 -columnWidth2 90 310 -columnAttach2 "right" "both";
-					text -label "Sending Options";
+		string $window = `window -title "b2 Shot Utils" -mnb false -mxb false b2SubWin1`;
+			columnLayout -adj true -rowSpacing 3;
+				rowLayout -numberOfColumns 2;
+					text -label "Sending Options: ";
 					string $group1 = `radioButtonGrp -numberOfRadioButtons 2
 						-labelArray2 "All shots" "Selected shot" -select 2 sendingOptions`;
+				
 				setParent ..;
-				textFieldButtonGrp -label "Target Directory" -text "" -buttonLabel "Browse..."
-					-columnWidth3 90 240 100 -buttonCommand "b2FileDialog \"dir\" \"none\" \"setPathField\"" setPathField;
-				separator -width 400;
-				button -width 400 -bgc 1 0.5 0.5 -label "Send Latest Playblast" -command "b2DoSendClips" -annotation "선택한 샷 혹은 모든 샷의 가장 최신 애니메이션 클립을 지정한 경로에 복사합니다.";
-				separator -width 400;
+				rowColumnLayout -numberOfColumns 2 -columnSpacing 2 10;
+					optionMenu -label "Component:" -cc compOptMenuCC compOptMenu;
+					optionMenu -label "Layer:" layerOptMenu;
+				
+				setParent ..;
+				textFieldButtonGrp -label "Target Directory" -text "" -buttonLabel "Browse..." 
+				-columnWidth3 90 240 100 -buttonCommand "b2FileDialog \"dir\" \"none\" \"setPathField\"" setPathField;
+
+				separator;
+				
+				button -label "Send Latest Playblast" -command b2DoSendClips -annotation "선택한 샷 혹은 모든 샷의 가장 최신 애니메이션 클립을 지정한 경로에 복사합니다.";
+				
+				separator;
 
 				textFieldGrp -label "Prefix: " -cw 1 50 filePrefixTxtFldGrp;
-				// Fill prefix text field.
 				string $proj = `optionMenu -q -v projList`;
 				string $buffer[];
 				tokenize $proj "_" $buffer;
 				textFieldGrp -e -text ($buffer[1] + "_") filePrefixTxtFldGrp;
-
 				textFieldGrp -label "Suffix: " -cw 1 50 -text "_AD" fileSuffixTxtFldGrp;
-				button -width 400 -bgc 0 0.375 0.75 -label "Send Maya Files and Clips" -command "sendShot" -annotation "선택한 샷들의 마야 파일과 Playblast들을 지정한 경로에 복사 합니다.";
+				button -label "Send Maya Files and Clips" -command sendShot -annotation "선택한 샷들의 마야 파일과 Playblast들을 지정한 경로에 복사 합니다.";
+				
+				separator;
+				
+				button -label "Send Assets" -command sendAssets -annotation "선택한 샷들에서 사용된 어셋을 지정한 경로에 복사 합니다.";
+				
+				separator;
+				
+				button -label "Play Clips" -command playPBSelectedShots -annotation "선택한 샷들의 Playblast를 모아서 봅니다.";
+				
 				//button -width 400 -bgc 0 0.3 0.6 -label "Pororo_Batch Playblast" -command "pororoBatchPB" -annotation "선택한 샷들에 대해 Playblast를 걸고 지정한 경로에 저장합니다.";
 				//button -width 400 -label "Cancel" -command "deleteUI b2SubWin1";
 		
@@ -2722,35 +2736,57 @@
 			confirmDialog -title "Error!" -message "시퀀스를 선택 하세요";
 		else
 		{
-		window -e -w 300 -h 100 $window;
+		
+		populateCompOptMenu();
+		compOptMenuCC();
+
+		window -e -w 100 -h 100 $window;
 		showWindow $window;
 		}
 
 	}
 
 
+	global proc populateCompOptMenu()
+	{
+		deleteOldMenuItem("compOptMenu");
+
+		string $shotCompLs[] = `textScrollList -q -allItems shotCompoList`;
+		for ($item in $shotCompLs)
+		{
+			menuItem -label $item -p compOptMenu;
+		}
+	}
+
+
+	global proc compOptMenuCC()
+	{
+		deleteOldMenuItem("layerOptMenu");
+
+		string $selItem[] = `b2GetCurrentlySelectedItem 3 2`;
+		string $selComp = `optionMenu -q -value compOptMenu`;
+		if (size($selItem[1]))
+		{
+			string $path = `b2GetFileName2 $selItem[0] $selItem[1] $selComp "" 0 "folder" 0`;
+			$newShotCompoList = `b2GetFolderList $path`;
+			for ($item in $newShotCompoList)
+			{
+				menuItem -label $item -p layerOptMenu;
+			}
+		}
+	}
+
+
 	global proc b2DoSendClips()
 	{	
 		string $selItems[] = `b2GetCurrentlySelectedItem 3 4`;
-		string $seqPath = `b2GetFileName2 $selItems[0] "" "" "" 0 "folder" 0`;
-
-		print "$seqPath =\n";
-		print $seqPath;
-		print "\n";
-		
+		string $seqPath = `b2GetFileName2 $selItems[0] "" "" "" 0 "folder" 0`;	
 		string $shtFolderLst[] = `b2GetFolderList $seqPath`;
-
-		print "$shtFolderLst =\n";
-		print $shtFolderLst;
-		print "\n";
-		
 		string $option = `radioButtonGrp -q -select "sendingOptions"`;
-		
-		print "$option =\n";
-		print $option;
-		print "\n";
-		
 		string $targetDir = `textFieldButtonGrp -q -text setPathField`;
+
+		string $selComp = `optionMenu -q -value compOptMenu`;
+		string $selLayer = `optionMenu -q -value layerOptMenu`;
 
 		if ($targetDir == "" || $targetDir == "/")
 		{
@@ -2771,7 +2807,7 @@
 				float $i = 0.0;
 				for ($eachFolder in $shtFolderLst)
 				{
-					string $filePath = $seqPath + $eachFolder + "/" + $selItems[0] + "_" + $eachFolder + "_maya/scenes/ani/master/develop/";
+					string $filePath = $seqPath + $eachFolder + "/" + $selItems[0] + "_" + $eachFolder + "_maya/scenes/" + $selComp + "/" + $selLayer + "/develop/";
 					string $versionLst[] = `getFileList -folder $filePath -filespec "v*"`;
 					sort $versionLst;
 					string $latestVersionDir = $versionLst[size($versionLst) - 1];
@@ -2791,10 +2827,6 @@
 			{
 				string $selectedShot[] = `textScrollList -q -selectItem  shotList`;
 
-				print "$selectedShot =\n";
-				print $selectedShot;
-				print "\n";				
-
 				if ($selectedShot[0] == "")
 				{
 					confirmDialog -title "Error!" -message "샷을 선택 하세요";					
@@ -2812,7 +2844,7 @@
 
 					for ( $i = 0; $i < size($selectedShot); $i++ )
 					{
-						string $filePath = $seqPath + $selectedShot[$i] + "/" + $selItems[0] + "_" + $selectedShot[$i] + "_maya/scenes/ani/master/develop/";
+						string $filePath = $seqPath + $selectedShot[$i] + "/" + $selItems[0] + "_" + $selectedShot[$i] + "_maya/scenes/" + $selComp + "/" + $selLayer + "/develop/";
 						string $versionLst[] = `getFileList -folder $filePath -filespec "v*"`;
 						sort $versionLst;
 						string $latestVersionDir = $versionLst[size($versionLst) - 1];
@@ -2822,76 +2854,51 @@
 						$targetPath = $targetDir + $mov[0];
 						string $evalCommand = "sysFile -copy \"" + $targetPath + "\" \"" + $filePath + "\"";
 						evalEcho $evalCommand;
-							progressBar -edit -step 1 $progressControl;
-
-						// string $devFile = `b2GetFileName2 $selItems[0] $selectedShot[$i] "ani" "master" 0 "develop" 0`;
-						// string $filename = `basenameEx $devFile`;
-						// string $sourceFile = `substituteAllString $devFile ".ma" ".mov"`;
-						// string $targetFile = $targetDir + $filename + ".mov";
-						// print "$sourceFile =\n";
-						// print $sourceFile;
-						// print "\n";
-						// print "$targetFile =\n";
-						// print $targetFile;
-						// print "\n";
-						// string $evalCommand = "sysFile -copy \"" + $targetFile + "\" \"" + $sourceFile + "\"";
-						// evalEcho $evalCommand;	
-						// 	progressBar -edit -step 1 $progressControl;
+						progressBar -edit -step 1 $progressControl;
 					}
 					deleteUI b2SubWin2;
-					deleteUI b2SubWin1; 
+					deleteUI b2SubWin1;
 				}
 			}
 
 		}
 	}
 
-	global proc sendShot(){
+
+	global proc sendShot()
+	{
 		// Get file prefix and suffix strings.
 		string $prefix = `textFieldGrp -q -text filePrefixTxtFldGrp`;
 		string $suffix = `textFieldGrp -q -text fileSuffixTxtFldGrp`;
 
 		// Get selected shot list
 		string $selectedSeq[] = `textScrollList -q -selectItem  seqList`;
-		// print $selectedSeq[0];
 
 		string $selectedShot[] = `textScrollList -q -selectItem  shotList`;
-		// print $selectedShot;
 
 		string $selItems[] = `b2GetCurrentlySelectedItem 3 4`;
 
 		string $targetDir = `textFieldButtonGrp -q -text setPathField`;
 
-		for ( $i = 0; $i < size($selectedShot); $i++ )	{
-			string $srcDevFile = `b2GetFileName2 $selItems[0] $selectedShot[$i] "ani" "master" 0 "develop" 0`;
-			// print "$srcDevFile =\n";
-			// print $srcDevFile;
-			// print "\n";
+		string $selComp = `optionMenu -q -value compOptMenu`;
+		string $selLayer = `optionMenu -q -value layerOptMenu`;
+
+		for ( $i = 0; $i < size($selectedShot); $i++ )
+		{
+			string $srcDevFile = `b2GetFileName2 $selItems[0] $selectedShot[$i] $selComp $selLayer 0 "develop" 0`;
 			
 			string $filename = $prefix + $selectedSeq[0] + "_" + $selectedShot[$i] + $suffix;
-			// print "$filename =\n";
-			// print $filename;
-			// print "\n";
 			
 			string $ext = `fileExtension($srcDevFile)`;
             string $trgDevFile = $targetDir + $selectedShot[$i] + "/Src/" + $filename + "." + $ext;
-			// print "$trgDevFile =\n";
-			// print $trgDevFile;
-			// print "\n";
 
 			string $srcClipFile = `substituteAllString $srcDevFile ".ma" ".mov"`;
 			if ($srcDevFile == $srcClipFile)
             {
                 $srcClipFile = `substituteAllString $srcDevFile ".mb" ".mov"`;
             }
-            // print "$srcClipFile =\n";
-			// print $srcClipFile;
-			// print "\n";
 
 			string $trgClipFile = $targetDir + $selectedShot[$i] + "/Src/" + $filename + ".mov";
-			// print "$trgClipFile =\n";
-			// print $trgClipFile;
-			// print "\n";
 
 			// Create folder
 			sysFile -makeDir ($targetDir + $selectedShot[$i] + "/Src/");
@@ -2904,6 +2911,29 @@
 		}
 	}
 
+
+	global proc sendAssets()
+	{
+		string $targetDir = `textFieldButtonGrp -q -text setPathField`;
+
+		string $selectedSeq[] = `textScrollList -q -selectItem  seqList`;
+		string $selectedShot[] = `textScrollList -q -selectItem  shotList`;
+		string $selItems[] = `b2GetCurrentlySelectedItem 3 4`;
+
+		string $selComp = `optionMenu -q -value compOptMenu`;
+		string $selLayer = `optionMenu -q -value layerOptMenu`;
+
+		for ( $i = 0; $i < size($selectedShot); $i++ )
+		{
+			string $srcDevFile = `b2GetFileName2 $selItems[0] $selectedShot[$i] $selComp $selLayer 0 "develop" 0`;
+
+			python("import tak_b2Pipeline_add");
+			python("reload(tak_b2Pipeline_add)");
+			python(`format -stringArg $srcDevFile -stringArg $targetDir "tak_b2Pipeline_add.copyAssetUsedInScene(\"^1s\", \"^2s\")"`);
+		}
+	}
+
+
 	global proc pororoBatchPB(){
 		// Desciption: Batch playplast for selected shots on Pororo project. //
 
@@ -2915,24 +2945,16 @@
 
 		// Get selected shot list.
 		string $selectedSeq[] = `textScrollList -q -selectItem  seqList`;
-		// print $selectedSeq[0];
 
 		string $selectedShot[] = `textScrollList -q -selectItem  shotList`;
-		// print $selectedShot;
 		
 		string $selItems[] = `b2GetCurrentlySelectedItem 3 4`;
-		// print $selItems;
-		// print "\n";
 
 		string $targetDir = `textFieldButtonGrp -q -text setPathField`;
-		// print $targetDir;
-		// print "\n";
 
 		for ( $i = 0; $i < size($selectedShot); $i++ )	{
 			// Open file.
 			string $devFile = `b2GetFileName2 $selItems[0] $selectedShot[$i] "ani" "master" 0 "develop" 0`;
-			// print $devFile;
-			// print "\n";
 
 			file -open -force $devFile;
 			
@@ -2949,8 +2971,6 @@
 			string $pbFileName = `substituteAllString $sceneName ".ma" ".avi"`;
 
 			string $pbFilePath = $targetDir + $pbFileName;
-			// print $pbFilePath;
-			// print "\n";
 
 			// Find proper sound
 			// Scene number
@@ -2979,10 +2999,46 @@
 			print ("Current scene sound is " + $snd);
 			print "\n";
 			
-			playblast  -fo -format avi -s $sounds[0] -filename $pbFilePath -sequenceTime 0 -clearCache 1 -viewer 0 -showOrnaments 1 -fp 4 -percent $percent -compression $codec -quality 100 -widthHeight $wdith $height;			
+			playblast  -fo -format avi -s $snd -filename $pbFilePath -sequenceTime 0 -clearCache 1 -viewer 0 -showOrnaments 1 -fp 4 -percent $percent -compression $codec -quality 100 -widthHeight $wdith $height;			
+			
 		}
 
 	}
 
 
+	global proc playPBSelectedShots()
+	{
+		string $selItems[] = `b2GetCurrentlySelectedItem 3 4`;
+		string $seqPath = `b2GetFileName2 $selItems[0] "" "" "" 0 "folder" 0`;
+		string $selComp = `optionMenu -q -value compOptMenu`;
+		string $selLayer = `optionMenu -q -value layerOptMenu`;
+		
+		// Play playblast for selected shots using Pdplayer
+		string $selectedShot[] = `textScrollList -q -selectItem  shotList`;
+
+		if ($selectedShot[0] == "")
+		{
+			confirmDialog -title "Error!" -message "샷을 선택 하세요";
+		}
+		else
+		{
+			string $movFiles[];
+			for ( $i = 0; $i < size($selectedShot); $i++ )
+			{
+				string $filePath = $seqPath + $selectedShot[$i] + "/" + $selItems[0] + "_" + $selectedShot[$i] + "_maya/scenes/" + $selComp + "/" + $selLayer + "/develop/";
+				string $versionLst[] = `getFileList -folder $filePath -filespec "v*"`;
+				sort $versionLst;
+				string $latestVersionDir = $versionLst[size($versionLst) - 1];
+				$filePath = $filePath + $latestVersionDir + "/";
+				string $mov[] = `getFileList -folder $filePath -filespec "*.mov"`;
+				$filePath = $filePath + $mov[0];
+				
+				$movFiles[$i] = $filePath;
+			}
+			
+			b2Playblast "sht" "seq" $movFiles;
+		}
+	}
+
 	print "// load b2PipelineShot.mel\n";
+	

@@ -488,6 +488,11 @@
 		int $result1 = `filetest -e $targetFile`;
 		if ($result1 == 1)
 		{
+			// Remove unused plugin requires
+			python("import tak_b2Pipeline_add");
+			python("reload(tak_b2Pipeline_add)");
+			python(`format -stringArg $targetFile "tak_b2Pipeline_add.removeUnusedPluginRequires(\"^1s\")"`);
+
 			$result = 1;
 		}
 		else

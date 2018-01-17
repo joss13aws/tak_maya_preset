@@ -35,7 +35,7 @@ class UI(object):
 
 		cmds.separator(style = 'in', h = 5, p = cls.widgets['mainColLo'])
 
-		cls.widgets['divFrntSldrGrp'] = cmds.intSliderGrp(label = 'Subdiv Front: ', field = True, min = 1, max = 200, fmn = 1, fmx = 200, v = 8, columnWidth = [(1, 80)], p = cls.widgets['mainColLo'], cc = Functions.subdivFrontCmd)
+		cls.widgets['divFrntSldrGrp'] = cmds.intSliderGrp(label = 'Subdiv Front: ', field = True, min = 1, max = 1000, fmn = 1, fmx = 1000, v = 8, columnWidth = [(1, 80)], p = cls.widgets['mainColLo'], cc = Functions.subdivFrontCmd)
 		cls.widgets['divSideSldrGrp'] = cmds.intSliderGrp(label = 'Subdiv Side: ', field = True, min = 3, max = 20, fmn = 3, fmx = 20, v = 8, columnWidth = [(1, 80)], p = cls.widgets['mainColLo'], cc = Functions.subdivSideCmd)
 		cls.widgets['sweepSldrGrp'] = cmds.floatSliderGrp(label = 'Sweep: ', field = True, min = 0, max = 360, fmn = 0, fmx = 360, v = 360, columnWidth = [(1, 80)], p = cls.widgets['mainColLo'], cc = Functions.sweepCmd)
 
