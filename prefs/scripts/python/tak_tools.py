@@ -136,7 +136,6 @@ def UI():
 
     cmds.frameLayout('riggingEditMdlFrameLo', label = 'Edit Model', collapse = False, collapsable = True, p = 'riggingScrLo')
     cmds.shelfLayout('Rigging_Edit_Model', h = (38 * 2), p = 'riggingEditMdlFrameLo')
-    cmds.shelfButton(annotation = 'Create lod02 material and assign to the selected lod02 geometries.', width = 35, height = 35, imageOverlayLabel = 'lod02Mat', image1 = 'pythonFamily.png', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.lod02Mat()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Duplicate material and assign duplicated material.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'dupMatAssign.png', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.dupMatAndAssign()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Assign lambert with a selected texture.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'lambertWithSelectedTexture.png', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.assignLambertWithSelectedTexture()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Assign solid color material with grabed color.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'solColorMat.bmp', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.solidColMat()', sourceType = 'python')

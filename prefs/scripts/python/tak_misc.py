@@ -25,6 +25,8 @@ import tak_cleanUpModel
 import tak_createCtrl
 import tak_lib
 import json
+import takAutoRig.base.control as control
+reload(control)
 from OBB.api import OBB
 
 
@@ -2821,3 +2823,42 @@ def setUpDefaultScaleAttr(scaleValue, globalControl='Main'):
    
    pm.setDrivenKeyframe(globalControl.getParent().scale, v=scaleValue, cd=globalControl.DefaultScale, dv=0)
    pm.setDrivenKeyframe(globalControl.getParent().scale, v=1.0, cd=globalControl.DefaultScale, dv=1)
+
+
+def setupSoftModCtrl(geometry):
+    # Load matrixNodes plug in for using decompose matrix node
+    if not cmds.pluginInfo('matrixNodes.mll', q=True, loaded=True):
+        cmds.loadPlugin('matrixNodes.mll')
+
+    if isinstance(geometry, basestring):
+        geometry = pm.PyNode(geometry)
+
+    count = len(pm.ls(type='softMod'))
+
+    softModCtrl = control.Control(name='%s_softMod%d_ctrl' % (geometry.name(), count), shape='sphere')
+    softModCtrl.makeGroup(zero=True, extra=True)
+    softModSlideCtrl = control.Control(name='%s_softModeSlide%d_ctrl' % (geometry.name(), count), shape='circleY')
+    softModSlideCtrl.makeGroup(zero=True)
+    pm.parent(softModCtrl.zeroGrp, softModSlideCtrl.name)
+
+    pm.select(geometry, r=True)
+    softMod = pm.softMod(weightedNode=[softModSlideCtrl.name, softModSlideCtrl.name])[0]
+    pm.softMod(softMod, e=True, weightedNode=[softModCtrl.name, softModCtrl.name])
+
+    softModSet = softMod.connections(type='objectSet')[0]
+    pm.sets(softModSet, add=geometry)
+
+    deMatrix = pm.createNode('decomposeMatrix', n='%s%d_deMatrix' % (softModSlideCtrl.name, count))
+
+    # Add attributes
+    softModCtrl.transform.addAttr('falloff', at='float', min=0, keyable=True)
+
+    # Connect attributes
+    softModSlideCtrl.transform.worldMatrix >> deMatrix.inputMatrix
+    deMatrix.outputTranslate >> softMod.falloffCenter
+    softModSlideCtrl.transform.worldMatrix >> softMod.softModXforms.preMatrix
+    softModSlideCtrl.transform.worldInverseMatrix >> softMod.softModXforms.postMatrix
+    softModCtrl.transform.matrix >> softMod.softModXforms.weightedMatrix
+    softModCtrl.transform.falloff >> softMod.falloffRadius
+
+

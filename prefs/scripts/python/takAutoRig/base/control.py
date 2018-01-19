@@ -4,7 +4,7 @@ from ..utils import general
 reload(general)
 
 
-class Controller(object):
+class Control(object):
     curveCommands = {
         'circleX': [partial(pm.circle, normal=(1, 0, 0), ch=False)],
         'circleY': [partial(pm.circle, normal=(0, 1, 0), ch=False)],
@@ -31,21 +31,21 @@ class Controller(object):
     }
 
     def __init__(self, name='new_ctrl', shape='circleX'):
-        super(Controller, self).__init__()
+        super(Control, self).__init__()
 
         self.name = name
         self.shape = shape
         self.color = None
-        self.controller = self._createCurve()
+        self.transform = self._createCurve()
         self.zeroGrp = None
 
-        self.controller.rename(self.name)
+        self.transform.rename(self.name)
 
-    def setController(self, obj):
-        self.controller = pm.PyNode(obj) if isinstance(obj, str) else obj
+    def setControl(self, obj):
+        self.transform = pm.PyNode(obj) if isinstance(obj, str) else obj
 
     def _createCurve(self):
-        curveCommands = Controller.curveCommands.get(self.shape)
+        curveCommands = Control.curveCommands.get(self.shape)
         curves = []
         for command in curveCommands:
             curve = command()
@@ -58,19 +58,19 @@ class Controller(object):
     def setShape(self, shape):
         self.shape = shape
         newCurve = self._createCurve()
-        general.replaceCurve(self.controller, newCurve)
+        general.replaceCurve(self.transform, newCurve)
 
     def setColor(self, color):
-        self.controller.overrideEnabled.set(True)
-        self.controller.overrideColor.set(Controller.colorTable.get(color))
+        self.transform.overrideEnabled.set(True)
+        self.transform.overrideColor.set(Control.colorTable.get(color))
 
     def makeGroup(self, zero=False, auto=False, extra=False):
         if zero:
-            self.zeroGrp = general.makeGroup(self.controller, '_zero')
+            self.zeroGrp = general.makeGroup(self.transform, '_zero')
         if auto:
-            self.zeroGrp = general.makeGroup(self.controller, '_auto')
+            general.makeGroup(self.transform, '_auto')
         if extra:
-            self.zeroGrp = general.makeGroup(self.controller, '_extra')
+            general.makeGroup(self.transform, '_extra')
 
     def matchZeroGrp(self, target):
         pm.delete(pm.parentConstraint(target, self.zeroGrp, mo=False))
@@ -79,7 +79,7 @@ class Controller(object):
         target = pm.PyNode(target) if isinstance(target, str) else target
 
         targetRotateOrder = target.rotateOrder.get()
-        self.controller.rotateOrder.set(targetRotateOrder)
+        self.transform.rotateOrder.set(targetRotateOrder)
 
     def matchLimitation(self, target):
         target = pm.PyNode(target) if isinstance(target, str) else target
@@ -91,7 +91,7 @@ class Controller(object):
         for attribute in attributes:
             if target.isLimited(attribute):
                 val = target.getLimit(attribute)
-                self.controller.setLimit(attribute, val)
+                self.transform.setLimit(attribute, val)
 
     def constraint(self, target, *types):
         """
@@ -107,7 +107,7 @@ class Controller(object):
         }
 
         for type in types:
-            constraintTable.get(type)(self.controller, target, mo=False)
+            constraintTable.get(type)(self.transform, target, mo=False)
 
     def connect(self, target, *attrs):
         """
@@ -118,19 +118,19 @@ class Controller(object):
         target = pm.PyNode(target) if isinstance(target, str) else target
 
         for attr in attrs:
-            self.controller.attr(attr) >> target.attr(attr)
+            self.transform.attr(attr) >> target.attr(attr)
 
     def parentShape(self, target):
-        controlShapes = self.controller.getShapes()
+        controlShapes = self.transform.getShapes()
 
         for shape in controlShapes:
             pm.parent(shape, target, s=True, r=True)
 
-        pm.delete(self.controller)
+        pm.delete(self.transform)
 
     def setScale(self, scale):
         """ Multiply to current scale """
-        controlShapes = self.controller.getShapes()
+        controlShapes = self.transform.getShapes()
         for shape in controlShapes:
             for cv in shape.cv:
                 cv.setPosition(cv.getPosition() * scale)
