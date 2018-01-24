@@ -2825,7 +2825,10 @@ def setUpDefaultScaleAttr(scaleValue, globalControl='Main'):
    pm.setDrivenKeyframe(globalControl.getParent().scale, v=1.0, cd=globalControl.DefaultScale, dv=1)
 
 
-def setupSoftModCtrl(geometry):
+def setupSoftModCtrl(geometry=None):
+    if not geometry:
+        geometry = pm.selected()[0]
+
     # Load matrixNodes plug in for using decompose matrix node
     if not cmds.pluginInfo('matrixNodes.mll', q=True, loaded=True):
         cmds.loadPlugin('matrixNodes.mll')
@@ -2862,3 +2865,9 @@ def setupSoftModCtrl(geometry):
     softModCtrl.transform.falloff >> softMod.falloffRadius
 
 
+def createFFdControls(name):
+    ffdPoints = pm.selected(fl=True)
+    for point in ffdPoints:
+        ffdCluster = pm.cluster(point, n='{name}_ffd_{index}_clst'.format(name=name, index=ffdPoints.index(point)))[1]
+        pm.select(ffdCluster, r=True)
+        locGrp()

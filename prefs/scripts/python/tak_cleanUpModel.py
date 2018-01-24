@@ -59,14 +59,14 @@ def UI():
     cmds.setParent('procColLay')
     cmds.separator(h = 5, style = 'in')
     cmds.frameLayout(label = 'Manual Check List', collapsable = True, collapse = True)
-    cmds.checkBox('mdlGridChkBox', label = '모델위치 Front/Side 에서 Grid 중앙, Grid 바닥 위', cc = partial(chkBoxCC, 'mdlGridChkBox'))
-    cmds.checkBox('scaleChkBox', label = '스케일( 실크기(성인남성 180cm), 다른캐릭터와 비례(Rig 이용) )', cc = partial(chkBoxCC, 'scaleChkBox'))
-    cmds.checkBox('dfltStateChkBox', label = 'Default Pose( 팔/다리 직선, 발 Z-Axis 에 맞춤, 무표정 )', cc = partial(chkBoxCC, 'dfltStateChkBox'))
-    cmds.checkBox('designCheck', label = '움직였을 때 무리가 없는 디자인( 관절 등 움직임이 큰 부분 주의 )', cc = partial(chkBoxCC, 'designCheck'))
-    cmds.checkBox('topoChkBox', label = 'Topology( Anatomical/Continuous Flow, Proper Resolution, Quad )', cc = partial(chkBoxCC, 'topoChkBox'))
-    cmds.checkBox('hiddenChkBox', label = '안보이는 부분( 입 안쪽 피부, 치아, 혀, 눈알... )구조, 텍스쳐', cc = partial(chkBoxCC, 'hiddenChkBox'))
-    cmds.checkBox('combineChkBox', label = '좌우대칭 모델( 눈썹, 속눈썹, 손... ) Material 같다면 Combine', cc = partial(chkBoxCC, 'combineChkBox'))
-    cmds.checkBox('OutlinerChkBox', label = 'Outliner 정리( Grouping, Naming )', cc = partial(chkBoxCC, 'OutlinerChkBox'))
+    cmds.checkBox('mdlGridChkBox', label = 'World Position: Front/Side 에서 Grid 중앙, Grid 위', cc = partial(chkBoxCC, 'mdlGridChkBox'))
+    cmds.checkBox('scaleChkBox', label = 'Scale: 실크기(성인남성 180cm), 다른캐릭터와 비례(Rig 이용)', cc = partial(chkBoxCC, 'scaleChkBox'))
+    cmds.checkBox('dfltStateChkBox', label = 'Default Pose: 팔/다리 직선, 발 Z-Axis 에 맞춤, 무표정', cc = partial(chkBoxCC, 'dfltStateChkBox'))
+    cmds.checkBox('designCheck', label = 'Design: 움직임이 가능한 구조인가?( 관절 등 움직임이 큰 부분 주의 )', cc = partial(chkBoxCC, 'designCheck'))
+    cmds.checkBox('topoChkBox', label = 'Topology: Anatomical/Continuous Flow, Proper Resolution, Quad', cc = partial(chkBoxCC, 'topoChkBox'))
+    cmds.checkBox('hiddenChkBox', label = 'Hidden Area: 입 안쪽 피부, 치아, 혀, 눈알... 구조 및 텍스쳐', cc = partial(chkBoxCC, 'hiddenChkBox'))
+    cmds.checkBox('combineChkBox', label = 'Symmetry Combine: 눈썹, 속눈썹, 손... 등 Material 같다면 Combine', cc = partial(chkBoxCC, 'combineChkBox'))
+    cmds.checkBox('OutlinerChkBox', label = 'Outliner: Grouping, Naming', cc = partial(chkBoxCC, 'OutlinerChkBox'))
 
     cmds.setParent('procColLay')
     cmds.separator(h = 5, style = 'in')
@@ -78,7 +78,7 @@ def UI():
     cmds.button('symChkButton', label = 'Check Symmetry', c = checkSym)
     cmds.setParent('symColLo')
     cmds.rowColumnLayout(numberOfColumns=2)
-    cmds.floatSliderGrp(label='Match Sym Vertex: ', field=True, value=0.001, min=0.001, max=3.000, step=0.001, columnWidth=[(1, 93), (2, 40), (3, 150)], cc=matchMirrorVtxPosition)
+    cmds.floatSliderGrp(label='Match Sym Vertex: ', field=True, value=0.001, min=0.001, max=1.000, step=0.001, columnWidth=[(1, 93), (2, 40), (3, 150)], cc=matchMirrorVtxPosition)
     cmds.button(label='translateX to Zero', c=tak_misc.zeroVtx)
     cmds.setParent('symColLo')
     cmds.separator()
@@ -631,10 +631,11 @@ def matchMirrorVtxPosition(searchTolerance):
     vtxs = cmds.ls(sl=True, fl=True)
     if not '.' in str(vtxs):
         return
-    geo = vtxs[0].split('.')[0]
 
     lfVtxs = [vtx for vtx in vtxs if cmds.pointPosition(vtx, local=True)[0] > 0]
     rtVtxs = list(set(vtxs) - set(lfVtxs))
+
+    nonMatchVtxs = []
 
     for leftVtx in lfVtxs:
         vtxPoint = OpenMaya.MPoint(*cmds.pointPosition(leftVtx, local=True))
@@ -644,10 +645,11 @@ def matchMirrorVtxPosition(searchTolerance):
         if mirrorVtx:
             rtVtxs.pop(rtVtxs.index(mirrorVtx))
             cmds.xform(mirrorVtx, translation=[mirrorPoint.x, mirrorPoint.y, mirrorPoint.z], os=True)
+        else:
+            nonMatchVtxs.append(leftVtx)
 
-    cmds.select(cl=True)
-    cmds.select(geo, r=True)
-    checkSym()
+    cmds.select(nonMatchVtxs, rtVtxs, r=True)
+
 
 def findMirrorVtx(mirrorPoint, vtxList, searchTolerance):
     resultVtx = None

@@ -780,3 +780,4 @@ rigGrp = pm.group(n='rig', empty=True, p='root')
 GeometryGrp = pm.group(n='Geometry', empty=True, p=rigGrp)
 pm.group(n='lod02_GRP', empty=True, p=GeometryGrp)
 pm.group(n='lod01_GRP', empty=True, p=GeometryGrp)
+
