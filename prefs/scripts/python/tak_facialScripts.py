@@ -20,6 +20,17 @@ if __name__ == "__main__":
     ]
 
 
+    # Duplicate Source Facial Group #
+    facialNeedList = ['eyebrow_down', 'eyebrow_up', 'eyebrow_angry', 'eyebrow_sad',
+    'eyelid_blink', 'eyelid_angry', 'eyelid_sad', 'eyelid_big',
+    'lip_smile', 'lip_frown', 'lip_wide', 'lip_narrow', 'lip_openSmileBig', 'lip_angryBig', 'lipSync_A', 'lipSync_E', 'lipSync_I', 'lipSync_O']
+
+    facialSrcGrp = cmds.ls(sl = True)
+
+    for item in facialNeedList:
+        cmds.duplicate(facialSrcGrp, n = item, renameChildren = True)
+
+
     # Connect Facial Control Attributes to the Facial Blend Shape #
     import re
 
@@ -78,27 +89,7 @@ if __name__ == "__main__":
         cmds.setAttr(bsNode + '.' + trg, 0)
 
 
-    # Duplicate Source Facial Group #
-    facialNeedList = ['eyebrow_down', 'eyebrow_up', 'eyebrow_angry', 'eyebrow_sad',
-    'eyelid_blink', 'eyelid_smile', 'eyelid_angry', 'eyelid_sad', 'eyelid_big',
-    'lip_smile', 'lip_frown', 'lip_wide', 'lip_narrow', 'lip_openSmileBig', 'lip_angryBig', 'lipSync_A', 'lipSync_E', 'lipSync_I', 'lipSync_O']
 
-    facialSrcGrp = cmds.ls(sl = True)
-
-    for item in facialNeedList:
-        cmds.duplicate(facialSrcGrp, n = item, renameChildren = True)
-
-
-    # Clean Up Blend Targets #
-    selLs = cmds.ls(sl = True)
-
-    for sel in selLs:
-        cmds. delete(ch = True)
-        
-        for child in cmds.listRelatives(sel, ad = True):
-            if 'Base' in child:
-                cmds.delete(child)
-                print child
 
 
 

@@ -142,7 +142,7 @@ def setAllDefEnvlope(geo, envVal):
         None
     '''
 
-    hierMeshLs = cmds.listRelatives(geo, ad = True, type = 'mesh')
+    hierMeshLs = cmds.listRelatives(geo, ad = True, type = 'mesh', path=True)
 
     deformerTypeLs = ['skinCluster', 'blendShape', 'cluster', 'ffd', 'wrap', 'nonLinear', 'sculpt', 'softMod', 'jiggle', 'wire']
     deformerLs = []

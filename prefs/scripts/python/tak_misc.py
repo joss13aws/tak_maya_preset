@@ -1337,19 +1337,17 @@ def bakeCam():
     if cmds.listRelatives(dupCam, p=True):
         cmds.parent(dupCam, world=True)
 
-    # unlock duplicated camera
-    attrList = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ',
-                'visibility']
-    for attr in attrList:
+    # Unlock keyalbe attributes duplicated camera
+    for attr in cmds.listAttr(dupCam, keyable=True):
         cmds.setAttr('%s.%s' % (dupCam, attr), lock=False)
 
-        # constriant with original camera
+    # constriant with original camera
     prntCnst = cmds.parentConstraint(cam, dupCam, mo=False)
 
     # Connect keyable shape attributes
     toCnctAttrs = ['focalLength']
     for attr in toCnctAttrs:
-        cmds.connectAttr('%sShape.%s' % (cam, attr), '%sShape.%s' % (dupCam, attr), f=True)
+        cmds.connectAttr('%s.%s' % (cmds.listRelatives(cam, s=True)[0], attr), '%s.%s' % (cmds.listRelatives(dupCam, s=True)[0], attr), f=True)
 
     # bake camera animation
     minFrame = cmds.playbackOptions(q=True, min=True)
