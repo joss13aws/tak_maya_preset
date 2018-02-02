@@ -727,7 +727,18 @@
 	global proc string[] b2GetBGSetList()
 	{
 		string $bgList[];
-		string $refList[] = `ls -type "reference"`;
+		string $rawRefLst[] = `ls -type "reference"`;
+		string $refList[] = {};
+		for ($ref in $rawRefLst)
+		{
+			if (catch(`referenceQuery -filename $ref`))
+			{
+				continue;
+			}
+
+			$refList[size($refList)] = $ref;
+		}
+		
 		string $remItems[] = { "sharedReferenceNode" };
 		$refList = stringArrayRemoveExact( $remItems, $refList );
 		print "$refList[] =\n";
@@ -791,7 +802,18 @@
 	global proc string[] b2GetAbcExportAstList( string $keyword )
 	{
 		string $astLst[];
-		string $refLst[] = `ls -type "reference"`;
+		string $rawRefLst[] = `ls -type "reference"`;
+		string $refLst[] = {};
+		for ($ref in $rawRefLst)
+		{
+			if (catch(`referenceQuery -filename $ref`))
+			{
+				continue;
+			}
+
+			$refLst[size($refLst)] = $ref;
+		}
+
 		string $remItems[] = { "sharedReferenceNode" };
 		$refLst = stringArrayRemove( $remItems, $refLst );
 		string $keywordSub;
@@ -834,7 +856,18 @@
 	//-
 	global proc string[] b2GetNonCachingAssetList()
 	{
-		string $refList[] = `ls -type "reference"`;
+		string $rawRefLst[] = `ls -type "reference"`;
+		string $refList[] = {};
+		for ($ref in $rawRefLst)
+		{
+			if (catch(`referenceQuery -filename $ref`))
+			{
+				continue;
+			}
+
+			$refList[size($refList)] = $ref;
+		}
+
 		string $remItems[] = { "sharedReferenceNode" };
 		$refList = stringArrayRemoveExact( $remItems, $refList );
 		string $nsList[];
@@ -1445,6 +1478,23 @@
 		}
 		return $returnVal;
 	}
+
+	
+	global proc string getMainCam()
+	{
+		string $allCamLst[] = `ls -type camera`;
+		string $mainCam = "";
+		for( $eachCam in $allCamLst )
+		{
+			string $transformNode[] = `listRelatives -parent $eachCam`;
+			string $matchMain = `match "cam_main_[0-9]+_[0-9]+" $transformNode[0]`;
+			if( size($matchMain) )
+			{
+				$mainCam = $transformNode[0];
+				return $mainCam;
+			}
+		}
+	}
 	
 	//-/
 	
@@ -1713,5 +1763,23 @@
 	}
 	//-/
 
+
+	global proc fillTextFieldWithSelected(string $widgetType, string $widgetName)
+	{
+		/*
+		Fill text field widget with selected object.
+
+		Parameters:
+			$widgetName: textField or textFieldGrp or textFieldButtonGrp widget name
+
+		Returns:
+			None
+		*/
+
+	    string $sel[] = `ls -sl`;
+
+	    string $stringToExec = $widgetType + " -e -text " + $sel[0] + " " + $widgetName + ";";
+	    eval $stringToExec;
+	}
 //-/
 print "load b2PipelineUtil\n";

@@ -2300,7 +2300,7 @@ def cutGeoWithJnts():
     cmds.select(cutPlaneLs, r=True)
 
 
-def simplePropAutoRigging():
+def simplePropAutoRigging(name='temp', controlShape='circleX'):
     """
     Auto rigging function for simple props like sword, gun... etc.
     """
@@ -2315,7 +2315,7 @@ def simplePropAutoRigging():
             srchStr = '_jnt'
             rplcStr = '_ctrl'
 
-            crv = tak_createCtrl.createCurve('circleX')
+            crv = tak_createCtrl.createCurve(controlShape)
             ctrlName = re.sub(srchStr, rplcStr, str(sel))
             cmds.rename(crv, ctrlName)
 
@@ -2330,15 +2330,23 @@ def simplePropAutoRigging():
             ctrlZeroGrpLs.append(ctrlZeroGrp)
             jntLs.append(str(sel))
         else:
-            obbBoundBoxPnts = OBB.from_points(sel.name())
-            
+            # Combine children meshes
+            childrenMeshes = [mesh for mesh in sel.getChildren(allDescendents=True, type='mesh') if 'Orig' not in mesh.name()]
+            tempMeshes = []
+            if len(childrenMeshes) > 1:
+                for mesh in childrenMeshes:
+                    tempMeshes.append(mesh.duplicate()[0])
+                sel = pm.polyUnite(tempMeshes, ch=False, n=sel.name()+'_geo')[0]
+
+            obbBoundBoxPnts = OBB.from_points(sel.fullPathName())
+
             pm.select(cl=True)
             jnt = pm.joint(n='%s_jnt' % sel.name())
             cmds.xform(str(jnt), matrix=obbBoundBoxPnts.matrix)
             geoScale = max(jnt.scale.get())
 
-            crv = tak_createCtrl.createCurve('circleZ')
-            ctrlName = str(sel) + '_ctrl'
+            crv = tak_createCtrl.createCurve(controlShape)
+            ctrlName = sel.name() + '_ctrl'
             cmds.rename(crv, ctrlName)
             ctrlZeroGrp = createCtrlGrp(ctrlName)
             cmds.select(ctrlName+'.cv[*]', r=True)
@@ -2357,13 +2365,23 @@ def simplePropAutoRigging():
             ctrlZeroGrpLs.append(ctrlZeroGrp)
             jntLs.append(str(jnt))
 
+            if len(childrenMeshes) > 1:
+                pm.delete(tempMeshes)
+                pm.delete(sel)
+
+    systemGrp = cmds.group(jntLs, n='{}_system_grp'.format(name))
+    ctrlGrp = cmds.group(ctrlZeroGrpLs, n='{}_ctrl_grp'.format(name))
+    cmds.group(systemGrp, ctrlGrp, n='{}_rig_grp'.format(name))
+
+
+def createGlobalControls(controlShape='circleY'):
     # Main global control
-    glbACtrl = tak_createCtrl.createCurve('circleY')
+    glbACtrl = tak_createCtrl.createCurve(controlShape)
     glbACtrlName = cmds.rename(glbACtrl, 'global_a_ctrl')
     doGroup(glbACtrlName, '_zero')
 
     # Sub global control
-    glbBCtrl = tak_createCtrl.createCurve('circleY')
+    glbBCtrl = tak_createCtrl.createCurve(controlShape)
     glbBCtrlName = cmds.rename(glbBCtrl, 'global_b_ctrl')
     glbBCtrlZeroGrp = doGroup(glbBCtrlName, '_zero')
     cmds.parent(glbBCtrlZeroGrp, glbACtrlName)
@@ -2373,14 +2391,10 @@ def simplePropAutoRigging():
     # Clean up outliner
     rigGrp = cmds.group(glbACtrlName + '_zero', n='rig')
     cmds.parent(rigGrp, 'root')
-    
+
     GeometryGrp = pm.group(n='Geometry', empty=True, p=rigGrp)
     pm.group(n='lod02_GRP', empty=True, p=GeometryGrp)
     pm.group(n='lod01_GRP', empty=True, p=GeometryGrp)
-
-    doNotTouchGrp = cmds.group(jntLs, n='doNotTouch_grp')
-    ctrlGrp = cmds.group(ctrlZeroGrpLs, n='ctrl_grp')
-    cmds.parent(doNotTouchGrp, ctrlGrp, glbBCtrlName)    
 
     lockAndHideAttr(glbBCtrlName)
 
@@ -2734,7 +2748,7 @@ def selAffectedVertex(inf):
         selLs.clear()
 
 
-def copyUVRiggedMesh(source, target):
+def copyUvRiggedMesh(source, target):
     """
     Copy source mesh uv to rigged target mesh
 
@@ -2839,8 +2853,13 @@ def setupSoftModCtrl(geometry=None):
     softModCtrl = control.Control(name='%s_softMod%d_ctrl' % (geometry.name(), count), shape='sphere')
     softModCtrl.makeGroup(zero=True, extra=True)
     softModSlideCtrl = control.Control(name='%s_softModeSlide%d_ctrl' % (geometry.name(), count), shape='circleY')
+    softModSlideCtrl.setScale(2)
     softModSlideCtrl.makeGroup(zero=True)
     pm.parent(softModCtrl.zeroGrp, softModSlideCtrl.name)
+
+    geoBB = geometry.getBoundingBox(space='world')
+    print softModSlideCtrl.zeroGrp
+    softModSlideCtrl.zeroGrp.setTranslation(geoBB.center(), space='world')
 
     pm.select(geometry, r=True)
     softMod = pm.softMod(weightedNode=[softModSlideCtrl.name, softModSlideCtrl.name])[0]
@@ -2863,9 +2882,20 @@ def setupSoftModCtrl(geometry=None):
     softModCtrl.transform.falloff >> softMod.falloffRadius
 
 
-def createFFdControls(name):
+def createFfdControls(name):
     ffdPoints = pm.selected(fl=True)
     for point in ffdPoints:
         ffdCluster = pm.cluster(point, n='{name}_ffd_{index}_clst'.format(name=name, index=ffdPoints.index(point)))[1]
         pm.select(ffdCluster, r=True)
         locGrp()
+
+
+def reconnectIkSplineSolver(ikHandles):
+    """
+    Reconnect ikSplineSolver when the solver has deleted accidentally
+    """
+
+    ikSplineSolver = pm.createNode('ikSplineSolver')
+
+    for ikHandle in ikHandles:
+        ikSplineSolver.message >> ikHandle.ikSolver

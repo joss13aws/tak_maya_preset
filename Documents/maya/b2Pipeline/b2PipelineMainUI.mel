@@ -3373,6 +3373,8 @@
 					}
 					else if ($key == "rel")
 					{
+						b2CorrectNamespaces();
+
 						python("import tak_b2Pipeline_add");
 						python("reload(tak_b2Pipeline_add)");
 						int $result = `python("tak_b2Pipeline_add.checkAssetVersion()")`;
@@ -3934,45 +3936,36 @@
 				string $match = `match "sharedReferenceNode" $eachRef`;
 				if( !size($match) )
 				{
-					print "$eachRef =\n";
-					print $eachRef;
-					print "\n";
-					string $temp[] = `stringToStringArray $eachRef "_"`;
-					if( size($temp) > 2 )
+					python("import tak_b2Pipeline_add");
+            		python("reload(tak_b2Pipeline_add)");
+            		string $parsedStr = python("tak_b2Pipeline_add.parseAstNamespace('" + $eachRef + "')");
+					string $temp[] = `stringToStringArray $parsedStr ","`;
+					if( size($temp) != 2 )
 					{
 						string $message1 = "레퍼런스 노드 " + $eachRef + "는(은) 파이프라인 툴을 통해 불러들여진 어셋이 아닌것 같습니다.\n";
-						string $message2 = "네임스페이스를 정리하는 과정에서 문제를 일으킬 수 있어 실제로 사용하고 있는 것이 아니라면 삭제해야 합니다.\n";
-						string $message3 = "만일 삭제하지 않고 계속하여 정상적으로 네임스페이스 정리가 이루어지지 않는다면 에러메세지를 확인하여 수동으로 처리해야 할 수도 있습니다.\n";
-						string $message4 = "이 노드를 삭제할까요?";
-						string $message = $message1 + $message2 + $message3 + $message4;
+						string $message2 = "\"에셋이름_001RN\" 형식으로 변경해야 합니다.\n";
+						string $message = $message1 + $message2;
 						string $confirm = `confirmDialog -title "Warning" -message $message
-							-button "Delete" -button "No" -defaultButton "No" -cancelButton "No" -dismissString "No"`;
+							-button "Fix" -button "No" -defaultButton "No" -cancelButton "No" -dismissString "No"`;
 							
-						if( $confirm == "Delete" )
+						if( $confirm == "Fix" )
 						{
-							lockNode -lock off $eachRef;
-							delete $eachRef;
+							select -r $eachRef;
+							python("import tak_misc_b1");
+							python("reload(tak_misc_b1)");
+							python("tak_misc_b1.renameRefNode()");
 							continue;
 						}
 					}
 					string $filename = `referenceQuery -wcn -filename $eachRef`;
-					print "$filename =\n";
-					print $filename;
-					print "\n";
 					string $basename = `basenameEx $filename`;
 					string $nameSplit[] = `stringToStringArray $basename "_"`;
 					
 					if( size($nameSplit) <= 5 )
 					{
 						string $astName = $nameSplit[1];
-						print "$astName =\n";
-						print $astName;
-						print "\n";
 						string $astNamespace = `referenceQuery -namespace $eachRef`;
 							$astNamespace = `substituteAllString $astNamespace ":" ""`;
-						print "$astNamespace =\n";
-						print $astNamespace;
-						print "\n";
 						string $astNamespaceSplit[] = `stringToStringArray $astNamespace "_"`;
 						string $newAstNamespace = $astName + "_" + $astNamespaceSplit[1];
 						string $newAstRefNode = $newAstNamespace + "RN";

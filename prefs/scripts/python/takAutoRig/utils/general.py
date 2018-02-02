@@ -54,7 +54,7 @@ def replaceCurve(origCurve, newCurve):
 def makeGroup(obj, suffix):
     obj = pm.PyNode(obj) if isinstance(obj, str) else obj
 
-    group = obj.duplicate(parentOnly=True, n=obj + suffix)
+    group = obj.duplicate(parentOnly=True, n=obj + suffix)[0]
     obj.setParent(group)
 
     return group

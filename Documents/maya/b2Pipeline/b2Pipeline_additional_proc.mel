@@ -417,7 +417,7 @@ global proc b2deliveryCopy(){
 	string $proj = `optionMenu -q -v projList`;
 	string $prjToken[];
 	tokenize $proj "_" $prjToken;
-	string $deliveryPath = "V:/delivery/" + $prjToken[1] + "_delivery/";
+	string $deliveryPath = "\\\\192.168.0.239\\B1delivery\\" + $prjToken[1] + "_delivery/";
 
 	if (!`filetest -d $deliveryPath`){
 		error "delivery path is not exist.";

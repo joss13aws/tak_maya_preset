@@ -99,6 +99,7 @@
 							button -label "Take Snapshot" -width 320 -command "b2TakeSnapshotSingle aniSnapshotImg";					
 				setParent $rootLayout;
 					radioButtonGrp -numberOfRadioButtons 2 -label "File Format: " -labelArray2 "ma" "mb" -select 1 fileFormatRadioBtn;
+					textFieldButtonGrp -label "Camera to Export: " -buttonLabel "Load Selected" -bc "fillTextFieldWithSelected(\"textFieldButtonGrp\", \"exportDevCamTxtFldBtnGrp\")" exportDevCamTxtFldBtnGrp;
 					separator;
 				    //string $emailNotification = `checkBox -label "Send Email notification" -value 0 cb_emailNotification`;
 					button -label "Send Message Maya" -command "SendMessageShotMaya()" -backgroundColor 0.2 0.2 0.4 ;
@@ -138,6 +139,15 @@
 				$disMatchInfo[size($disMatchInfo)] = "cam_main 카메라의 프레임 정보가 샷의 설정과 다릅니다. 이 문제를 해결하지 않으면 씬을 저장할 수 없습니다.";
 				button -edit -enable false saveButton;
 			}
+
+			// Fill 'exportDevCamTxtFldBtnGrp'
+			string $mainCam = getMainCam();
+			b2Print("mainCam: ", $mainCam);
+			if (!($mainCam == ""))
+			{
+				textFieldButtonGrp -e -text $mainCam exportDevCamTxtFldBtnGrp;
+			}
+
 			//기본 샷 설정과 현재 씬 설정이 일치하지 않는 경우 UI에 표시
 			if( $shtInfo[1] != $currXRes || $shtInfo[2] != $currYRes )
 			{
@@ -254,6 +264,10 @@
 					b2ResetViewportRender;
 
 					int $result1 = `b2SaveScene $targetFile`; //마야파일 저장
+					
+					// main_cam Exporting
+					exportDevShotCamera();
+
 					if( $result1 )
 					{
 						int $fileId = `fopen $infoFile "w"`;
@@ -3037,6 +3051,41 @@
 			}
 			
 			b2Playblast "sht" "seq" $movFiles;
+		}
+	}
+
+
+	global proc exportDevShotCamera()
+	{
+		string $selItem[] = `b2GetCurrentlySelectedItem 3 4`;
+		string $targetFile = `b2GetFileName2 $selItem[0] $selItem[1] $selItem[2] $selItem[3] 0 "develop" 0`;
+		string $targetBaseName = `basenameEx $targetFile`;
+		string $dirPath = `dirname $targetFile`;
+
+		if (`textFieldButtonGrp -ex exportDevCamTxtFldBtnGrp`)
+		{
+			string $devShotCam = `textFieldButtonGrp -q -text exportDevCamTxtFldBtnGrp`;
+			
+			if (!($devShotCam == ""))
+			{
+				select -r $devShotCam;
+				
+				// Bake camera
+				python("import tak_misc_b1");
+				python("reload(tak_misc_b1)");
+				string $bakedCam = python("tak_misc_b1.bakeCam()");
+
+				string $targetFilePath = $dirPath + "/" + $targetBaseName + "_cam.ma";
+
+				select -r $bakedCam;
+				file -force -type "mayaAscii" -exportSelected $targetFilePath;
+
+				python("import tak_b2Pipeline_add");
+				python("reload(tak_b2Pipeline_add)");
+				python("tak_b2Pipeline_add.removeUnusedPluginRequires(\"" + $targetFilePath + "\")");
+
+				delete $bakedCam;
+			}
 		}
 	}
 

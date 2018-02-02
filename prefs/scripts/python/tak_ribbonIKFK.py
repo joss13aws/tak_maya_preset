@@ -168,15 +168,15 @@ class ribbonIKFK(object):
 		cls.ribbon = cls.ribbonFromCrv(crv, numOfSpan)
 
 		# Delete ribbon bind joint chain if exists it.
-		if cmds.objExists('%s_*_rbBnd_jnt' %crv):
-			cmds.delete('%s_*_rbBnd_jnt' %crv)
+		if cmds.objExists('%s_*_rbBnd' %crv):
+			cmds.delete('%s_*_rbBnd' %crv)
 
 		# Build joint chain hierarchy for orient joints.
 		cmds.select(cl = True)
 		cls.rbBndJntLs = []
 		for i in xrange(numOfCtrl):
 			rbBndJntPos = cmds.pointPosition('%s.un[%f]' %(crv, unNum), w = True)
-			rbBndJnt = cmds.joint(p = rbBndJntPos, n = '%s_%d_rbBnd_jnt' %(crv, i), radius = 5)
+			rbBndJnt = cmds.joint(p = rbBndJntPos, n = '%s_%d_rbBnd' %(crv, i), radius = 5)
 			cls.rbBndJntLs.append(rbBndJnt)
 			unNum += increNum
 		cmds.CompleteCurrentTool()
@@ -361,7 +361,7 @@ class ribbonIKFK(object):
 		# Create each joint control
 		for jnt in jntLs:
 			# Create cube shape control
-			ctrl = cmds.curve(n = jnt.rsplit('_rbBnd_jnt')[0] + '_ctrl', d = 1, p = [(-1, 1, 1),(1, 1, 1),(1, 1, -1),(-1, 1, -1),(-1, 1, 1),(-1, -1, 1),(-1, -1, -1),(1, -1, -1),(1, -1, 1),(-1, -1, 1),(1, -1, 1),(1, 1, 1),(1, 1, -1),(1, -1, -1),(-1, -1, -1),(-1, 1, -1)], k = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
+			ctrl = cmds.curve(n = jnt.rsplit('_rbBnd')[0] + '_ctrl', d = 1, p = [(-1, 1, 1),(1, 1, 1),(1, 1, -1),(-1, 1, -1),(-1, 1, 1),(-1, -1, 1),(-1, -1, -1),(1, -1, -1),(1, -1, 1),(-1, -1, 1),(1, -1, 1),(1, 1, 1),(1, 1, -1),(1, -1, -1),(-1, -1, -1),(-1, 1, -1)], k = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
 			ctrlLs.append(ctrl)
 
 			# Lock and hide unused attributes of control.
@@ -439,7 +439,7 @@ class ribbonIKFK(object):
 
 		allGrp = cmds.createNode('transform', n = crv + '_ribbonIKFK_grp')
 		
-		chldGrpNameLs = ['doNotTouch_grp', 'crv_jnt_grp', 'bnd_jnt_grp', 'ctrl_grp']
+		chldGrpNameLs = ['doNotTouch_grp', 'crv_jnt_grp', 'jnt_grp', 'ctrl_grp']
 		hideObjLs = []
 
 		# Create group and parent related nodes.
@@ -455,7 +455,7 @@ class ribbonIKFK(object):
 				cmds.parent(chldGrp, crv + '_doNotTouch_grp')
 				hideObjLs.append(chldGrp)
 
-			elif grpName == 'bnd_jnt_grp':
+			elif grpName == 'jnt_grp':
 				cmds.parent(bndJntLs, chldGrp)
 				cmds.parent(chldGrp, crv + '_doNotTouch_grp')
 

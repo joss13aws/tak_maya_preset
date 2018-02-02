@@ -266,11 +266,14 @@ def parseRplcAstName(baseName):
 
 
 def parseAstNamespace(baseName):
+    melBufferStr = ''
+    
     srchObj = re.search(r'(.+?)_(\d+)', baseName)
     if srchObj:
         joinStr = ','
         melBufferStr = joinStr.join(srchObj.groups())
-        return melBufferStr
+    
+    return melBufferStr
 
 
 def chkTexNameConflict():
