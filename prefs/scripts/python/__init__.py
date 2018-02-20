@@ -1,1 +1,1 @@
-import takAutoRig
+import tak_riggingToolkit

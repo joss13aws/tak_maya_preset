@@ -610,8 +610,6 @@ def allInOne(*args):
     delAllLayers()
     delKeys()
     lockGeoTrsf()
-    # if cmds.objExists('lod01_GRP') or cmds.objExists('lod02_GRP'):
-    # 	setLod01Lod02SmoothLevel()
     chkNamespace()
     delCache()
     hideJoints()
@@ -627,6 +625,11 @@ def allInOne(*args):
         if cmds.objExists(visCtrl + '.geometryVis'): cmds.setAttr(visCtrl + '.geometryVis', 2)
         if cmds.objExists(visCtrl + '.lodVis'): cmds.setAttr(visCtrl + '.lodVis', 1)
         if cmds.objExists(visCtrl + '.correctiveCtrlVis'): cmds.setAttr(visCtrl + '.correctiveCtrlVis', 0)
+
+    globalScaleCtrl = cmds.ls('*.DefaultScale')
+    if globalScaleCtrl:
+        globalScaleCtrl = globalScaleCtrl[0].split('.')[0]
+        if cmds.objExists(globalScaleCtrl + '.DefaultScale'): cmds.setAttr(globalScaleCtrl + '.DefaultScale', 0, lock=True)
 
     # Set dynamic control's start frame attributes value to 100000.
     if cmds.objExists('dyn_ctr_crv'):

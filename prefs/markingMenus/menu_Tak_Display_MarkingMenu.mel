@@ -1,0 +1,226 @@
+
+    menuItem
+        -label "Add Selected Items" 
+        -divider 0
+        -subMenu 0
+        -tearOff 0
+        -command "python(\"import tak_misc\");\npython(\"reload(tak_misc)\");\npython(\"tak_misc.isoAdd()\");" 
+        -altModifier 0
+        -optionModifier 0
+        -commandModifier 0
+        -ctrlModifier 0
+        -shiftModifier 0
+        -optionBox 0
+        -enable 1
+        -data 0
+        -radialPosition "NE" 
+        -allowOptionBoxes 1
+        -postMenuCommandOnce 0
+        -enableCommandRepeat 1
+        -image "isolateAdd.bmp" 
+        -echoCommand 0
+        -italicized 0
+        -boldFont 1
+        -sourceType "mel" 
+        menuEditorMenuItem1;
+
+    menuItem
+        -label "Remove Selected Items" 
+        -divider 0
+        -subMenu 0
+        -tearOff 0
+        -command "python(\"import tak_misc\");\npython(\"reload(tak_misc)\");\npython(\"tak_misc.isoRmv()\");" 
+        -altModifier 0
+        -optionModifier 0
+        -commandModifier 0
+        -ctrlModifier 0
+        -shiftModifier 0
+        -optionBox 0
+        -enable 1
+        -data 0
+        -radialPosition "E" 
+        -allowOptionBoxes 1
+        -postMenuCommandOnce 0
+        -enableCommandRepeat 1
+        -image "isolateRemove.bmp" 
+        -echoCommand 0
+        -italicized 0
+        -boldFont 1
+        -sourceType "mel" 
+        menuEditorMenuItem2;
+
+    menuItem
+        -label "Model Only" 
+        -divider 0
+        -subMenu 0
+        -tearOff 0
+        -command "python(\"import tak_misc\");\npython(\"reload(tak_misc)\");\npython(\"tak_misc.hideShowViewMdl()\");" 
+        -altModifier 0
+        -optionModifier 0
+        -commandModifier 0
+        -ctrlModifier 0
+        -shiftModifier 0
+        -optionBox 0
+        -enable 1
+        -data 0
+        -radialPosition "W" 
+        -allowOptionBoxes 1
+        -postMenuCommandOnce 0
+        -enableCommandRepeat 1
+        -image "menuIconDisplay.png" 
+        -echoCommand 0
+        -italicized 0
+        -boldFont 1
+        -sourceType "mel" 
+        menuEditorMenuItem5;
+
+    menuItem
+        -label "Joint Vis" 
+        -divider 0
+        -subMenu 0
+        -tearOff 0
+        -command "python(\"import tak_misc\");\npython(\"reload(tak_misc)\");\npython(\"tak_misc.hideShowViewJnt()\");" 
+        -altModifier 0
+        -optionModifier 0
+        -commandModifier 0
+        -ctrlModifier 0
+        -shiftModifier 0
+        -optionBox 0
+        -enable 1
+        -data 0
+        -radialPosition "SE" 
+        -allowOptionBoxes 1
+        -postMenuCommandOnce 0
+        -enableCommandRepeat 1
+        -image "menuIconDisplay.png" 
+        -echoCommand 0
+        -italicized 0
+        -boldFont 1
+        -sourceType "mel" 
+        menuEditorMenuItem7;
+
+    menuItem
+        -label "Wire On/Off" 
+        -divider 0
+        -subMenu 0
+        -tearOff 0
+        -command "python(\"import tak_misc\");\npython(\"reload(tak_misc)\");\npython(\"tak_misc.wireOnOff()\");" 
+        -altModifier 0
+        -optionModifier 0
+        -commandModifier 0
+        -ctrlModifier 0
+        -shiftModifier 0
+        -optionBox 0
+        -enable 1
+        -data 0
+        -radialPosition "NW" 
+        -allowOptionBoxes 1
+        -postMenuCommandOnce 0
+        -enableCommandRepeat 1
+        -image "selectionHighlighting.bmp" 
+        -echoCommand 0
+        -italicized 0
+        -boldFont 1
+        -sourceType "mel" 
+        menuEditorMenuItem8;
+
+    menuItem
+        -label "Color Feedback" 
+        -divider 0
+        -subMenu 0
+        -tearOff 0
+        -command "{\nstring $curCtx = `currentCtx`;\nint $colFeedStatus = `artAttrSkinPaintCtx -q -colorfeedback $curCtx`;\nprint $colFeedStatus;\nif ($colFeedStatus){\n\tartAttrSkinPaintCtx -e -colorfeedback false `currentCtx`;\n}\nelse{\n\tartAttrSkinPaintCtx -e -colorfeedback true `currentCtx`;\n}\n}" 
+        -altModifier 0
+        -optionModifier 0
+        -commandModifier 0
+        -ctrlModifier 0
+        -shiftModifier 0
+        -optionBox 0
+        -enable 1
+        -data 0
+        -radialPosition "N" 
+        -allowOptionBoxes 1
+        -postMenuCommandOnce 0
+        -enableCommandRepeat 1
+        -echoCommand 0
+        -italicized 0
+        -boldFont 1
+        -sourceType "mel" 
+        menuEditorMenuItem3;
+
+    menuItem
+        -label "Curve Vis" 
+        -divider 0
+        -subMenu 0
+        -tearOff 0
+        -command "python(\"import tak_misc\");\npython(\"reload(tak_misc)\");\npython(\"tak_misc.hideShowViewCrv()\");" 
+        -altModifier 0
+        -optionModifier 0
+        -commandModifier 0
+        -ctrlModifier 0
+        -shiftModifier 0
+        -optionBox 0
+        -enable 1
+        -data 0
+        -radialPosition "S" 
+        -allowOptionBoxes 1
+        -postMenuCommandOnce 0
+        -enableCommandRepeat 1
+        -image "menuIconDisplay.png" 
+        -echoCommand 0
+        -italicized 0
+        -boldFont 1
+        -sourceType "mel" 
+        menuEditorMenuItem4;
+
+    menuItem
+        -label "Polygon Vis" 
+        -divider 0
+        -subMenu 0
+        -tearOff 0
+        -command "python(\"import tak_misc\");\npython(\"reload(tak_misc)\");\npython(\"tak_misc.hideShowViewPoly()\");" 
+        -altModifier 0
+        -optionModifier 0
+        -commandModifier 0
+        -ctrlModifier 0
+        -shiftModifier 0
+        -optionBox 0
+        -enable 1
+        -data 0
+        -radialPosition "SW" 
+        -allowOptionBoxes 1
+        -postMenuCommandOnce 0
+        -enableCommandRepeat 1
+        -image "menuIconDisplay.png" 
+        -echoCommand 0
+        -italicized 0
+        -boldFont 1
+        -sourceType "mel" 
+        menuEditorMenuItem6;
+
+    menuItem
+        -label "Use Default Material" 
+        -divider 0
+        -subMenu 0
+        -tearOff 0
+        -command "python(\"import tak_misc\");\npython(\"reload(tak_misc)\");\npython(\"tak_misc.useDfltMat()\");" 
+        -altModifier 0
+        -optionModifier 0
+        -commandModifier 0
+        -ctrlModifier 0
+        -shiftModifier 0
+        -optionBox 0
+        -enable 1
+        -data 0
+        -allowOptionBoxes 1
+        -postMenuCommandOnce 0
+        -enableCommandRepeat 1
+        -image "useDfltMat.bmp" 
+        -echoCommand 0
+        -italicized 0
+        -boldFont 1
+        -sourceType "mel" 
+        menuEditorMenuItem9;
+
+setParent -m ..;
+

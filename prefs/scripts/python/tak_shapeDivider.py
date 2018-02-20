@@ -10,10 +10,11 @@ Usage:
 
     # Fit border using leftBorderPlane
 
-    shapeDivider.divide(numOfDivision=6)
+    shapeDivider.divide(numOfShapes=6)
 """
 
 import pymel.core as pm
+
 
 class ShapeDivider(object):
     def __init__(self, baseGeo=None, targetGeo=None):
@@ -26,7 +27,7 @@ class ShapeDivider(object):
         self.rightBorderPlane = None
         self.refPlaneRootGrp = None
         self.targetGeoBoundingBox = None
-        self.numOfDivision = None
+        self.numOfShapes = None
 
         if not pm.pluginInfo('rampBlendShape', q=True, loaded=True):
             pm.loadPlugin('rampBlendShape')
@@ -46,30 +47,36 @@ class ShapeDivider(object):
             self.baseGeo = baseGeo
             self.targetGeo = targetGeo
 
-    def build(self, numOfDivision=2):
-        self.numOfDivision = numOfDivision
+    def build(self, numOfShapes=2, centerFalloff=5):
+        """
+        Args:
+            numOfShapes: Number of shapes
+            centerFalloff: Percentage of falloff from center
+        """
+        self.numOfShapes = numOfShapes
+        offset = centerFalloff * 0.01
 
         self.outGeo = self.baseGeo.duplicate(n='%s_rampBS' % self.targetGeo.name())[0]
         pm.delete(pm.parentConstraint(self.targetGeo, self.outGeo, mo=False))
 
-        self.createRefPlanes()
+        self._createRefPlanes()
 
         self.rampBS = pm.createNode('rampBlendShape')
-        if self.numOfDivision == 2:
+        if self.numOfShapes == 2:
             pm.removeMultiInstance(self.rampBS.weightCurveRamp[2], b=True)
-            self.rampBS.weightCurveRamp[0].weightCurveRamp_Position.set(0.45)
-            self.rampBS.weightCurveRamp[1].weightCurveRamp_Position.set(0.55)
+            self.rampBS.weightCurveRamp[0].weightCurveRamp_Position.set(0.5-offset)
+            self.rampBS.weightCurveRamp[1].weightCurveRamp_Position.set(0.5+offset)
 
-        self.connectNodes()
+        self._connectNodes()
 
         self.targetGeo.hide()
 
-    def createRefPlanes(self):
+    def _createRefPlanes(self):
         self.refPlaneRootGrp = pm.group(n='refPlaneRoot_grp', empty=True)
 
-        self.targetGeoBoundingBox = self.targetGeo.getBoundingBox(space='world')
-        boundingBoxWidth = self.targetGeoBoundingBox.width()
-        boundingBoxHeight = self.targetGeoBoundingBox.height()
+        self.baseGeoBoundingBox = self.baseGeo.getBoundingBox(space='world')
+        boundingBoxWidth = self.baseGeoBoundingBox.width()
+        boundingBoxHeight = self.baseGeoBoundingBox.height()
 
         self.centerPlane = pm.polyPlane(n='centerPlane', w=boundingBoxWidth, h=boundingBoxHeight, sw=1, sh=1, axis=[1, 0, 0], ch=False)[0]
         self.leftBorderPlane = self.centerPlane.duplicate(n='leftBorderPlane')[0]
@@ -79,10 +86,9 @@ class ShapeDivider(object):
         self.centerPlane | self.leftBorderPlane
         self.centerPlane | self.rightBorderPlane
 
-        self.refPlaneRootGrp.setTranslation(self.targetGeoBoundingBox.center())
+        self.refPlaneRootGrp.setTranslation(self.targetGeo.getBoundingBox(space='world').center())
         self.centerPlane.translate.set(0, 0, 0)
         pm.parentConstraint(self.outGeo, self.refPlaneRootGrp, mo=True)
-
 
         leftBorderPlaneInvXMul = pm.createNode('multiplyDivide', n='leftBorderPlaneInvX_mul')
         leftBorderPlaneInvXMul.input2X.set(-1)
@@ -90,9 +96,10 @@ class ShapeDivider(object):
         self.leftBorderPlane.translateX >> leftBorderPlaneInvXMul.input1X
         leftBorderPlaneInvXMul.outputX >> self.rightBorderPlane.translateX
 
-        self.leftBorderPlane.translateX.set(boundingBoxWidth / 2)
+        borderMargin = 0.1
+        self.leftBorderPlane.translateX.set(boundingBoxWidth/2 + borderMargin)
 
-    def connectNodes(self):
+    def _connectNodes(self):
         self.baseGeo.getShape().worldMesh >> self.rampBS.baseGeo
         self.targetGeo.getShape().worldMesh >> self.rampBS.targetGeo
         self.rampBS.outGeo >> self.outGeo.inMesh
@@ -104,7 +111,7 @@ class ShapeDivider(object):
         dividedGeoOrigin = self.targetGeo.getTranslation(space='world')
         dividedGeoXOffset = self.targetGeoBoundingBox.width()
 
-        if self.numOfDivision == 2:
+        if self.numOfShapes == 2:
             for i in xrange(2):
                 dividedGeo = self.outGeo.duplicate(n='%s%s' % (self.targetGeo, i+1))[0]
                 dividedGeoPos = dividedGeoOrigin + pm.datatypes.Vector((dividedGeoXOffset*(i+1)), 0.0, 0.0)
@@ -112,14 +119,14 @@ class ShapeDivider(object):
                 self.rampBS.weightCurveRamp[0].weightCurveRamp_FloatValue.set(1)
                 self.rampBS.weightCurveRamp[1].weightCurveRamp_FloatValue.set(0)
 
-        elif self.numOfDivision >= 2 :
+        elif self.numOfShapes >= 2 :
             wholeRange = self.rampBS.range.get() * 2
-            divisionRange = wholeRange / (self.numOfDivision-1)
+            divisionRange = wholeRange / (self.numOfShapes-1)
             startCenter = -(wholeRange / 2)
 
             self.leftBorderPlane.translateX.set(divisionRange)
 
-            for i in xrange(self.numOfDivision):
+            for i in xrange(self.numOfShapes):
                 self.centerPlane.translateX.set(startCenter)
 
                 dividedGeo = self.outGeo.duplicate(n='%s%s' % (self.targetGeo, i+1))[0]

@@ -34,7 +34,7 @@ if int(MAYA_VER) > 2016:
 cmds.selectPref(tso = True)
 
 TAK_TOOL_PATH = 'D:/Tak/Program_Presets/tak_maya_preset/prefs/scripts/python/tak_tools.py'
-ICON_DIR_PATH = 'D:/Tak/Program_Presets/tak_maya_preset/prefs/icons'
+ICON_DIR_PATH = 'D:/Tak/Program_Presets/tak_maya_preset/prefs/images'
 
 # Refresh tak_tools whenever new scene opened
 cmds.scriptJob(event=['NewSceneOpened', 'tak_tools.UI()'])
@@ -158,7 +158,7 @@ def UI():
     cmds.frameLayout('riggingBuildFrameLo', label = 'Build', collapse = False, collapsable = True, p = 'riggingScrLo')
     cmds.shelfLayout('Rigging_Build', h = (36.5 * 4), p = 'riggingBuildFrameLo')
     cmds.shelfButton(annotation = 'Advanced skeleton body setup window.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'AdvancedSkeleton/asBody.png', command = 'source "AdvancedSkeleton/asBody.mel";asBody;', sourceType = 'mel')
-    cmds.shelfButton(annotation = 'AdvancedSkeleton5', width = 35, height = 35, imageOverlayLabel = '', image1 = 'C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5Files/icons/AS5.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5.mel";AdvancedSkeleton5;', sourceType = 'mel')
+    cmds.shelfButton(annotation = 'AdvancedSkeleton5', width = 35, height = 35, imageOverlayLabel = '', image1 = 'C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5Files/images/AS5.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5.mel";AdvancedSkeleton5;', sourceType = 'mel')
     cmds.shelfButton(annotation = 'scripts for the advanced skeleton', width = 35, height = 35, imageOverlayLabel = '', image1 = 'toolForAs.bmp', command = 'import toolForAs\nreload(toolForAs)\ntoolForAs.UI()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Click to place joint. Click on existing joint to add to skeleton. Click-Drag to position joint.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'kinJoint.png', command = 'JointTool', sourceType = 'mel')
     cmds.shelfButton(annotation = '', width = 35, height = 35, imageOverlayLabel = '', image1 = 'vertsCenter.bmp', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.getVertsCenter()', sourceType = 'python')
@@ -271,15 +271,15 @@ def UI():
     cmds.shelfLayout('Animation_Control_Select', h = 41, p = 'aniCtrlSelFrameLo')
     cmds.shelfButton(annotation = 'Save controls selected', width = 35, height = 35, imageOverlayLabel = '', image1 = 'pos2Shelf.bmp', command = 'pose2shelf', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Advanced skeleton selector window.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'AdvancedSkeleton/asBiped.png', command = 'source "AdvancedSkeleton/Selector/biped.mel";asSelectorbiped;', sourceType = 'mel')
-    cmds.shelfButton(annotation = 'Selector:biped', width = 35, height = 35, imageOverlayLabel = 'AS5', image1 = 'C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5Files/icons/asBiped.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5//AdvancedSkeleton5Files/Selector/biped.mel";asSelectorbiped;', sourceType = 'mel')
-    cmds.shelfButton(annotation = 'Selector:face', width = 35, height = 35, imageOverlayLabel = 'AS5', image1 = 'C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5Files/icons/asFace.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5//AdvancedSkeleton5Files/Selector/face.mel";asSelectorface;', sourceType = 'mel')
+    cmds.shelfButton(annotation = 'Selector:biped', width = 35, height = 35, imageOverlayLabel = 'AS5', image1 = 'C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5Files/images/asBiped.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5//AdvancedSkeleton5Files/Selector/biped.mel";asSelectorbiped;', sourceType = 'mel')
+    cmds.shelfButton(annotation = 'Selector:face', width = 35, height = 35, imageOverlayLabel = 'AS5', image1 = 'C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5Files/images/asFace.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5//AdvancedSkeleton5Files/Selector/face.mel";asSelectorface;', sourceType = 'mel')
 
     cmds.frameLayout('aniDisplayFrameLo', label = 'Display', collapse = False, collapsable = True, p = 'aniScrLo')
     cmds.shelfLayout('Animation_Display', h = 41, p = 'aniDisplayFrameLo')
     cmds.shelfButton(annotation = 'Convert selected keyframe(s) into breakdown tick(s).', width = 35, height = 35, imageOverlayLabel = 'breakdown', image1 = 'breakdown.png', command = 'keyframe -tds on;', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Convert selected keyframe(s) into key tick(s).', width = 35, height = 35, imageOverlayLabel = 'key', image1 = 'key.png', command = 'keyframe -tds off;', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Create ouline.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'bhGhostIcon.png', command = 'source bhGhost.mel;\nbhGhost;', sourceType = 'mel')
-    cmds.shelfButton(annotation = 'Onion Skin Renderer', width = 35, height = 35, imageOverlayLabel = '', image1 = 'D:/Tak/Program_Presets/tak_maya_preset/prefs/icons/onionskin_renderer_icon_32.png', command = 'import onionSkinRenderer.onionSkinRendererWindow as onionWindow\nimport onionSkinRenderer.onionSkinRendererCore as onionCore\nif __name__ == "__main__":\n    try:\n        onionUI.close()\n    except:\n        pass\n\n\n\treload(onionCore)\n\n    onionUI = onionWindow.OnionSkinRendererWindow()\n    onionUI.show()', sourceType = 'python')
+    cmds.shelfButton(annotation = 'Onion Skin Renderer', width = 35, height = 35, imageOverlayLabel = '', image1 = 'D:/Tak/Program_Presets/tak_maya_preset/prefs/images/onionskin_renderer_icon_32.png', command = 'import onionSkinRenderer.onionSkinRendererWindow as onionWindow\nimport onionSkinRenderer.onionSkinRendererCore as onionCore\nif __name__ == "__main__":\n    try:\n        onionUI.close()\n    except:\n        pass\n\n\n\treload(onionCore)\n\n    onionUI = onionWindow.OnionSkinRendererWindow()\n    onionUI.show()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Create arc of selection.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'arcTracer.bmp', command = 'import ml_arcTracer\nml_arcTracer.ui()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Select object(s) to generate a motion trail over time.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'motionTrail.png', command = 'doMotionTrail 2 { "snapshot  -motionTrail 1  -increment 1 -startTime `playbackOptions -query -min` -endTime `playbackOptions -query -max`", "1","0","0","1","1","1"}', sourceType = 'mel')
 

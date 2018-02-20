@@ -20,49 +20,6 @@ if __name__ == "__main__":
     ]
 
 
-    # Duplicate Source Facial Group #
-    facialNeedList = ['eyebrow_down', 'eyebrow_up', 'eyebrow_angry', 'eyebrow_sad',
-    'eyelid_blink', 'eyelid_angry', 'eyelid_sad', 'eyelid_big',
-    'lip_smile', 'lip_frown', 'lip_wide', 'lip_narrow', 'lip_openSmileBig', 'lip_angryBig', 'lipSync_A', 'lipSync_E', 'lipSync_I', 'lipSync_O']
-
-    facialSrcGrp = cmds.ls(sl = True)
-
-    for item in facialNeedList:
-        cmds.duplicate(facialSrcGrp, n = item, renameChildren = True)
-
-
-    # Connect Facial Control Attributes to the Facial Blend Shape #
-    import re
-
-    facialCtrlLs = cmds.ls(sl = True)
-    facialBsName = 'facial_bs'
-
-    for facialCtrl in facialCtrlLs:
-        facialAttrLs = cmds.listAttr(facialCtrl, keyable = True)
-        for facialAttr in facialAttrLs:
-            facialBsTrgName = re.sub(r'ctrl', facialAttr, facialCtrl)
-            
-            if cmds.objExists(facialBsName + '.' + facialBsTrgName):
-                try:
-                    cmds.connectAttr(facialCtrl + '.' + facialAttr, facialBsName + '.' + facialBsTrgName, f = True)
-                except:
-                    pass
-            
-            if 'lip' in facialCtrl:
-                facialBsTrgName = re.sub(r'ctrl', facialAttr, facialCtrl)
-                if 'lip_lf' in facialBsTrgName:
-                    facialBsTrgName = re.sub(r'lip_lf', 'lf_lip', facialBsTrgName)
-                elif 'lip_rt' in facialBsTrgName:
-                    facialBsTrgName = re.sub(r'lip_rt', 'rt_lip', facialBsTrgName)
-                
-                if cmds.objExists(facialBsName + '.' + facialBsTrgName):
-                    try:
-                        cmds.connectAttr(facialCtrl + '.' + facialAttr, facialBsName + '.' + facialBsTrgName, f = True)
-                    except:
-                        pass
-
-
-    # Extract Facial Targets with Selected Controls #
     facialCtrlLs = cmds.ls(sl = True)
     facialGrp = 'facial_bs_geo'
 
@@ -87,12 +44,6 @@ if __name__ == "__main__":
         cmds.setAttr(bsNode + '.' + trg, 1)
         cmds.duplicate(facialGrp, renameChildren = True, n = trg)
         cmds.setAttr(bsNode + '.' + trg, 0)
-
-
-
-
-
-
 
 
     ### Joint Based Facial Rigging ###
@@ -155,6 +106,7 @@ if __name__ == "__main__":
     import pymel.core as pm
     import tak_misc
 
+    # Normal eyelid
     selJnts = pm.selected()
     for jnt in selJnts:
         name = jnt.getChildren()[0].rsplit('_jnt')[0]
@@ -167,6 +119,8 @@ if __name__ == "__main__":
         ikh.setParent(loc)
         tak_misc.doGroup(loc.name(), '_zero')
         tak_misc.doGroup(loc.name(), '_auto')
+
+
 
 
     # Zipper Lip #
@@ -234,6 +188,49 @@ if __name__ == "__main__":
         endValue += increment
 
 
+def createFacialList(facialGrp):
+    facialList = ['eyebrow_down', 'eyebrow_up', 'eyebrow_angry', 'eyebrow_sad',
+                      'eyelid_blink', 'eyelid_smile', 'eyelid_angry', 'eyelid_sad', 'eyelid_big',
+                      'lip_smile', 'lip_frown', 'lip_wide', 'lip_narrow', 'lip_openSmileBig', 'lip_angryBig', 'a', 'e',
+                      'i', 'o']
+
+    for item in facialList:
+        cmds.duplicate(facialGrp, n=item, renameChildren=True)
+
+    cmds.select(facialList, r=True)
+    tak_misc.arrangeInAColumn()
+
+
+def connectFacial(blendshapeNode='facial_bs'):
+    """ Connect selected facial controls attributes to matching blendshape target """
+
+    facialCtrlLs = cmds.ls(sl = True)
+
+    for facialCtrl in facialCtrlLs:
+        facialAttrLs = cmds.listAttr(facialCtrl, keyable = True)
+        for facialAttr in facialAttrLs:
+            facialBsTrgName = re.sub(r'ctrl', facialAttr, facialCtrl)
+
+            if cmds.objExists(blendshapeNode + '.' + facialBsTrgName):
+                try:
+                    cmds.connectAttr(facialCtrl + '.' + facialAttr, blendshapeNode + '.' + facialBsTrgName, f = True)
+                except:
+                    pass
+
+            if 'lip' in facialCtrl:
+                facialBsTrgName = re.sub(r'ctrl', facialAttr, facialCtrl)
+                if 'lip_lf' in facialBsTrgName:
+                    facialBsTrgName = re.sub(r'lip_lf', 'lf_lip', facialBsTrgName)
+                elif 'lip_rt' in facialBsTrgName:
+                    facialBsTrgName = re.sub(r'lip_rt', 'rt_lip', facialBsTrgName)
+
+                if cmds.objExists(blendshapeNode + '.' + facialBsTrgName):
+                    try:
+                        cmds.connectAttr(facialCtrl + '.' + facialAttr, blendshapeNode + '.' + facialBsTrgName, f = True)
+                    except:
+                        pass
+
+
 ### Facial Tertiary ###
 def createCurveRig(name, numOfControls):
     """
@@ -271,7 +268,7 @@ def createCurveRig(name, numOfControls):
     locGrp = pm.group(locators, n=name+'_loc_grp')
     pm.group(jntGrp, locGrp, newCrv, n=name+'_system_grp')
 
-def renameByPosition(name, transformList, suffix='jnt'):
+def renameByPosition(name, transformList, suffix='bnd_jnt'):
     renamedList = []
 
     transformList.sort(key=lambda x:x.tx.get(), reverse=True) if 'rt_' in name else transformList.sort(key=lambda x:x.tx.get())
@@ -325,3 +322,13 @@ def createProjectedFollicle(locator, nurbsSurface):
     follicleShape.outRotate >> follicleTransform.rotate
 
     return follicleTransform
+
+
+# Ball eyelid
+def createIKHandles(bndJnts, baseJnt):
+    ikhs = []
+    for jnt in bndJnts:
+        dupBaseJnt = baseJnt.duplicate(n=jnt.replace('_bnd_jnt', '_base_jnt'))[0]
+        dupBaseJnt | jnt
+        ikhs.append(pm.ikHandle(solver='ikSCsolver', sj=dupBaseJnt, ee=jnt, n=jnt.replace('_bnd_jnt', '_ikh'))[0])
+    pm.select(ikhs, r=True)

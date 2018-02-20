@@ -218,7 +218,7 @@ def createShelfButton(command, label='', name=None, description='',
     '''
     Create a shelf button for the command on the current shelf
     '''
-    #some good default icons:
+    #some good default images:
     #menuIconConstraints - !
     #render_useBackground - circle
     #render_volumeShader - black dot
@@ -1814,7 +1814,7 @@ class UndoChunk():
 #
 # Revision 3: 2012-05-31 : Adding Menu and Icon update to UI, adding KeyframeSelection object, and a few random utility functions.
 #
-# Revision 4: 2012-06-01 : Fixing bug with UI icons
+# Revision 4: 2012-06-01 : Fixing bug with UI images
 #
 # Revision 5: 2012-07-23 : Expanding and bug fixing Keyselection, added SkipUndo, minor bug fixes.
 #

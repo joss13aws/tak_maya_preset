@@ -25,7 +25,7 @@ import tak_cleanUpModel
 import tak_createCtrl
 import tak_lib
 import json
-import takAutoRig.base.control as control
+import tak_riggingToolkit.base.control as control
 reload(control)
 from OBB.api import OBB
 
@@ -2823,6 +2823,29 @@ def loadMatAssignInfo(filePath, namespace=''):
     for mat, meshes in matAssignInfo.items():
         pm.select(meshes, r=True)
         pm.hyperShade(assign=namespace+mat)
+
+
+def saveSetsInfo(filePath):
+    selSets = pm.selected()
+    setsInfo = {}
+    for set in selSets:
+        setsInfo[set.name()] = (set.nodeType(), [member.name() for member in set.members()])
+
+    with open(filePath, 'w') as f:
+        json.dump(setsInfo, f, indent=4)
+
+
+def createSets(filePath):
+    with open(filePath, 'r') as f:
+        setsInfo = json.load(f)
+
+    for key, value in setsInfo.items():
+        setName = key
+        nodeType = value[0]
+        setMembers = value[1]
+
+        set = pm.createNode(nodeType, name=setName)
+        set.addMembers(setMembers)
 
 
 def setUpDefaultScaleAttr(scaleValue, globalControl='Main'):

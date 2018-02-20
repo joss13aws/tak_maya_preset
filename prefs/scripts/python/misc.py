@@ -756,7 +756,7 @@ def findMirrorVtx(mirrorPoint, vtxList, searchTolerance):
 
 # Add Control Curve to the Joints #
 import pymel.core as pm
-import takAutoRig
+import tak_riggingToolkit
 import re
 import tak_misc
 
@@ -767,7 +767,7 @@ shape = 'circleX'
 jnts = pm.selected()
 for jnt in jnts:
     ctrlName = re.sub(search, replace, jnt.name())
-    controller = takAutoRig.base.control.Controller(ctrlName, shape)
+    controller = tak_riggingToolkit.base.control.Controller(ctrlName, shape)
     controller.create()
     controller.parentShape(jnt)
     jnt.rename(ctrlName)
@@ -781,3 +781,15 @@ GeometryGrp = pm.group(n='Geometry', empty=True, p=rigGrp)
 pm.group(n='lod02_GRP', empty=True, p=GeometryGrp)
 pm.group(n='lod01_GRP', empty=True, p=GeometryGrp)
 
+
+# Search pymel method, attributes
+import tak_lib
+tak_lib.searchMethods(selSets[0], 'member')
+tak_lib.searchAttributes(selSets[0], 'member')
+
+
+# Simple prop rigging
+import tak_misc
+reload(tak_misc)
+tak_misc.simplePropAutoRigging(name='foodPile', controlShape='cube')
+tak_misc.createGlobalControls('square')

@@ -1,0 +1,20 @@
+//Maya Preference 2015 (Release 1)
+//
+//
+
+hotkey -keyShortcut "!" -name ("Tak_Display_MarkingMenu_PressNameCommand");
+hotkey -keyShortcut "1" -ctl -releaseName ("");
+hotkey -keyShortcut "1" -ctl -name ("");
+hotkey -keyShortcut "2" -ctl -releaseName ("");
+hotkey -keyShortcut "q" -alt -releaseName ("");
+hotkey -keyShortcut "2" -ctl -name ("");
+hotkey -keyShortcut "q" -alt -name ("SlideEdgeToolNameCommand");
+hotkey -keyShortcut "a" -alt -name ("SplitPolygonToolNameCommand");
+hotkey -keyShortcut "F" -ctl -name ("fumeLunchShortcut");
+hotkey -keyShortcut "1" -ctl -alt -releaseName ("");
+hotkey -keyShortcut "1" -ctl -alt -name ("");
+hotkey -keyShortcut "@" -releaseName ("Tak_Modeling_MarkingMenu_ReleaseNameCommand");
+hotkey -keyShortcut "@" -name ("Tak_Modeling_MarkingMenu_PressNameCommand");
+hotkey -keyShortcut "0" -releaseName ("HfAttrSelect_Menu_revert");
+hotkey -keyShortcut "0" -name ("HfAttrSelect_Menu");
+hotkey -keyShortcut "!" -releaseName ("Tak_Display_MarkingMenu_ReleaseNameCommand");

@@ -3534,8 +3534,11 @@ for ($i=0;$i<size($controlSetMembers);$i++)
 	for ($y=0;$y<size($tempString);$y++)
 		$setAttrCmd+="setAttr "+$controlSetMembers[$i]+"."+$tempString[$y]+" "+`getAttr ($controlSetMembers[$i]+"."+$tempString[$y])`+";";
 	}
-addAttr -ln udAttr -dt "string"  ("buildPose");
-setAttr -type "string" ("buildPose.udAttr") $setAttrCmd;
+if (!`objExists "buildPose.udAttr"`)
+{
+	addAttr -ln udAttr -dt "string"  ("buildPose");
+	setAttr -type "string" ("buildPose.udAttr") $setAttrCmd;
+}
 
 //Allset
 string $allAfter[]=`ls`;

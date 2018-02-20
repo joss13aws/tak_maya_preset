@@ -19,7 +19,7 @@ VER = 4
 _BMP, _PNG, _XPM = ('bmp', 20), ('png', 32), ('xpm', 63)
 ICON_FMT_STR, ICON_FMT_MAGIC_INT = _PNG
 
-ICON_SIZE = 60  #icons are square
+ICON_SIZE = 60  #images are square
 
 
 class AnimLibException(Exception): pass
@@ -65,7 +65,7 @@ def generateIcon( preset ):
 		initialStates.append( mel.eval("modelEditor -q %s %s;" % (setting, panel)) )
 		mel.eval("modelEditor -e %s 0 %s;" % (setting, panel))
 
-	#this is WAY more involved than doing a playblast, but it also results in prettier icons...  seems like a reasonably tradeoff to me!
+	#this is WAY more involved than doing a playblast, but it also results in prettier images...  seems like a reasonably tradeoff to me!
 	view = OpenMayaUI.M3dView()
 	OpenMayaUI.M3dView.getM3dViewFromModelPanel( panel, view )
 	xUtil, yUtil, wUtil, hUtil = OpenMaya.MScriptUtil(), OpenMaya.MScriptUtil(), OpenMaya.MScriptUtil(), OpenMaya.MScriptUtil()

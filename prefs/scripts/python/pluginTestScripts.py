@@ -16,7 +16,7 @@ cmds.unloadPlugin('rampBlendShape')
 
 
 
-import takShapeDivider
-reload(takShapeDivider)
-shapeDivider = takShapeDivider.ShapeDivider(baseGeo='face', targetGeo='eyebrows_up')
+import tak_shapeDivider
+reload(tak_shapeDivider)
+shapeDivider = tak_shapeDivider.ShapeDivider(baseGeo='face', targetGeo='eyebrows_up')
 shapeDivider.build()

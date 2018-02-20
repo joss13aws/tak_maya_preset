@@ -333,9 +333,6 @@ def clnOutl(*args):
         cmds.createNode('transform', n = 'extra_ctrl_grp')
         cmds.parent('extra_ctrl_grp', 'Sub')
 
-    if cmds.objExists('skinPose_loc_grp'):
-        cmds.parent('skinPose_loc_grp', 'wip_GRP')
-
     fingerCtrls = ['Fingers_L', 'Fingers_R']
     for fingerCtrl in fingerCtrls:
         cmds.setAttr(fingerCtrl + '.scale', lock = True)
@@ -358,7 +355,7 @@ def alignAnkleOriToWorld(*args):
 
 
 def rmvCustomRigNodesFromSets(*args):
-    cmds.select('extra_*_grp', 'facial_*_grp', 'misc_*_grp', r=True, hi=True)
+    cmds.select('extra*_grp', 'misc*_grp', r=True, hi=True)
     if cmds.objExists('facial*_grp'):
         cmds.select('facial*_grp', add = True, hi = True)
 
