@@ -2764,7 +2764,7 @@ def copyUvRiggedMesh(source, target):
         src = sels[0]
         trg = sels[1]
 
-        tak_misc.copyUVRiggedMesh(src, trg)
+        tak_misc.copyUvRiggedMesh(src, trg)
     """
     targetShapes = target.getChildren(shapes=True)
     if len(targetShapes) > 2:

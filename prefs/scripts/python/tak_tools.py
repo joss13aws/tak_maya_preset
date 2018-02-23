@@ -37,7 +37,7 @@ TAK_TOOL_PATH = 'D:/Tak/Program_Presets/tak_maya_preset/prefs/scripts/python/tak
 ICON_DIR_PATH = 'D:/Tak/Program_Presets/tak_maya_preset/prefs/images'
 
 # Refresh tak_tools whenever new scene opened
-cmds.scriptJob(event=['NewSceneOpened', 'tak_tools.UI()'])
+# cmds.scriptJob(event=['NewSceneOpened', 'tak_tools.UI()'])
 
 
 def UI():
