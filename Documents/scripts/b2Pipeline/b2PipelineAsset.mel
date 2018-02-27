@@ -513,34 +513,6 @@
 	global proc int b2SubmitTextures(int $tab, string $path, string $submitType, int $version)
 	{
 		print "b2SubmitTextures.....................................................................................................procedure start\n";
-		//- 사용 안함. 추후 삭제
-		// string $type; //b2GetFileName 변수
-		// string $tag; //b2GetVersionFromFile 변수
-		// string $versionString;
-		// if ($submitType == "dev")
-		// {
-			// $type = "nextDevelop";
-			// $tag = "v";
-		// }
-		// else if ($submitType == "rel")
-		// {
-			// $type = "nextRelease";
-			// $tag = "r";
-		// }
-		// string $selectedItem[] = `b2GetCurrentlySelectedItem $tab 3`; //main UI에서 선택된 아이템 확인
-		// string $fileName = `b2GetFileName $tab $selectedItem[0] $selectedItem[1] $selectedItem[2] 0 $type 0`; //저장할 마야 파일명 생성
-		// string $dirPath = `dirname $fileName`;
-		// int $versionArray[] = `b2GetVersionFromFile $fileName $tag `; //파일명에서 버전 문자열 추출
-		// string $versionString = ($tag + b2Pad($versionArray[0], 3)); 
-		//-/
-		
-		// python("import tak_b2Pipeline_add");
-		// python("reload(tak_b2Pipeline_add)");
-		// int $result = python("tak_b2Pipeline_add.chkTexNameConflict()");
-		// if ($result == 0){
-		// 	error "";
-		// }
-
 		string $texPath = $path + "/tex"; //텍스쳐를 카피해 넣을 디렉토리 경로
 		string $evalScene[] = `b2CheckTextureExistence`; //파일 텍스쳐 경로 오류 체크.
 		int $badNodeCount = `size($evalScene)`;
@@ -564,14 +536,13 @@
 			string $currentPathString;
 			string $currentFileName;
 			string $targetDir; //시퀀스 텍스쳐가 있는경우 텍스쳐가 들어있는 디렉토리 이름
-			// string $texDir = (`b2GetFileName $tab $selectedItem[0] $selectedItem[1] $selectedItem[2] 0 "folder" 0` + "tex/" + $versionString);
 			int $targetResult;
 			int $successCount = 0;
 			int $failCount = 0;
 			string $filePathGroupOrig[] = `b2TestAllFileNodes`; //모든 텍스쳐 파일을 경로별로 분류
 			string $removeString[] = { "emptyFileTexture", "missingPath" };
 			string $filePathGroup[] = stringArrayRemove($removeString, $filePathGroupOrig); //오류체크를 통과 했으므로 emptyFileTexture와 missingPath 그룹을 제거
-			int $filePathGroupSize = size($filePathGroup);	
+			int $filePathGroupSize = size($filePathGroup);
 			
 			if (`filetest -d $texPath` == 0)
 			{
@@ -651,22 +622,93 @@
 				{
 					for ($j = 1; $j < $pathGroupStringArraySize; $j ++) //처음 $path* 다음부터 처리해야 하므로 1부터 시작
 					{
-						$fileNode = $pathGroupStringArray[$j];
 						string $filePathAttrName;
-						if (`nodeType $fileNode` == "mentalrayIblShape")
+
+						$fileNode = $pathGroupStringArray[$j];
+						
+						// Check file path has UDIM
+						python("import maya.app.general.fileTexturePathResolver as ftpr");
+					    python("fileTextureNamePattern = cmds.getAttr('%s.computedFileTextureNamePattern' % \"" + $fileNode + "\")");
+					    int $hasUDIM = `python("'UDIM' in fileTextureNamePattern")`;
+					    
+					    if ($hasUDIM)
+					    {
+							string $currentPathPattern = `python("cmds.getAttr('%s.computedFileTextureNamePattern' % \"" + $fileNode + "\")")`;
+							string $currentPattern = basename ($currentPathPattern, "");
+							string $targetPathPattern = $texPath + "/" + $currentPattern;
+					    	
+					    	string $currentPathStrings[] = python("ftpr.findAllFilesForPattern(fileTextureNamePattern, None)");
+					    	for ($currentPathString in $currentPathStrings)
+					    	{
+					    	    $currentFileName = basename ($currentPathString, "");
+					    	    $targetFile = $texPath + "/" + $currentFileName;
+					    	    
+					    	    // When target file is not exists copy file
+					    	    if (`filetest -f $targetFile` == 0)
+								{
+									$targetResult = `sysFile -copy $targetFile $currentPathString`;
+									if ($targetResult == 1)
+									{
+										// Fix file path to target path
+										$filePathAttrName = $fileNode + ".fileTextureName";
+										setAttr -type "string" $filePathAttrName $targetPathPattern;
+									}
+									else
+									{
+										return 0;
+										break;
+									}
+								}
+								// When file exists on target file path
+								else
+								{
+									// Comparison current file with target file
+									python("import tak_b2Pipeline_add");
+									python("reload(tak_b2Pipeline_add)");
+									string $latestFilePath = `python("tak_b2Pipeline_add.findLatestFile('" + $currentPathString + "'" + ", " + "'" + $targetFile + "')")`;
+									
+									// If current file(local) is latest file then copy to target path(server)
+									if ($currentPathString == $latestFilePath)
+									{
+										$targetResult = `sysFile -copy $targetFile $currentPathString`;
+										// Modifiy file node fileTextreName attribute to target path
+										if ($targetResult == 1)
+										{
+											// Fix file path to target path							
+											$filePathAttrName = $fileNode + ".fileTextureName";
+											setAttr -type "string" $filePathAttrName $targetPathPattern;
+										}
+										else
+										{
+											return 0;
+											break;
+										}
+									}
+									// When target file is latest just modify file path to target path
+									else
+									{
+										$filePathAttrName = $fileNode + ".fileTextureName";
+										setAttr -type "string" $filePathAttrName $targetPathPattern;
+									}
+								}
+					    	}
+					    }
+						
+						
+						else if (`nodeType $fileNode` == "mentalrayIblShape")
 						{
 							$filePathAttrName = $fileNode + ".texture";
 							$currentPathString = `getAttr $filePathAttrName`;
 						}
+						
 						else
 						{
 							$filePathAttrName = $fileNode + ".fileTextureName";
 							$currentPathString = `getAttr $filePathAttrName`;
 						}
+						
 						$currentFileName = basename ($currentPathString, "");
-						print (">>> Current File Path:   " + $currentPathString + "\n");
 						$targetFile = $texPath + "/" + $currentFileName;
-						print (">>>  Target File Path:   " + $targetFile + "\n");
 						if (`filetest -f $targetFile` == 0)
 						{
 							$targetResult = `sysFile -copy $targetFile $currentPathString`;
@@ -682,50 +724,6 @@
 						}
 						else
 						{
-							// setAttr -type "string" $filePathAttrName $targetFile;
-							
-							// string $buffer[];
-							// tokenize $currentFileName "." $buffer;
-							// $newFileName = $buffer[0] + "_ver02." + $buffer[1];
-							// $targetFile = $texPath + "/" + $newFileName;
-							// print (">>>  Target File Path:   " + $targetFile + "\n");
-
-							// $targetResult = `sysFile -copy $targetFile $currentPathString`;
-							// if ($targetResult == 1)
-							// {
-							// 	setAttr -type "string" $filePathAttrName $targetFile;
-							// }
-							// else
-							// {
-							// 	return 0;
-							// 	break;
-							// }
-
-							// python("import tak_b2Pipeline_add");
-							// python("reload(tak_b2Pipeline_add)");
-							// string $newFilePath = `python("tak_b2Pipeline_add.chkSameFilePathNode('" + $currentPathString + "')")`;							
-							// if ($newFilePath == $currentPathString)
-							// {
-							// 	setAttr -type "string" $filePathAttrName $targetFile;
-							// }
-							// else
-							// {
-							// 	$newCurrentFileName = basename ($newFilePath, "");
-							// 	$targetFile = $texPath + "/" + $newCurrentFileName;
-							// 	print (">>> Target File Path:   " + $targetFile + "\n");
-
-							// 	$targetResult = `sysFile -copy $targetFile $currentPathString`;
-							// 	if ($targetResult == 1)
-							// 	{
-							// 		setAttr -type "string" $filePathAttrName $targetFile;
-							// 	}
-							// 	else
-							// 	{
-							// 		return 0;
-							// 		break;
-							// 	}
-							// }
-
 							python("import tak_b2Pipeline_add");
 							python("reload(tak_b2Pipeline_add)");
 							string $latestFilePath = `python("tak_b2Pipeline_add.findLatestFile('" + $currentPathString + "'" + ", " + "'" + $targetFile + "')")`;

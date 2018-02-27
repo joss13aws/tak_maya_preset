@@ -268,7 +268,7 @@ def parseRplcAstName(baseName):
 def parseAstNamespace(baseName):
     melBufferStr = ''
     
-    srchObj = re.search(r'(.+?)_(\d+)', baseName)
+    srchObj = re.search(r'(.+)_(\d{3})', baseName)
     if srchObj:
         joinStr = ','
         melBufferStr = joinStr.join(srchObj.groups())

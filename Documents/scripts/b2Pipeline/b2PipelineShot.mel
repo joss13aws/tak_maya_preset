@@ -2824,6 +2824,12 @@
 					string $filePath = $seqPath + $eachFolder + "/" + $selItems[0] + "_" + $eachFolder + "_maya/scenes/" + $selComp + "/" + $selLayer + "/develop/";
 					string $versionLst[] = `getFileList -folder $filePath -filespec "v*"`;
 					sort $versionLst;
+
+					if (size($versionLst) == 0)
+					{
+						continue;
+					}
+
 					string $latestVersionDir = $versionLst[size($versionLst) - 1];
 					$filePath = $filePath + $latestVersionDir + "/";
 					string $mov[] = `getFileList -folder $filePath -filespec "*.mov"`;
@@ -2861,6 +2867,12 @@
 						string $filePath = $seqPath + $selectedShot[$i] + "/" + $selItems[0] + "_" + $selectedShot[$i] + "_maya/scenes/" + $selComp + "/" + $selLayer + "/develop/";
 						string $versionLst[] = `getFileList -folder $filePath -filespec "v*"`;
 						sort $versionLst;
+						
+						if (size($versionLst) == 0)
+						{
+							continue;
+						}
+
 						string $latestVersionDir = $versionLst[size($versionLst) - 1];
 						$filePath = $filePath + $latestVersionDir + "/";
 						string $mov[] = `getFileList -folder $filePath -filespec "*.mov"`;

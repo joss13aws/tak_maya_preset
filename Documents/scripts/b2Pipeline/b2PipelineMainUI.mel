@@ -3943,7 +3943,7 @@
 					if( size($temp) != 2 )
 					{
 						string $message1 = "레퍼런스 노드 " + $eachRef + "는(은) 파이프라인 툴을 통해 불러들여진 어셋이 아닌것 같습니다.\n";
-						string $message2 = "\"에셋이름_001RN\" 형식으로 변경해야 합니다.\n";
+						string $message2 = "\"에셋이름_00#RN\" 형식으로 변경해야 합니다.\n";
 						string $message = $message1 + $message2;
 						string $confirm = `confirmDialog -title "Warning" -message $message
 							-button "Fix" -button "No" -defaultButton "No" -cancelButton "No" -dismissString "No"`;
@@ -3956,26 +3956,62 @@
 							python("tak_misc_b1.renameRefNode()");
 							continue;
 						}
+						else
+						{
+							error ($eachRef + " 의 이름을 \"에셋이름_00#RN\" 형식으로 변경해야 합니다.");
+						}
 					}
+
 					string $filename = `referenceQuery -wcn -filename $eachRef`;
 					string $basename = `basenameEx $filename`;
-					string $nameSplit[] = `stringToStringArray $basename "_"`;
+					// string $nameSplit[] = `stringToStringArray $basename "_"`;
+					python("import tak_b2Pipeline_add");
+					python("reload(tak_b2Pipeline_add)");
+					string $parsedStr = python("tak_b2Pipeline_add.parsingAssetFileName('" + $basename + "')");					
+					string $nameSplit[] = `stringToStringArray $parsedStr ","`;
 					
 					if( size($nameSplit) <= 5 )
 					{
 						string $astName = $nameSplit[1];
 						string $astNamespace = `referenceQuery -namespace $eachRef`;
 							$astNamespace = `substituteAllString $astNamespace ":" ""`;
-						string $astNamespaceSplit[] = `stringToStringArray $astNamespace "_"`;
+						python("import tak_b2Pipeline_add");
+	            		python("reload(tak_b2Pipeline_add)");
+	            		string $parsedStr = python("tak_b2Pipeline_add.parseAstNamespace('" + $eachRef + "')");
+						string $astNamespaceSplit[] = `stringToStringArray $parsedStr ","`;
+
+
+						// string $astNamespaceSplit[] = `stringToStringArray $astNamespace "_"`;
 						string $newAstNamespace = $astName + "_" + $astNamespaceSplit[1];
 						string $newAstRefNode = $newAstNamespace + "RN";
+						
+						b2Print("astName: ", $astName);
+						b2Print("astNamespaceSplit[0]: ", $astNamespaceSplit[0]);
 						if( $astName != $astNamespaceSplit[0] )
 						{
-							namespace -set ":";
-							namespace -rename $astNamespace $newAstNamespace;
-							lockNode -lock off $eachRef;
-							rename $eachRef $newAstRefNode;
-							lockNode -lock on $newAstRefNode; 
+							string $message1 = "레퍼런스 노드 " + $eachRef + "는(은) 네임스페이스의 에셋이름과 실제 에셋이름이 일치하지 않습니다.\n";
+							string $message2 = "\"실제에셋이름_00#RN\" 형식으로 변경해야 합니다.\n";
+							string $message = $message1 + $message2;
+							string $confirm = `confirmDialog -title "Warning" -message $message
+								-button "Fix" -button "No" -defaultButton "No" -cancelButton "No" -dismissString "No"`;
+								
+							if( $confirm == "Fix" )
+							{
+								select -r $eachRef;
+								python("import tak_misc_b1");
+								python("reload(tak_misc_b1)");
+								python("tak_misc_b1.renameRefNode()");
+								continue;
+							}
+							else
+							{
+								error ($eachRef + " 의 이름을 \"실제 에셋이름_00#RN\" 형식으로 변경해야 합니다.");
+							}
+							// namespace -set ":";
+							// namespace -rename $astNamespace $newAstNamespace;
+							// lockNode -lock off $eachRef;
+							// rename $eachRef $newAstRefNode;
+							// lockNode -lock on $newAstRefNode; 
 						}
 					}
 				}
