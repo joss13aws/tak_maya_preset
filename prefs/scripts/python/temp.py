@@ -1,99 +1,21 @@
-MStatus exportSkinClusterData::doIt( const MArgList& args )
-{
-	// parse args to get the file name from the command-line
-	//
-	MStatus stat = parseArgs(args);
-	if (stat != MS::kSuccess) {
-		return stat;
-	}
+# b1XGen Module Test Code #
+import b2Pipeline.python.b1XGen as b1XGen
+reload(b1XGen)
 
-	unsigned int count = 0;
+b1xgC = b1XGen.B1XGenCreate('charA', r'P:\1801_A71\A71_maya')
 
-	// Iterate through graph and search for skinCluster nodes
-	//
-	MItDependencyNodes iter( MFn::kInvalid);
-	for ( ; !iter.isDone(); iter.next() ) {
-		MObject object = iter.item();
-		if (object.apiType() == MFn::kSkinClusterFilter) {
-			count++;
+b1xgC.createDescription('mainHair')
+b1xgC.createDescription('subHair')
+b1xgC.createDescription('beard')
 
-			// For each skinCluster node, get the list of influence objects
-			//
-			MFnSkinCluster skinCluster(object);
-			MDagPathArray infs;
-			MStatus stat;
-			unsigned int nInfs = skinCluster.influenceObjects(infs, &stat);
-			CheckError(stat,"Error getting influence objects.");
+b1xgC.assignHairShader('black', 'charA_mainHair_desc')
+b1xgC.assignHairShader('black', 'charA_subHair_desc')
+b1xgC.assignHairShader('brown', 'charA_beard_desc')
 
-			if (0 == nInfs) {
-				stat = MS::kFailure;
-				CheckError(stat,"Error: No influence objects found.");
-			}
-
-			// loop through the geometries affected by this cluster
-			//
-			unsigned int nGeoms = skinCluster.numOutputConnections();
-			for (unsigned int ii = 0; ii < nGeoms; ++ii) {
-				unsigned int index = skinCluster.indexForOutputConnection(ii,&stat);
-				CheckError(stat,"Error getting geometry index.");
-
-				// get the dag path of the ii'th geometry
-				//
-				MDagPath skinPath;
-				stat = skinCluster.getPathAtIndex(index,skinPath);
-				CheckError(stat,"Error getting geometry path.");
-
-				// iterate through the components of this geometry
-				//
-				MItGeometry gIter(skinPath);
-
-				// print out the path name of the skin, vertexCount & influenceCount
-				//
-				fprintf(file,
-						"%s %d %u\n",skinPath.partialPathName().asChar(),
-						gIter.count(),
-						nInfs);
-
-				// print out the influence objects
-				//
-				for (unsigned int kk = 0; kk < nInfs; ++kk) {
-					fprintf(file,"%s ",infs[kk].partialPathName().asChar());
-				}
-				fprintf(file,"\n");
-
-				for ( /* nothing */ ; !gIter.isDone(); gIter.next() ) {
-					MObject comp = gIter.component(&stat);
-					CheckError(stat,"Error getting component.");
-
-					// Get the weights for this vertex (one per influence object)
-					//
-					MDoubleArray wts;
-					unsigned int infCount;
-					stat = skinCluster.getWeights(skinPath,comp,wts,infCount);
-					CheckError(stat,"Error getting weights.");
-					if (0 == infCount) {
-						stat = MS::kFailure;
-						CheckError(stat,"Error: 0 influence objects.");
-					}
-
-					// Output the weight data for this vertex
-					//
-					fprintf(file,"%d ",gIter.index());
-					for (unsigned int jj = 0; jj < infCount ; ++jj ) {
-						fprintf(file,"%f ",wts[jj]);
-					}
-					fprintf(file,"\n");
-				}
-			}
-		}
-	}
-
-	if (0 == count) {
-		displayError("No skinClusters found in this scene.");
-	}
-	fclose(file);
-	return MS::kSuccess;
-}
+b1xgP = b1XGen.B1XGenPublish('charA', 'd:/temp')
+b1xgP.publishScalp()
+b1xgP.publishCollection()
+b1xgP.publishShader()
 
 
 

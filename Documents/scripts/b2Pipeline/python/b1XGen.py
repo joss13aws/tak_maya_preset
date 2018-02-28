@@ -1,20 +1,21 @@
 import pymel.core as pm
 import xgenm as xg
+import json
 
 
 class B1XGen(object):
     b1ProjectRoot = 'p:/'
 
-    def __init__(self, prefix):
-        self.prefix = prefix
-        self.collectionName = '{0}_collection'.format(self.prefix)
-        self.hairFurGrp = '{0}_hairFur_grp'.format(self.prefix)
-        self.scalpGrp = '{0}_scalp_grp'.format(self.prefix)
+    def __init__(self, assetName):
+        self.assetName = assetName
+        self.collection = '{0}_collection'.format(self.assetName)
+        self.hairFurGrp = '{0}_hairFur_grp'.format(self.assetName)
+        self.scalpGrp = '{0}_scalp_grp'.format(self.assetName)
 
 
 class B1XGenCreate(B1XGen):
-    def __init__(self, prefix, xgenRoot=''):
-        super(B1XGenCreate, self).__init__(prefix)
+    def __init__(self, assetName, xgenRoot=''):
+        super(B1XGenCreate, self).__init__(assetName)
 
         self.xgenRoot = pm.fileDialog2(fm=3, ds=1, dir=B1XGen.b1ProjectRoot) if xgenRoot == '' else xgenRoot
 
@@ -49,28 +50,70 @@ class B1XGenCreate(B1XGen):
         if not sels:
             pm.error('You must select a scalp mesh')
         scalp = sels[0].node()
-        assert scalp.startswith(self.prefix), 'Scalp name must start with "{0}_"'.format(self.prefix)
+        assert isinstance(scalp.getShape(), pm.nodetypes.Mesh), 'Need to select a mesh'
+        assert scalp.startswith(self.assetName), 'Scalp name must start with "{0}_"'.format(self.assetName)
 
-        prefixedDescription = self.prefix+'_'+description
-        xg.createDescription(self.collectionName, prefixedDescription, primitive, generator, renderer, method)
-        xg.modifyFaceBinding(self.collectionName, prefixedDescription)
+        prefixedDescription = self.assetName + '_' + description + '_desc'
+        xg.createDescription(self.collection, prefixedDescription, primitive, generator, renderer, method)
+        xg.modifyFaceBinding(self.collection, prefixedDescription)
 
         # Cleanup outliner
         pm.parent(scalp, self.scalpGrp)
-        pm.parent(self.collectionName, self.hairFurGrp)
+        pm.parent(self.collection, self.hairFurGrp)
+
+    def assignHairShader(self, name, description):
+        hairShader = '{0}_{1}_hairShader'.format(self.assetName, name)
+        if not pm.objExists(hairShader):
+            hairShader = pm.shadingNode('aiStandardHair', asShader=True, n=hairShader)
+        pm.select(description, r=True)
+        pm.hyperShade(assign=hairShader)
 
 
 class B1XGenPublish(B1XGen):
-    def __init__(self, prefix, publishPath):
-        super(B1XGenPublish, self).__init__(prefix)
+    def __init__(self, assetName, publishPath):
+        super(B1XGenPublish, self).__init__(assetName)
         self.publishPath = pm.Path(publishPath)
 
     def publishScalp(self):
-        pm.select(self.hairFurGrp, r=True)
+        pm.select(self.scalpGrp, r=True)
         pm.system.exportSelected(exportPath=self.publishPath/self.scalpGrp+'.ma', f=True, type='mayaAscii')
 
     def publishCollection(self):
-        xg.exportPalette(self.collectionName, str(self.publishPath/self.collectionName+'.xgen'))
+        xg.exportPalette(self.collection, str(self.publishPath/self.collection+'.xgen').replace('\\', '/'))
 
     def publishShader(self):
-        pass
+        hairShaders = []
+        shaderAssignInfo = {}
+
+        descriptions = pm.listRelatives(self.collection)
+        for description in descriptions:
+            hairShader = pm.ls(description.getShape().connections(type='shadingEngine')[0].connections(), materials=True)
+            hairShaders.extend(hairShader)
+            shaderAssignInfo[str(description)] = str(hairShader[0])
+
+        hairShaders = list(set(hairShaders))
+        pm.select(hairShaders, r=True)
+        pm.exportSelected(exportPath=self.publishPath/self.collection+'_shaders.ma', f=True, type='mayaAscii')
+
+        # Write shader assign information
+        with open(self.publishPath/self.collection+'_shaders.json', 'w') as f:
+            json.dump(shaderAssignInfo, f, indent=4)
+
+
+class B1XGenRebuild(B1XGen):
+    def __init__(self, assetName, sourceDirPath):
+        super(B1XGenRebuild, self).__init__(assetName)
+        self.sourceDirPath = pm.Path(sourceDirPath)
+
+    def importSources(self):
+        pm.importFile(self.sourceDirPath/self.scalpGrp+'.ma')
+        xg.importPalette(str(self.sourceDirPath/self.collection+'.xgen').replace('\\', '/'), '')
+        pm.importFile(self.sourceDirPath/self.collection+'_shaders.ma')
+
+    def assignShader(self):
+        with open(self.sourceDirPath/self.collection+'_shaders.json', 'r') as f:
+            shaderAssignInfo = json.load(f)
+
+        for description, shader in shaderAssignInfo.items():
+            pm.select(description, r=True)
+            pm.hyperShade(assign=shader)
