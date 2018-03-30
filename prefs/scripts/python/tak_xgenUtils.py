@@ -22,6 +22,10 @@ def assignNewSolver(solver=None, hairSystems=None):
     Parameters:
         solver: Nucleus node or nucleus node name
         hairSystems (list): Hair system list
+
+    Examples:
+        hairSystems = pm.selected()
+        assignNewSolver(solver=None, hairSystems=hairSystems)
     """
     if not hairSystems:
         hairSystems = pm.ls(sl=True)

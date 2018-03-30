@@ -134,6 +134,11 @@ class SkinWeights(object):
 		Populate influence and weight value text scroll list.
 		'''
 
+		# Deactivate influences object color
+		if SkinWeights.infTxtScrLsCurrentAllItems:
+					for inf in SkinWeights.infTxtScrLsCurrentAllItems:
+						cls.unuseObjectColor(inf)
+
 		# Get options
 		hideZroInfOpt = cmds.menuItem(cls.uiWidgets['hideZroInfMenuItem'], q=True, checkBox=True)
 		hierSortOpt = cmds.menuItem(cls.uiWidgets['sortHierMenuItem'], q=True, checkBox=True)
@@ -334,8 +339,6 @@ class SkinWeights(object):
 				selInfWghtList.append(matchingWeightVal)
 				wghtVal = cls.oriWeightTable[selInf].split(' ')[0]
 				logger.debug('Selected Influence Weight: %s' % wghtVal)
-
-			cmds.textScrollList(cls.uiWidgets['wghtTxtScrLs'], e=True, selectItem=selInfWghtList)
 
 			cls.changeSelInfCol(allInfs, selInfList)
 

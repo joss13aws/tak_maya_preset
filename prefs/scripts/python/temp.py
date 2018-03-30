@@ -5,17 +5,24 @@ reload(b1XGen)
 b1xgC = b1XGen.B1XGenCreate('charA', r'P:\1801_A71\A71_maya')
 
 b1xgC.createDescription('mainHair')
-b1xgC.createDescription('subHair')
 b1xgC.createDescription('beard')
 
 b1xgC.assignHairShader('black', 'charA_mainHair_desc')
-b1xgC.assignHairShader('black', 'charA_subHair_desc')
 b1xgC.assignHairShader('brown', 'charA_beard_desc')
 
 b1xgP = b1XGen.B1XGenPublish('charA', 'd:/temp')
 b1xgP.publishScalp()
 b1xgP.publishCollection()
 b1xgP.publishShader()
+
+b1xgB = b1XGen.B1XGenBuild('charA', 'd:/temp')
+b1xgB.importSources()
+b1xgB.assignShader()
+
+b1xgCc = b1XGen.B1XGenCache('charA', 'd:/temp', 'd:/temp')
+b1xgCc.referencingScalp()
+b1xgCc.attachToAniModel('charA_head')
+b1xgCc.exportCaches()
 
 
 

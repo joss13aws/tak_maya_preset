@@ -338,6 +338,11 @@ def clnOutl(*args):
         cmds.setAttr(fingerCtrl + '.scale', lock = True)
 
     cmds.parent('Group', 'rig')
+    if cmds.objExists('skinPose_loc_grp') and cmds.objExists('wip_GRP'):
+        try:
+            cmds.parent('skinPose_loc_grp', 'wip_GRP')
+        except:
+            print 'skinPose_loc_grp is already in wip_GRP'
 
 
 

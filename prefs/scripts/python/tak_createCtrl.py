@@ -290,13 +290,13 @@ def app(*args):
         channels = ['X', 'Y', 'Z']
         if trnsCnntOpt:
             for channel in channels:
-                cmds.connectAttr(ctrl + '.translate%s' % channel, trg + '.translate%s' % channel)
+                cmds.connectAttr(ctrl + '.translate%s' % channel, trg + '.translate%s' % channel, f=True)
         if roCnntOpt:
             for channel in channels:
-                cmds.connectAttr(ctrl + '.rotate%s' % channel, trg + '.rotate%s' % channel)
+                cmds.connectAttr(ctrl + '.rotate%s' % channel, trg + '.rotate%s' % channel, f=True)
         if scaleCnntOpt:
             for channel in channels:
-                cmds.connectAttr(ctrl + '.scale%s' % channel, trg + '.scale%s' % channel)
+                cmds.connectAttr(ctrl + '.scale%s' % channel, trg + '.scale%s' % channel, f=True)
 
             # Match hierarchy same as target objects hierarchy.
         if hierOpt:

@@ -475,6 +475,7 @@ def UI():
     outliner = cmds.outlinerPanel(panel, query=True, outlinerEditor=True)
     cmds.outlinerEditor( outliner, edit=True, mainListConnection='worldList', selectionConnection='modelList', showShapes=False, showReferenceNodes=False, showReferenceMembers=False, showAttributes=False, showConnected=False, showAnimCurvesOnly=False, autoExpand=False, showDagOnly=True, ignoreDagHierarchy=False, expandConnections=False, showCompounds=True, showNumericAttrsOnly=False, highlightActive=True, autoSelectNewObjects=False, doNotSelectNewObjects=False, transmitFilters=False, showSetMembers=True, setFilter='defaultSetFilter', ignoreHiddenAttribute=False )
 
+
     # Make dockable depend on maya version
     if int(MAYA_VER) <= 2016:
         if cmds.dockControl("tTDock", q = True, exists = True): 
