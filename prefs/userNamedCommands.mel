@@ -1,0 +1,52 @@
+//Maya Preference 2018 (Release 1)
+//
+//
+
+nameCommand
+	-annotation "SplitPolygonToolNameCommand"
+	-sourceType "mel"
+	-command ("SplitPolygonTool")
+	SplitPolygonToolNameCommand;
+
+nameCommand
+	-annotation "SlideEdgeToolNameCommand"
+	-sourceType "mel"
+	-command ("SlideEdgeTool")
+	SlideEdgeToolNameCommand;
+
+nameCommand
+	-annotation "Tak_Modeling_MarkingMenu_PressNameCommand"
+	-sourceType "mel"
+	-command ("Tak_Modeling_MarkingMenu_Press")
+	Tak_Modeling_MarkingMenu_PressNameCommand;
+
+nameCommand
+	-annotation "Tak_Modeling_MarkingMenu_ReleaseNameCommand"
+	-sourceType "mel"
+	-command ("Tak_Modeling_MarkingMenu_Release")
+	Tak_Modeling_MarkingMenu_ReleaseNameCommand;
+
+nameCommand
+	-annotation "Tak_Display_MarkingMenu_PressNameCommand"
+	-sourceType "mel"
+	-command ("Tak_Display_MarkingMenu_Press")
+	Tak_Display_MarkingMenu_PressNameCommand;
+
+nameCommand
+	-annotation "Tak_Display_MarkingMenu_ReleaseNameCommand"
+	-sourceType "mel"
+	-command ("Tak_Display_MarkingMenu_Release")
+	Tak_Display_MarkingMenu_ReleaseNameCommand;
+
+nameCommand
+	-annotation "Tak_XGen_MarkingMenu_PressNameCommand"
+	-sourceType "mel"
+	-command ("Tak_XGen_MarkingMenu_Press")
+	Tak_XGen_MarkingMenu_PressNameCommand;
+
+nameCommand
+	-annotation "Tak_XGen_MarkingMenu_ReleaseNameCommand"
+	-sourceType "mel"
+	-command ("Tak_XGen_MarkingMenu_Release")
+	Tak_XGen_MarkingMenu_ReleaseNameCommand;
+

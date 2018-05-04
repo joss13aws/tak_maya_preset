@@ -99,10 +99,10 @@ class nClothSetUp(object):
 		# Create new solver
 		if not cmds.objExists(solverName + '_nucleus'):
 			solver = cmds.createNode('nucleus', n=solverName + '_nucleus')
-			cmds.setAttr('%s.subSteps' % solver, 20)
-			cmds.setAttr('%s.maxCollisionIterations' % solver, 20)
+			cmds.setAttr('%s.subSteps' % solver, 10)
+			cmds.setAttr('%s.maxCollisionIterations' % solver, 10)
 			cmds.setAttr('%s.timeScale' % solver, 1.0)
-			cmds.setAttr('%s.spaceScale' % solver, 0.1)
+			cmds.setAttr('%s.spaceScale' % solver, 0.01)
 			cmds.setAttr('%s.visibility' % solver, 0)
 			cmds.connectAttr('time1.outTime', solver + '.currentTime', f=True)
 		else:
