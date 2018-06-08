@@ -18,7 +18,7 @@ reload(tak_helperJoint)
 tak_helperJoint.ui()
 '''
 
-
+import pymel.core as pm
 import maya.cmds as cmds
 import maya.mel as mel
 from functools import partial
@@ -337,7 +337,6 @@ def mirrorCorJnt(*args):
 		# Check if target objects exists.
 		sdkLoc = helperJnt + '_sdk_loc'
 		sDriver = cmds.setDrivenKeyframe(sdkLoc, q=True, cd=True)[0].split('.')[0]
-		print sDriver
 		tDriver = re.sub(jntSrch, jntRplc, sDriver)
 		tDriven = re.sub(helperJntSrch, helperJntRplc, sdkLoc)
 
@@ -401,8 +400,43 @@ def mirrorCorJnt(*args):
 
 			# Check if driver is more than two.
 			if not drvrVals:
-				cmds.warning("There is more than two drivers for source helper joint's locator.")
-				return
+				animatableAttrs = pm.PyNode(sdkLoc).listAnimatable()
+				for attr in animatableAttrs:
+					animAttrInputNode = attr.connections(d=False, scn=True)
+					if animAttrInputNode:
+						if isinstance(animAttrInputNode[0], pm.nodetypes.AnimCurve): # In case animCurve
+							animCurve = animAttrInputNode[0]
+							animCurveInput = animCurve.input.connections(p=True, scn=True)[0]
+							animCurveOutput = animCurve.output.connections(p=True, scn=True)[0]
+							
+							dupAnimCurve = animCurve.duplicate()[0]
+							pm.PyNode(animCurveInput.replace(helperJntSrch, helperJntRplc)) >> dupAnimCurve.input
+							dupAnimCurve.output >> pm.PyNode(animCurveOutput.replace(helperJntSrch, helperJntRplc))
+
+						else: # In case blendWeight
+							blendWeight = animAttrInputNode[0]
+							animCurves = blendWeight.input.connections(scn=True)
+							blendWeightOutput = blendWeight.output.connections(p=True, scn=True)[0]
+
+							dupBlendWeight = blendWeight.duplicate()[0]
+							dupBlendWeight.output >> pm.PyNode(blendWeightOutput.replace(helperJntSrch, helperJntRplc))
+							for animCurve in animCurves:
+								if not animCurve.numKeyframes():
+									pm.delete(animCurve)
+									continue
+								
+								animCurveInput = animCurve.input.connections(p=True, scn=True)[0]
+								animCurveOutput = animCurve.output.connections(p=True, scn=True)[0]
+
+								dupAnimCurve = animCurve.duplicate()[0]
+								pm.PyNode(animCurveInput.replace(helperJntSrch, helperJntRplc)) >> dupAnimCurve.input
+								dstIndex = re.search(r'.*\[(\d+)\]', str(animCurveOutput)).group(1)
+								dupAnimCurve.output >> dupBlendWeight.input[dstIndex]
+
+								if 'translate' in str(blendWeightOutput):
+									for i in xrange(dupAnimCurve.numKeyframes()):
+										dupAnimCurve.setValue(i, -dupAnimCurve.getValue(i))
+				continue
 
 			for i in xrange(len(drvrVals)):
 				if 'translate' in drvnAttr:
@@ -544,3 +578,6 @@ def mirPoseReader(sdkLoc, jntSrch, jntRplc, helperJntSrch, helperJntRplc):
 			cmds.connectAttr(mirStartPoseLocName + '.translate', mirAnglBtwnName + '.vector1')
 			cmds.connectAttr(mirTrgPoseLocName + '.translate', mirAnglBtwnName + '.vector2')
 			cmds.connectAttr(mirAnglBtwnName + '.angle', mirRemapValName + '.inputMax')
+
+
+

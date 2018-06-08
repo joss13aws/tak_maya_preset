@@ -104,9 +104,17 @@ def main(*args):
         rightBlendTarget = createLfRtTarget(baseName, targetName, side='right')
 
         baseMeshes = removeNoMesh(cmds.listRelatives(baseName, allDescendents=True, type='transform'))
+        if not baseMeshes:
+            baseMeshes = [baseName]
         targetMeshes = removeNoMesh(cmds.listRelatives(targetName, allDescendents=True, type='transform'))
+        if not targetMeshes:
+            targetMeshes = [targetName]
         leftTargetMeshes = removeNoMesh(cmds.listRelatives(leftBlendTarget, allDescendents=True, type='transform'))
+        if not leftTargetMeshes:
+            leftTargetMeshes = [leftBlendTarget]
         rightTargetMeshes = removeNoMesh(cmds.listRelatives(rightBlendTarget, allDescendents=True, type='transform'))
+        if not rightTargetMeshes:
+            rightTargetMeshes = [rightBlendTarget]
 
         # Calculate and assign vector
         vectorReproduce(baseMeshes, targetMeshes, leftTargetMeshes, centerFalloff, side='left')
@@ -129,21 +137,17 @@ def createLfRtTarget(baseName, targetName, side):
                  'right': {'prefix': rPrefix, 'suffix': rSuffix, 'position': (targetPos[0]-posOffset, targetPos[1], targetPos[2])}
                 }
 
-    blendTarget = cmds.duplicate(baseName, n=lfRtTable[side]['prefix'] + targetName + lfRtTable[side]['suffix'], rr=True, renameChildren=True)[0]
+    blendTarget = pm.createNode('mesh').getTransform()
+    blendTarget.rename(lfRtTable[side]['prefix'] + targetName + lfRtTable[side]['suffix'])
+    blendTarget.setTranslation(lfRtTable[side]['position'], space='world')
 
-    if cmds.listRelatives(blendTarget, p=True):
-        cmds.parent(blendTarget, world=True)
-
-    for attr in cmds.listAttr(baseName, keyable=True):
-        cmds.setAttr(blendTarget + '.' + str(attr), lock=False)
-
-    cmds.xform(blendTarget, ws=True, t=lfRtTable[side]['position'])
-
-    return blendTarget
+    return str(blendTarget)
 
 
 def removeNoMesh(transformList):
-    meshes = [item for item in transformList if cmds.listRelatives(item, s=True)]
+    meshes = []
+    if transformList:
+        meshes = [item for item in transformList if cmds.listRelatives(item, s=True)]
     return meshes
 
 
@@ -169,8 +173,8 @@ def vectorReproduce(baseMeshes, targetMeshes, outMeshes, centerFalloff, side):
             rampBS.weightCurveRamp[0].weightCurveRamp_Position.set(0.5+offset)
             rampBS.weightCurveRamp[1].weightCurveRamp_Position.set(0.5-offset)
 
-        baseMesh.getShape().worldMesh >> rampBS.baseGeo
-        targetMesh.getShape().worldMesh >> rampBS.targetGeo
+        baseMesh.getShape(ni=True).worldMesh >> rampBS.baseGeo
+        targetMesh.getShape(ni=True).worldMesh >> rampBS.targetGeo
         rampBS.outGeo >> outMesh.inMesh
 
         pm.delete(outMesh, ch=True)

@@ -1521,7 +1521,7 @@ $FTM_FCAllFormats = {"iff","sgi","tga","rgb","jpg","jpeg","map","tif","tiff","bm
 
 // cover all file texture nodes including mentalray's
 global string $lsCmd;
-$lsCmd = "ls -typ file -typ psdFileTex -typ mentalrayTexture";
+$lsCmd = "ls -typ file -typ psdFileTex";
 
 select -cl;
 

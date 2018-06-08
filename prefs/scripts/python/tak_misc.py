@@ -27,6 +27,7 @@ import tak_lib
 import json
 import tak_riggingToolkit.base.control as control
 reload(control)
+reload(tak_lib)
 from OBB.api import OBB
 
 
@@ -1658,7 +1659,7 @@ def crvToPolyStrp():
 
     selCrvs = cmds.ls(sl=True)
 
-    strkDens = 0.15
+    strkDens = 0.2
     strkWidth = 0.5
     strkLs = []
 
@@ -1672,7 +1673,7 @@ def crvToPolyStrp():
         brush = cmds.listConnections(strkShp, s=True, type='brush')[0]
 
         cmds.setAttr('%s.sampleDensity' % strkShp, strkDens)
-        cmds.setAttr('%s.smoothing' % strkShp, 1)
+        cmds.setAttr('%s.smoothing' % strkShp, 0)
         cmds.setAttr('%s.brushWidth' % brush, strkWidth)
         cmds.setAttr('%s.flatness1' % brush, 1)
 
@@ -1680,6 +1681,8 @@ def crvToPolyStrp():
     cmds.select(strkLs, r=True)
     mel.eval('doPaintEffectsToPoly( 1,0,1,1,100000);')
     cmds.hyperShade(assign='lambert1')
+    
+    cmds.delete(selCrvs)
 
 
 ### Connect Facial Control to ROM Facial Locator with SDK ###
@@ -2922,3 +2925,15 @@ def reconnectIkSplineSolver(ikHandles):
 
     for ikHandle in ikHandles:
         ikSplineSolver.message >> ikHandle.ikSolver
+
+
+def createAvgCurve(curve1, curve2):
+    avgCrv = pm.createNode('avgCurves')
+    avgCrv.automaticWeight.set(False)
+    curve1.worldSpace >> avgCrv.inputCurve1
+    curve2.worldSpace >> avgCrv.inputCurve2
+
+    resultCurve = pm.createNode('nurbsCurve')
+    avgCrv.outputCurve >> resultCurve.create
+
+    pm.delete(resultCurve, ch=True)

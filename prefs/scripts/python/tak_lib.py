@@ -199,16 +199,15 @@ def isUniqeName(obj):
 
 
 def getMatFromSel(obj):
-    '''
-    Get material From selected object.
-    '''
+    """ Get material From selected object """
 
-    shapeName = cmds.listRelatives(obj, ni = True, path = True, s = True)
+    shapeName = cmds.listRelatives(obj, ni=True, path=True, s=True)
 
     if shapeName:
-        sgName = cmds.listConnections(shapeName[0], d = True, type = "shadingEngine")
-        matName = cmds.ls(cmds.listConnections(sgName), materials = True)
+        sgName = cmds.listConnections(shapeName[0], d=True, type="shadingEngine")
+        matName = [mat for mat in cmds.ls(cmds.listConnections(sgName), materials=True) if not cmds.nodeType(mat) == 'displacementShader']
 
+        print 'matName: ', matName
         return list(set(matName))
 
 

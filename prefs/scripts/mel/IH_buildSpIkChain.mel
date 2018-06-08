@@ -1438,21 +1438,28 @@ global proc addConstraintAttr(){
 			}	
 
 			//connect constraint.
-			if ( `objExists ($constraintNode[0] + ".w0")`) {
-				string $connect[] = `listConnections -s 1 -d 0 -p 1 ($constraintNode[0] + ".w0")`;
-				if ( size($connect) > 0 )
-					disconnectAttr $connect[0] ($constraintNode[0] + ".w0");		   
-				connectAttr -f ($cur + ".Constraint")($constraintNode[0] + ".w0"); 
+			for ($constraint in $constraintNode)
+			{
+				if ( `objExists ($constraint + ".w0")`)
+				{
+					string $connect[] = `listConnections -s 1 -d 0 -p 1 ($constraint + ".w0")`;
+					if ( size($connect) > 0 )
+						disconnectAttr $connect[0] ($constraint + ".w0");		   
+					connectAttr -f ($cur + ".Constraint")($constraint + ".w0"); 
+				}
+				if ( `objExists ($constraint + ".w1")`)
+				{
+					string $connect[] = `listConnections -s 1 -d 0 -p 1 ($constraint + ".w1")`;
+					if ( size($connect) > 0 )
+						disconnectAttr $connect[0] ($constraint + ".w1");
+					connectAttr -f ($cur + ".Constraint")($constraint + ".w1"); 
+					if (`objExists ($constraint + ".interpType")`)
+					{
+						setAttr ($constraint + ".interpType") 2;
+					}
+					print ("//result : " + $curCon  + " connect to " + $cur + ".Constraint" + "\n");
+				}
 			}
-			if ( `objExists ($constraintNode[0] + ".w1")`) {
-				string $connect[] = `listConnections -s 1 -d 0 -p 1 ($constraintNode[0] + ".w1")`;
-				if ( size($connect) > 0 )
-					disconnectAttr $connect[0] ($constraintNode[0] + ".w1");
-				connectAttr -f ($cur + ".Constraint")($constraintNode[0] + ".w1"); 
-				setAttr ($constraintNode[0] + ".interpType") 2;
-				print ("//result : " + $curCon  + " connect to " + $cur + ".Constraint" + "\n");
-			}
-
 		}
 
 	}

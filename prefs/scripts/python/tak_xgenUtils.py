@@ -80,8 +80,6 @@ def connectScalpToPatch(scalp, patch):
 
 def connectFollicleToScalp(follicle, scalp):
     """
-    Connect scalp mesh to follicle.
-
     Parameters:
         follicle: string, Follicle name.
         scalp: string, Scalp mesh name.
