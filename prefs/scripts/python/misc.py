@@ -6,18 +6,18 @@ import random
 # Set Relative for Selected Cluster #
 clus = cmds.ls(sl = True)
 for clu in clus:
-	cmds.setAttr(clu + "Cluster.relative", 1)
-	
+    cmds.setAttr(clu + "Cluster.relative", 1)
+    
 
 
 
-	
+    
 # Print Matrix #    
 sel = cmds.ls(sl = True)[0]
 matrixArray = cmds.getAttr(sel + '.matrix')
 matrix = zip(matrixArray[0::4], matrixArray[1::4], matrixArray[2::4], matrixArray[3::4])
 for vector in matrix:
-	print vector
+    print vector
 
 
 
@@ -42,12 +42,12 @@ attrList = ['translate', 'rotate', 'scale']
 axisList = ['X', 'Y', 'Z']
 selList = cmds.ls(sl = True)
 for sel in selList:
-	for attr in attrList:
-		for axis in axisList:
-			cmds.setAttr('%s.%s%s' %(sel, attr, axis), keyable = True)
-			mel.eval('CBunlockAttr "%s.%s%s";' %(sel, attr, axis))
-	cmds.setAttr('%s.visibility' %sel, keyable = True)
-	mel.eval('CBunlockAttr "%s.visibility";' %sel)
+    for attr in attrList:
+        for axis in axisList:
+            cmds.setAttr('%s.%s%s' %(sel, attr, axis), keyable = True)
+            mel.eval('CBunlockAttr "%s.%s%s";' %(sel, attr, axis))
+    cmds.setAttr('%s.visibility' %sel, keyable = True)
+    mel.eval('CBunlockAttr "%s.visibility";' %sel)
 
 
 
@@ -66,29 +66,29 @@ cmds.select(selList[1::skipNum], r = True)
 selLs = cmds.ls(sl = True)
 
 for sel in selLs:
-	selShp = cmds.listRelatives(sel, s = True, path = True)[0]
-	cmds.setAttr("%s.castsShadows" %selShp, 1)
-	cmds.setAttr("%s.receiveShadows" %selShp, 1)
-	cmds.setAttr("%s.motionBlur" %selShp, 1)
-	cmds.setAttr("%s.primaryVisibility" %selShp, 1)
-	cmds.setAttr("%s.smoothShading" %selShp, 1)
-	cmds.setAttr("%s.visibleInReflections" %selShp, 1)
-	cmds.setAttr("%s.visibleInRefractions" %selShp, 1)
-	cmds.setAttr("%s.doubleSided" %selShp, 1)
+    selShp = cmds.listRelatives(sel, s = True, path = True)[0]
+    cmds.setAttr("%s.castsShadows" %selShp, 1)
+    cmds.setAttr("%s.receiveShadows" %selShp, 1)
+    cmds.setAttr("%s.motionBlur" %selShp, 1)
+    cmds.setAttr("%s.primaryVisibility" %selShp, 1)
+    cmds.setAttr("%s.smoothShading" %selShp, 1)
+    cmds.setAttr("%s.visibleInReflections" %selShp, 1)
+    cmds.setAttr("%s.visibleInRefractions" %selShp, 1)
+    cmds.setAttr("%s.doubleSided" %selShp, 1)
 
 
 # Set Disable to Render
 selLs = cmds.ls(sl = True)
 
 for sel in selLs:
-	selShp = cmds.listRelatives(sel, s = True, path = True)[0]
-	cmds.setAttr("%s.castsShadows" %selShp, 0)
-	cmds.setAttr("%s.receiveShadows" %selShp, 0)
-	cmds.setAttr("%s.motionBlur" %selShp, 0)
-	cmds.setAttr("%s.primaryVisibility" %selShp, 0)
-	cmds.setAttr("%s.smoothShading" %selShp, 0)
-	cmds.setAttr("%s.visibleInReflections" %selShp, 0)
-	cmds.setAttr("%s.visibleInRefractions" %selShp, 0)
+    selShp = cmds.listRelatives(sel, s = True, path = True)[0]
+    cmds.setAttr("%s.castsShadows" %selShp, 0)
+    cmds.setAttr("%s.receiveShadows" %selShp, 0)
+    cmds.setAttr("%s.motionBlur" %selShp, 0)
+    cmds.setAttr("%s.primaryVisibility" %selShp, 0)
+    cmds.setAttr("%s.smoothShading" %selShp, 0)
+    cmds.setAttr("%s.visibleInReflections" %selShp, 0)
+    cmds.setAttr("%s.visibleInRefractions" %selShp, 0)
 
 
 
@@ -100,8 +100,8 @@ level = 0
 selLs = cmds.ls(sl = True)
 
 for sel in selLs:
-	selShp = cmds.listRelatives(sel, s = True)[0]
-	cmds.setAttr('%s.smoothLevel' %selShp, level)
+    selShp = cmds.listRelatives(sel, s = True)[0]
+    cmds.setAttr('%s.smoothLevel' %selShp, level)
 
 
 
@@ -113,23 +113,23 @@ ctrls = cmds.ls(sl = True)
 noDfltValCtrls = []
 
 for ctrl in ctrls:
-	prntTrnsf = cmds.listRelatives(ctrl, parent = True)[0]
-	attrs = cmds.listAttr(ctrl, keyable = True)
-	if attrs:
-		for attr in attrs:
-			attrVal = cmds.getAttr('%s.%s' %(ctrl, attr))
-			if attr in ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ'] and not attrVal == 0:
-				if 'scale' in attr:
-					cmds.setAttr('%s.%s' %(prntTrnsf, attr), attrVal)
-					cmds.setAttr('%s.%s' %(ctrl, attr), 1)
-				else:
-					prntAttrVal = cmds.getAttr('%s.%s' %(prntTrnsf, attr))
-					prntAttrVal += attrVal
+    prntTrnsf = cmds.listRelatives(ctrl, parent = True)[0]
+    attrs = cmds.listAttr(ctrl, keyable = True)
+    if attrs:
+        for attr in attrs:
+            attrVal = cmds.getAttr('%s.%s' %(ctrl, attr))
+            if attr in ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ'] and not attrVal == 0:
+                if 'scale' in attr:
+                    cmds.setAttr('%s.%s' %(prntTrnsf, attr), attrVal)
+                    cmds.setAttr('%s.%s' %(ctrl, attr), 1)
+                else:
+                    prntAttrVal = cmds.getAttr('%s.%s' %(prntTrnsf, attr))
+                    prntAttrVal += attrVal
 
-					cmds.setAttr('%s.%s' %(prntTrnsf, attr), prntAttrVal)
-					cmds.setAttr('%s.%s' %(ctrl, attr), 0)
-	else:
-		pass
+                    cmds.setAttr('%s.%s' %(prntTrnsf, attr), prntAttrVal)
+                    cmds.setAttr('%s.%s' %(ctrl, attr), 0)
+    else:
+        pass
 
 
 
@@ -209,10 +209,10 @@ ctrlToAddAttr = 'Main'
 cmds.select(cmds.ls(sl = True), hi = True, r = True)
 shpLs = cmds.ls(sl = True, type = 'mesh')
 for shp in shpLs:
-	try:
-		cmds.connectAttr('%s.smoothLevel' %(ctrlToAddAttr), '%s.smoothLevel' %(shp), f = True)
-	except:
-		pass
+    try:
+        cmds.connectAttr('%s.smoothLevel' %(ctrlToAddAttr), '%s.smoothLevel' %(shp), f = True)
+    except:
+        pass
 
 
 
@@ -223,8 +223,8 @@ for shp in shpLs:
 sels = cmds.ls(sl = True)
 
 for sel in sels:
-	selShp = cmds.listRelatives(sel, s = True)[0]
-	cmds.setAttr('%s.visibility' %selShp, 0)
+    selShp = cmds.listRelatives(sel, s = True)[0]
+    cmds.setAttr('%s.visibility' %selShp, 0)
 
 
 
@@ -234,10 +234,10 @@ for sel in sels:
 asBndJnts = cmds.ls(sl = True)
 
 for bndJnt in asBndJnts:
-	if cmds.objExists('lod01_' + bndJnt):
-		cmds.parentConstraint(bndJnt, 'lod01_' + bndJnt, mo = True)
-	else:
-		pass
+    if cmds.objExists('lod01_' + bndJnt):
+        cmds.parentConstraint(bndJnt, 'lod01_' + bndJnt, mo = True)
+    else:
+        pass
 
 
 
@@ -246,10 +246,10 @@ for bndJnt in asBndJnts:
 # Trun on inherits transform.
 selLs = cmds.ls(sl = True)
 for sel in selLs:
-	try:
-		cmds.setAttr(sel + '.inheritsTransform', True)
-	except:
-		pass
+    try:
+        cmds.setAttr(sel + '.inheritsTransform', True)
+    except:
+        pass
 
 
 
@@ -259,32 +259,32 @@ for sel in selLs:
 selLs = cmds.ls(sl = True)
 
 for sel in selLs:
-		# duplicate skin geometry for saving skin weights
-		cmds.duplicate(sel, n = 'tempGeo')
+        # duplicate skin geometry for saving skin weights
+        cmds.duplicate(sel, n = 'tempGeo')
 
-		cmds.select('tempGeo', r = True)
-		tak_cleanUpModel.delHis()
-		tak_cleanUpModel.delInterMediObj()
+        cmds.select('tempGeo', r = True)
+        tak_cleanUpModel.delHis()
+        tak_cleanUpModel.delInterMediObj()
 
-		cmds.setAttr('%s.visibility' %'tempGeo', False)
+        cmds.setAttr('%s.visibility' %'tempGeo', False)
 
-		# transfer skin weights from skin geometry to the temporary geometry
-		cmds.select(sel, r = True)
-		cmds.select('tempGeo', add = True)
-		tak_misc.TransSkinWeights()
+        # transfer skin weights from skin geometry to the temporary geometry
+        cmds.select(sel, r = True)
+        cmds.select('tempGeo', add = True)
+        tak_misc.TransSkinWeights()
 
-		# clean up skin geometry
-		cmds.select(sel, r = True)
-		tak_cleanUpModel.delHis()
-		tak_cleanUpModel.delInterMediObj()
+        # clean up skin geometry
+        cmds.select(sel, r = True)
+        tak_cleanUpModel.delHis()
+        tak_cleanUpModel.delInterMediObj()
 
-		# transfer skin weights from temporary geometry to the original geometry
-		cmds.select('tempGeo', r = True)
-		cmds.select(sel, add = True)
-		tak_misc.TransSkinWeights()
-		
-		# delete temporary geometry
-		cmds.delete('tempGeo')
+        # transfer skin weights from temporary geometry to the original geometry
+        cmds.select('tempGeo', r = True)
+        cmds.select(sel, add = True)
+        tak_misc.TransSkinWeights()
+        
+        # delete temporary geometry
+        cmds.delete('tempGeo')
 
 
 
@@ -302,8 +302,8 @@ cmds.pickWalk(direction = 'up')
 # Turn Off Opposite #
 selLs = cmds.ls(sl = True, allPaths = True)
 for sel in selLs:
-	shape = cmds.listRelatives(sel, path = True, s = True)[0]
-	cmds.setAttr(shape + '.opposite', False)
+    shape = cmds.listRelatives(sel, path = True, s = True)[0]
+    cmds.setAttr(shape + '.opposite', False)
 
 
 
@@ -313,23 +313,23 @@ import tak_lib
 
 selLs = cmds.ls(sl = True)
 for sel in selLs:
-	tak_lib.unlockChannelBoxAttr(sel)
+    tak_lib.unlockChannelBoxAttr(sel)
 
-	cnst = cmds.ls(cmds.listRelatives(sel), type = 'constraint')
-	weightAttr = cmds.listAttr(cnst, ud = True)
-	cmds.setAttr(cnst[0] + '.' + weightAttr[0], 0)
-	
-	cnstDriver = getCnstDriver(cnst[0])
-	cnstType = cmds.objectType(cnst)
-	cmds.delete(cnst)
-	excuteStr = 'cmds.%s("%s", "%s", mo = True, w = 1)' %(cnstType, cnstDriver, sel)
-	exec(excuteStr)
+    cnst = cmds.ls(cmds.listRelatives(sel), type = 'constraint')
+    weightAttr = cmds.listAttr(cnst, ud = True)
+    cmds.setAttr(cnst[0] + '.' + weightAttr[0], 0)
+    
+    cnstDriver = getCnstDriver(cnst[0])
+    cnstType = cmds.objectType(cnst)
+    cmds.delete(cnst)
+    excuteStr = 'cmds.%s("%s", "%s", mo = True, w = 1)' %(cnstType, cnstDriver, sel)
+    exec(excuteStr)
 
 def getCnstDriver(cnst):
-	cnstConSrcs = list(set(cmds.listConnections('%s.target' %cnst, s = True, d = False)))
-	for cnstConSrc in cnstConSrcs:
-		if cnstConSrc != cnst:
-			return cnstConSrc
+    cnstConSrcs = list(set(cmds.listConnections('%s.target' %cnst, s = True, d = False)))
+    for cnstConSrc in cnstConSrcs:
+        if cnstConSrc != cnst:
+            return cnstConSrc
 
 
 
@@ -341,12 +341,12 @@ import tak_misc
 selMeshes = cmds.ls(sl = True)
 prefix = 'lod02_'
 for mesh in selMeshes:
-	if cmds.objExists(prefix + mesh):
-		cmds.select(mesh, prefix + mesh, r = True)
-		try:
-			tak_misc.TransSkinWeights()
-		except:
-			pass
+    if cmds.objExists(prefix + mesh):
+        cmds.select(mesh, prefix + mesh, r = True)
+        try:
+            tak_misc.TransSkinWeights()
+        except:
+            pass
 
 
 
@@ -369,14 +369,14 @@ cmds.connectAttr(srcShp + '.outMesh', trgShp + '.inMesh', f = True)
 # Separate Multi #
 selGeos = cmds.ls(sl = True)
 for geo in selGeos:
-	cmds.select(geo, r = True)
-	try:
-		mel.eval('performPolyChipOff 0 0;')
-		cmds.delete(ch = True)
-		cmds.select(cl = True)
-		cmds.selectMode(object = True)
-	except:
-		pass
+    cmds.select(geo, r = True)
+    try:
+        mel.eval('performPolyChipOff 0 0;')
+        cmds.delete(ch = True)
+        cmds.select(cl = True)
+        cmds.selectMode(object = True)
+    except:
+        pass
 
 
 
@@ -393,7 +393,7 @@ cmds.select(handJntLs, r = True)
 selTrsf = cmds.ls(sl = True, type = 'transform')
 
 for trsf in selTrsf:
-	cmds.setAttr('%s.inheritsTransform' %trsf, True)
+    cmds.setAttr('%s.inheritsTransform' %trsf, True)
 
 
 
@@ -425,11 +425,11 @@ import tak_misc
 # Assign Material to Deformed Shape #
 deformedShps = cmds.ls('*ShapeDeformed')
 for shp in deformedShps:
-	origShpPartialName = shp.split('Deformed')[0]
-	origShpFullName = cmds.ls('*:' + origShpPartialName)
-	if origShpFullName:
-		cmds.select(origShpFullName, shp, r = True)
-		tak_misc.copyMat()
+    origShpPartialName = shp.split('Deformed')[0]
+    origShpFullName = cmds.ls('*:' + origShpPartialName)
+    if origShpFullName:
+        cmds.select(origShpFullName, shp, r = True)
+        tak_misc.copyMat()
 
 
 
@@ -527,14 +527,14 @@ cmds.editDisplayLayerMembers('jointLayer', selLs)
 selLs = cmds.ls(sl = True)
 
 for sel in selLs:
-	# Create joint
-	selWsPos = cmds.xform(sel, q = True, rp = True, ws = True)
-	cmds.select(cl = True)
-	bndJnt = cmds.joint(n = sel + '_jnt', p = selWsPos)
-	cmds.CompleteCurrentTool()
-	
-	# Bind
-	cmds.skinCluster(bndJnt, sel, mi = 3, dr = 4.5, tsb = True, omi = False, nw = 1)
+    # Create joint
+    selWsPos = cmds.xform(sel, q = True, rp = True, ws = True)
+    cmds.select(cl = True)
+    bndJnt = cmds.joint(n = sel + '_jnt', p = selWsPos)
+    cmds.CompleteCurrentTool()
+    
+    # Bind
+    cmds.skinCluster(bndJnt, sel, mi = 3, dr = 4.5, tsb = True, omi = False, nw = 1)
 
 
 
@@ -548,44 +548,44 @@ srcJnt = selLs[0]
 trgGeos = selLs[1:]
 
 for geo in trgGeos:
-	#geoRpInWs = cmds.xform(geo, q = True, rp = True, ws = True)
-	geoJnt = cmds.duplicate(srcJnt, n = geo + '_jnt')
-	#cmds.xform(geoJnt, t = geoRpInWs, ws = True)
-	
-	cmds.skinCluster(geoJnt, geo, mi = 4, dr = 4, tsb = True, omi = False, nw = 1)
-	
+    #geoRpInWs = cmds.xform(geo, q = True, rp = True, ws = True)
+    geoJnt = cmds.duplicate(srcJnt, n = geo + '_jnt')
+    #cmds.xform(geoJnt, t = geoRpInWs, ws = True)
+    
+    cmds.skinCluster(geoJnt, geo, mi = 4, dr = 4, tsb = True, omi = False, nw = 1)
+    
 
 autoGrps = cmds.ls(sl = True)
 for i in xrange(len(autoGrps)):
-	if i == 0:
-		continue
-	pmaNode = cmds.createNode('plusMinusAverage', n = selLs[i] + '_offset_pma')
-	cmds.connectAttr(autoGrps[i-1] + '.rotateY', pmaNode + '.input1D[0]')
-	cmds.connectAttr('flip_ctrl' + '.offset', pmaNode + '.input1D[2]')
-	cmds.connectAttr(pmaNode + '.output1D', autoGrps[i] + '.rotateY')
-	cmds.setAttr(pmaNode + '.operation', 2)
+    if i == 0:
+        continue
+    pmaNode = cmds.createNode('plusMinusAverage', n = selLs[i] + '_offset_pma')
+    cmds.connectAttr(autoGrps[i-1] + '.rotateY', pmaNode + '.input1D[0]')
+    cmds.connectAttr('flip_ctrl' + '.offset', pmaNode + '.input1D[2]')
+    cmds.connectAttr(pmaNode + '.output1D', autoGrps[i] + '.rotateY')
+    cmds.setAttr(pmaNode + '.operation', 2)
 
 
 geos = cmds.ls(sl = True)
 for geo in geos:
-	bendGeo = cmds.duplicate(geo, n = geo + '_bend_geo')[0]
-	cmds.parent(bendGeo, w = True)
-	bsNode = cmds.blendShape(bendGeo, geo, frontOfChain = True)[0]
-	cmds.setAttr(bsNode + '.' + bendGeo, 1)
-	cmds.setAttr(bendGeo + '.visibility', False)
+    bendGeo = cmds.duplicate(geo, n = geo + '_bend_geo')[0]
+    cmds.parent(bendGeo, w = True)
+    bsNode = cmds.blendShape(bendGeo, geo, frontOfChain = True)[0]
+    cmds.setAttr(bsNode + '.' + bendGeo, 1)
+    cmds.setAttr(bendGeo + '.visibility', False)
 
-	bendHndl = cmds.nonLinear(bendGeo, type = 'bend', lowBound = 0, highBound = 1, curvature = 0)[1]
-	baseName = geo.split('_bend_geo')[0]
-	bendHndl = cmds.rename(bendHndl, baseName + '_bendHndl')
-	
-	bendNode = cmds.listConnections(bendHndl + '.worldMatrix[0]')[0]
-	ctrlBaseName = bendHndl.split('_bendHndl')[0]
-	cmds.connectAttr(ctrlBaseName + '_ctrl.bend', bendNode + '.curvature')
-	cmds.connectAttr(ctrlBaseName + '_ctrl.twist', bendHndl + '.rotateX')
-	cmds.setAttr(bendHndl + '.translateY', 2.6)
-	cmds.setAttr(bendHndl + '.scaleX', 9.5)
-	cmds.setAttr(bendHndl + '.scaleY', 9.5)
-	cmds.setAttr(bendHndl + '.scaleZ', 9.5)
+    bendHndl = cmds.nonLinear(bendGeo, type = 'bend', lowBound = 0, highBound = 1, curvature = 0)[1]
+    baseName = geo.split('_bend_geo')[0]
+    bendHndl = cmds.rename(bendHndl, baseName + '_bendHndl')
+    
+    bendNode = cmds.listConnections(bendHndl + '.worldMatrix[0]')[0]
+    ctrlBaseName = bendHndl.split('_bendHndl')[0]
+    cmds.connectAttr(ctrlBaseName + '_ctrl.bend', bendNode + '.curvature')
+    cmds.connectAttr(ctrlBaseName + '_ctrl.twist', bendHndl + '.rotateX')
+    cmds.setAttr(bendHndl + '.translateY', 2.6)
+    cmds.setAttr(bendHndl + '.scaleX', 9.5)
+    cmds.setAttr(bendHndl + '.scaleY', 9.5)
+    cmds.setAttr(bendHndl + '.scaleZ', 9.5)
 
 
 
@@ -607,16 +607,16 @@ sels.getDagPath(1, trgLtcPath)
 srcLtcPnts = OpenMaya.MPointArray()
 srcLtcGeoIt = OpenMaya.MItGeometry(srcLtcPath)
 while not srcLtcGeoIt.isDone():
-	pnt = srcLtcGeoIt.position()
-	srcLtcPnts.append(pnt)
-	srcLtcGeoIt.next()
+    pnt = srcLtcGeoIt.position()
+    srcLtcPnts.append(pnt)
+    srcLtcGeoIt.next()
 
 # Set target lattice's points
 trgLtcGeoIt = OpenMaya.MItGeometry(trgLtcPath)
 while not trgLtcGeoIt.isDone():
-	srcPnt = srcLtcPnts[trgLtcGeoIt.index()]
-	trgLtcGeoIt.setPosition(srcPnt)
-	trgLtcGeoIt.next()
+    srcPnt = srcLtcPnts[trgLtcGeoIt.index()]
+    trgLtcGeoIt.setPosition(srcPnt)
+    trgLtcGeoIt.next()
 
 
 ###############################################################
@@ -626,11 +626,11 @@ import pymel.core as pm
 
 dfmedShps = [x for x in pm.listRelatives(ad=True, type="mesh") if "Deformed" in x.name()]
 for dfmedShp in dfmedShps:
-	trsf = pm.listRelatives( dfmedShp, parent=True )
-	shp = [ x for x in pm.listRelatives( trsf ) if not "Deformed" in x ]
-	if shp:
-		shp[0].setAttr("intermediateObject", False)
-		pm.delete(dfmedShp)
+    trsf = pm.listRelatives( dfmedShp, parent=True )
+    shp = [ x for x in pm.listRelatives( trsf ) if not "Deformed" in x ]
+    if shp:
+        shp[0].setAttr("intermediateObject", False)
+        pm.delete(dfmedShp)
 
 
 ##############################################
@@ -655,24 +655,24 @@ pntJntDic = {}
 selPnts = pm.ls(sl=True, fl=True)
 
 for pnt in selPnts:
-	pm.select(pnt, r=True)
-	pntPos = pm.pointPosition(pnt, w=True)
-	pm.select(cl=True)
-	jnt = pm.joint(n=pnt.name() + "_jnt", position=pntPos)
-	pntJntDic[pnt] = jnt
+    pm.select(pnt, r=True)
+    pntPos = pm.pointPosition(pnt, w=True)
+    pm.select(cl=True)
+    jnt = pm.joint(n=pnt.name() + "_jnt", position=pntPos)
+    pntJntDic[pnt] = jnt
 
 # Tracking and baking
 startFrame = 0
 endFrame = 144
 
 while startFrame != (endFrame+1):
-	pm.currentTime(startFrame)
-	for pnt, jnt in pntJntDic.items():
-		pntPos = pm.pointPosition(pnt, w=True)
-		pm.xform(jnt, ws=True, t=pntPos)
-		pm.setKeyframe(jnt + ".translate")
+    pm.currentTime(startFrame)
+    for pnt, jnt in pntJntDic.items():
+        pntPos = pm.pointPosition(pnt, w=True)
+        pm.xform(jnt, ws=True, t=pntPos)
+        pm.setKeyframe(jnt + ".translate")
 
-	startFrame += 1
+    startFrame += 1
 
 
 ## Book Set Up ##
@@ -684,30 +684,30 @@ reload(tak_misc)
 bulgeClsts = []
 selLs = pm.ls(sl=True)
 for sel in selLs:
-	pm.select(sel, r=True)
-	ffdNodes = pm.lattice(sel, divisions=[2,5,2], objectCentered=True, ldv=[2,2,2], n=sel+"_ffd")
-	ffdNodes[0].setAttr("local", 0)
-	clst = pm.cluster("%s.pt[0:1][1][0]" %(ffdNodes[1]), "%s.pt[0:1][1][1]" %(ffdNodes[1]), n=sel+"_ffd_clst")
-	
-	pm.addAttr(sel.split("_")[0]+"_ctrl", ln="bulge", at="float", keyable=True)
-	pm.connectAttr(sel.split("_")[0]+"_ctrl"+".bulge", clst[0]+"Handle.translateX")
+    pm.select(sel, r=True)
+    ffdNodes = pm.lattice(sel, divisions=[2,5,2], objectCentered=True, ldv=[2,2,2], n=sel+"_ffd")
+    ffdNodes[0].setAttr("local", 0)
+    clst = pm.cluster("%s.pt[0:1][1][0]" %(ffdNodes[1]), "%s.pt[0:1][1][1]" %(ffdNodes[1]), n=sel+"_ffd_clst")
+    
+    pm.addAttr(sel.split("_")[0]+"_ctrl", ln="bulge", at="float", keyable=True)
+    pm.connectAttr(sel.split("_")[0]+"_ctrl"+".bulge", clst[0]+"Handle.translateX")
 
 # Page1~5
 selLs = pm.ls(sl=True)
 for sel in selLs:
-	pm.select(sel, r=True)
-	ffdNodes = pm.lattice(sel, divisions=[2,5,2], objectCentered=True, ldv=[2,2,2], n=sel+"_ffd")
-	ffdNodes[0].setAttr("local", 0)
-	clst = pm.cluster("%s.pt[0:1][1][0]" %(ffdNodes[1]), "%s.pt[0:1][1][1]" %(ffdNodes[1]), n=sel+"_ffd_clst")
-	
-	pm.addAttr(sel.rsplit("_", 1)[0] + "_ctrl", ln="bulge", at="float", keyable=True)
-	pm.connectAttr(sel.rsplit("_", 1)[0]+"_ctrl"+".bulge", clst[0]+"Handle.translateX")
-	
-	groupName = sel.split("_", 1)[0] + "_bulge_system_grp"
-	if groupName:
-		pm.parent(ffdNodes[1:], clst[1], groupName)
-	else:
-		pm.group(ffdNodes[1:], clst[1], n=groupName)
+    pm.select(sel, r=True)
+    ffdNodes = pm.lattice(sel, divisions=[2,5,2], objectCentered=True, ldv=[2,2,2], n=sel+"_ffd")
+    ffdNodes[0].setAttr("local", 0)
+    clst = pm.cluster("%s.pt[0:1][1][0]" %(ffdNodes[1]), "%s.pt[0:1][1][1]" %(ffdNodes[1]), n=sel+"_ffd_clst")
+    
+    pm.addAttr(sel.rsplit("_", 1)[0] + "_ctrl", ln="bulge", at="float", keyable=True)
+    pm.connectAttr(sel.rsplit("_", 1)[0]+"_ctrl"+".bulge", clst[0]+"Handle.translateX")
+    
+    groupName = sel.split("_", 1)[0] + "_bulge_system_grp"
+    if groupName:
+        pm.parent(ffdNodes[1:], clst[1], groupName)
+    else:
+        pm.group(ffdNodes[1:], clst[1], n=groupName)
 
 
 
@@ -717,7 +717,7 @@ import pymel.core as pm
 srfcInfoNodes = pm.ls(sl=True)
 
 for srfcInfoNode in srfcInfoNodes:
-	srfcInfoNode.parameterV.set(0.5)
+    srfcInfoNode.parameterV.set(0.5)
 
 
 // set release scale
@@ -793,3 +793,71 @@ import tak_misc
 reload(tak_misc)
 tak_misc.simplePropAutoRigging(name='foodPile', controlShape='cube')
 tak_misc.createGlobalControls('square')
+
+
+# Cache Loop Expression #
+$startFrame = 0;
+$endFrame = 50;
+
+bush02_proxyShape.aiFrameNumber = (frame+$startFrame) % $endFrame;
+
+
+# Scatter Arnold Standin #
+import pymel.core as pm
+import random
+
+sels = pm.selected()
+src = sels[0]
+targets = sels[1:]
+
+for target in targets:
+    dup = pm.duplicate(src)[0]
+
+    # Match transform to the target
+    pm.delete(pm.parentConstraint(target, dup, mo=False))
+    pm.delete(pm.scaleConstraint(target, dup, mo=False))
+
+    dupShape = dup.getShape()
+    pm.expression(s="$startFrame = {0};\n$endFrame = 50;\n{1}.aiFrameNumber = (frame+$startFrame) % $endFrame;".format(int(random.uniform(0, 50)), dupShape), o="", ae=1, uc='all')
+
+
+# Save SDK #
+import pymel.core as pm
+import json
+from collections import OrderedDict
+
+def saveSDK(filePath, driver, attribute):
+    if isinstance(driver, basestring):
+        driver = pm.PyNode(driver)
+    
+    nodeNetworkDict['driver'] = OrderedDict([('name', driver.nodeName()), ('attr', attribute)])
+    nodeNetworkDict['drivens'] = []
+
+    drivens = driver.attr(attribute).connections()
+    for driven in drivens:
+        nodeNetworkDict['drivens'].append(OrderedDict([('nodeName', driven.nodeName()), 
+                                                        ('nodeType', driven.nodeType()), 
+                                                        ('keys', []), 
+                                                        ('outConnection', [str(connection) for connection in driven.output.connections(plugs=True)])
+                                                        ]
+                                                    )
+                                                )
+        for i in xrange(driven.numKeys()):
+            nodeNetworkDict['drivens'][-1]['keys'].append((i, float(driven.getTime(i)), driven.getValue(i)))
+
+    with open(filePath, 'w') as f:
+        json.dump(nodeNetworkDict, f, indent=4)
+
+
+filePath = r'C:\Users\stlee\Desktop\sdk.json'
+driver = pm.selected()[0]
+attribute = 'fistCorrect'
+
+saveSDK(filePath, driver, attribute)
+
+
+def buildSDK(filePath):
+    with open(filePath, 'r') as f:
+        nodeNetworkDict = json.load(filePath)
+    
+    

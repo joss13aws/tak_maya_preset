@@ -985,8 +985,8 @@ def plcHldr():
             vtxPos = cmds.xform(sel, q=True, ws=True, t=True)
             cmds.xform(loc, t=vtxPos, ws=True)
         else:
-            pCnst = cmds.parentConstraint(sel, loc, mo=False)
-            cmds.delete(pCnst)
+            cmds.delete(cmds.parentConstraint(sel, loc, mo=False))
+            cmds.delete(cmds.scaleConstraint(sel, loc, mo=False))
 
 
 def delBsTargetUI():
@@ -2258,7 +2258,7 @@ def copyTexRename(*args):
     cmds.deleteUI('copyTexWin')
     return subprocess.call(
         ['C:/Python27/python.exe', 'D:/Tak/Program_Presets/tak_scripts/python_scripts/cliResizeImage.py', trgDir,
-         '0.1'])
+         '0.25'])
 
 
 def cntShpGeo():

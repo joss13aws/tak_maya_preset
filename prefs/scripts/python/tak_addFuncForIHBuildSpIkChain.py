@@ -101,14 +101,14 @@ def setHairChainDefaultValue(*args):
 				# Set dynamic attributes
 				cmds.setAttr('%s.Damp' %endCtr, 0.1)
 				cmds.setAttr('%s.Friction' %endCtr, 0.1)
-				cmds.setAttr('%s.startCurveAttract' %endCtr, 0.25)
-				cmds.setAttr('%s.bendResistance' %endCtr, 5)
+				cmds.setAttr('%s.startCurveAttract' %endCtr, 0.0)
+				cmds.setAttr('%s.bendResistance' %endCtr, 0.25)
 			
 				# Set hair system attributes.
 				hairSysName = endCtr.rsplit('_ctrEnd_crv')[0] + '_hairSystemShape'
 				cmds.setAttr('%s.stretchResistance' %hairSysName, 200)
 				cmds.setAttr('%s.compressionResistance' %hairSysName, 200)
-				cmds.setAttr("%s.hairWidthScale[0].hairWidthScale_FloatValue" %hairSysName, 200)
+				cmds.setAttr("%s.hairWidthScale[0].hairWidthScale_FloatValue" %hairSysName, 100)
 				cmds.setAttr("%s.hairWidthScale[1].hairWidthScale_FloatValue" %hairSysName, 200)
 
 			# Set sine deformer attributes.

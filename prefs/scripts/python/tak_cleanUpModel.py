@@ -64,7 +64,7 @@ def UI():
     cmds.checkBox('scaleChkBox', label = 'Scale: 실제 크기(성인남성 180cm), 다른캐릭터와 비례(Rig 이용)', cc = partial(chkBoxCC, 'scaleChkBox'))
     cmds.checkBox('dfltStateChkBox', label = 'Default Pose: 발 Z-Axis에 맞춤, 무표정, Range of Motion의 중간, Stretch 시 문제여부', cc = partial(chkBoxCC, 'dfltStateChkBox'))
     cmds.checkBox('topoChkBox', label = 'Topology: Anatomical/Continuous Flow, Proper Resolution, Quad', cc = partial(chkBoxCC, 'topoChkBox'))
-    cmds.checkBox('hiddenChkBox', label = 'Hidden Area: 입 안쪽 피부, 치아, 혀, 눈알... 구조 및 텍스쳐', cc = partial(chkBoxCC, 'hiddenChkBox'))
+    cmds.checkBox('hiddenChkBox', label = 'Hidden Area: 옷 안쪽, 입 안쪽 피부, 치아, 혀, 눈알... 구조 및 텍스쳐', cc = partial(chkBoxCC, 'hiddenChkBox'))
     cmds.checkBox('combineChkBox', label = 'Symmetry Combine: 눈썹, 속눈썹, 손... 등 Material 같다면 Combine', cc = partial(chkBoxCC, 'combineChkBox'))
     cmds.checkBox('OutlinerChkBox', label = 'Outliner: Grouping, Naming', cc = partial(chkBoxCC, 'OutlinerChkBox'))
 

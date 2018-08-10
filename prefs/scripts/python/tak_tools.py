@@ -105,6 +105,7 @@ def UI():
     cmds.shelfButton(annotation = '', width = 35, height = 35, imageOverlayLabel = '', image1 = 'useDfltMat.bmp', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.useDfltMat()', sourceType = 'python')
     cmds.shelfButton(annotation = '', width = 35, height = 35, imageOverlayLabel = '', image1 = 'presetMat.bmp', command = 'import tak_matPreset\nreload(tak_matPreset)\ntak_matPreset.MatPreset.ui()', sourceType = 'python')
     cmds.shelfButton(annotation = '', width = 35, height = 35, imageOverlayLabel = '', image1 = 'jointColor.bmp', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.setJntColorUI()', sourceType = 'python')
+    cmds.shelfButton(annotation = '', width = 35, height = 35, imageOverlayLabel = 'DupS', image1 = 'menuIconEdit.png', command = 'duplicatePreset(1,1,2,0,0,0,1,0,0,0,0,0,0,0,1,1,1)', sourceType = 'mel')
 
     cmds.separator('mainSep', h = 10, style = 'in', p = 'mainFormLo')
 
@@ -154,11 +155,12 @@ def UI():
     cmds.shelfButton(annotation = 'Set smooth level.', width = 35, height = 35, imageOverlayLabel = 'smLevel', image1 = 'pythonFamily.png', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.setSmoothLevelUI()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Copy all uv sets and material from source to target.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'copyUvMat.png', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.copyUvMat()', sourceType = 'python')
     cmds.shelfButton(annotation = 'File Texture Manager', width = 35, height = 35, imageOverlayLabel = '', image1 = 'texManger.bmp', command = 'FileTextureManager;', sourceType = 'mel')
+    cmds.shelfButton(annotation = "Copy source mesh's uv to target mesh that rigged", width = 35, height = 35, imageOverlayLabel = '', image1 = 'copyUvRiggedMesh.png', command = 'import pymel.core as pm\nimport tak_misc\n\nsels = pm.ls(sl=True)\nsrc = sels[0]\ntrg = sels[1]\n\ntak_misc.copyUvRiggedMesh(src, trg)', sourceType = 'python')
 
     cmds.frameLayout('riggingBuildFrameLo', label = 'Build', collapse = False, collapsable = True, p = 'riggingScrLo')
     cmds.shelfLayout('Rigging_Build', h = (36.5 * 4), p = 'riggingBuildFrameLo')
     cmds.shelfButton(annotation = 'Advanced skeleton body setup window.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'AdvancedSkeleton/asBody.png', command = 'source "AdvancedSkeleton/asBody.mel";asBody;', sourceType = 'mel')
-    cmds.shelfButton(annotation = 'AdvancedSkeleton5', width = 35, height = 35, imageOverlayLabel = '', image1 = 'C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5Files/images/AS5.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5.mel";AdvancedSkeleton5;', sourceType = 'mel')
+    cmds.shelfButton(annotation = 'AdvancedSkeleton5', width = 35, height = 35, imageOverlayLabel = '', image1 = 'vacantCell.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5.mel";AdvancedSkeleton5;', sourceType = 'mel')
     cmds.shelfButton(annotation = 'scripts for the advanced skeleton', width = 35, height = 35, imageOverlayLabel = '', image1 = 'toolForAs.bmp', command = 'import toolForAs\nreload(toolForAs)\ntoolForAs.UI()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Click to place joint. Click on existing joint to add to skeleton. Click-Drag to position joint.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'kinJoint.png', command = 'JointTool', sourceType = 'mel')
     cmds.shelfButton(annotation = '', width = 35, height = 35, imageOverlayLabel = '', image1 = 'vertsCenter.bmp', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.getVertsCenter()', sourceType = 'python')
@@ -255,7 +257,6 @@ def UI():
     cmds.shelfButton(annotation = 'Manage attributes.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'attrManager.png', command = 'import tak_attrManager\nreload(tak_attrManager)\ntak_attrManager.ui()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Grep Rename', width = 35, height = 35, imageOverlayLabel = '', image1 = 'grep_rename.bmp', command = 'source js_grepRenameUI;\njs_grepRenameUI', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Duplicate selected objects with assign unique name.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'dupUniqName.png', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.dupRenameUI()', sourceType = 'python')
-    cmds.shelfButton(annotation = 'Duplicate Special', width = 35, height = 35, imageOverlayLabel = 'DupS', image1 = 'menuIconEdit.png', command = 'duplicatePreset(1,1,2,0,0,0,1,0,0,0,0,0,0,0,1,1,1)', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Duplicate selected objects with original state and assign unique name.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'dupNoDefUniqName.png', command = 'import tak_misc\nreload(tak_misc)\ntak_misc.dupNoDefUniqName()', sourceType = 'python')
     cmds.shelfButton(annotation = 'Clean up rig to publish.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'cleanUpRig.png', command = 'import tak_cleanUpRig\nreload(tak_cleanUpRig)\ntak_cleanUpRig.ui()', sourceType = 'python')
     cmds.shelfButton(annotation = 'OBB_BoundingBox', width = 35, height = 35, imageOverlayLabel = '', image1 = 'OBB_boundingBox.png', command = 'from maya import cmds\nfrom OBB.api import OBB\nmeshes = cmds.ls(selection=True)\nif len(meshes) == 0:\n   raise RuntimeError("Nothing selected!")\nfor mesh in meshes:\n    obbBoundBoxPnts = OBB.from_points(mesh)\n    obbCube = cmds.polyCube(ch=False, name="pointMethod_GEO")[0]\n    cmds.xform(obbCube, matrix=obbBoundBoxPnts.matrix)\n    cmds.rename(obbCube, mesh + \'_OBB\')', sourceType = 'python')
@@ -271,8 +272,8 @@ def UI():
     cmds.shelfLayout('Animation_Control_Select', h = 41, p = 'aniCtrlSelFrameLo')
     cmds.shelfButton(annotation = 'Save controls selected', width = 35, height = 35, imageOverlayLabel = '', image1 = 'pos2Shelf.bmp', command = 'pose2shelf', sourceType = 'mel')
     cmds.shelfButton(annotation = 'Advanced skeleton selector window.', width = 35, height = 35, imageOverlayLabel = '', image1 = 'AdvancedSkeleton/asBiped.png', command = 'source "AdvancedSkeleton/Selector/biped.mel";asSelectorbiped;', sourceType = 'mel')
-    cmds.shelfButton(annotation = 'Selector:biped', width = 35, height = 35, imageOverlayLabel = 'AS5', image1 = 'C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5Files/images/asBiped.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5//AdvancedSkeleton5Files/Selector/biped.mel";asSelectorbiped;', sourceType = 'mel')
-    cmds.shelfButton(annotation = 'Selector:face', width = 35, height = 35, imageOverlayLabel = 'AS5', image1 = 'C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5/AdvancedSkeleton5Files/images/asFace.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5//AdvancedSkeleton5Files/Selector/face.mel";asSelectorface;', sourceType = 'mel')
+    cmds.shelfButton(annotation = 'Selector:biped', width = 35, height = 35, imageOverlayLabel = 'AS5', image1 = 'vacantCell.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5//AdvancedSkeleton5Files/Selector/biped.mel";asSelectorbiped;', sourceType = 'mel')
+    cmds.shelfButton(annotation = 'Selector:face', width = 35, height = 35, imageOverlayLabel = 'AS5', image1 = 'vacantCell.png', command = 'source "C:/Users/stlee/Documents/maya/2015-x64/scripts/AdvancedSkeleton5//AdvancedSkeleton5Files/Selector/face.mel";asSelectorface;', sourceType = 'mel')
 
     cmds.frameLayout('aniDisplayFrameLo', label = 'Display', collapse = False, collapsable = True, p = 'aniScrLo')
     cmds.shelfLayout('Animation_Display', h = 41, p = 'aniDisplayFrameLo')
