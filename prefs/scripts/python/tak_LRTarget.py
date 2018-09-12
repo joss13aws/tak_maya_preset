@@ -137,7 +137,8 @@ def createLfRtTarget(baseName, targetName, side):
                  'right': {'prefix': rPrefix, 'suffix': rSuffix, 'position': (targetPos[0]-posOffset, targetPos[1], targetPos[2])}
                 }
 
-    blendTarget = pm.createNode('mesh').getTransform()
+    blendTarget = pm.duplicate(baseName, renameChildren=True)[0]
+    pm.parent(blendTarget, world=True)
     blendTarget.rename(lfRtTable[side]['prefix'] + targetName + lfRtTable[side]['suffix'])
     blendTarget.setTranslation(lfRtTable[side]['position'], space='world')
 

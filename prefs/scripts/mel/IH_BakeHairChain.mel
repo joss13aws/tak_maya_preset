@@ -174,7 +174,6 @@ global proc int IH_dynamicGroupShow()
 
 	for ($i = 0 ; $i <size($listDynamicName) ; $i++ ){
 		if ( $listDynamicName[$i] != "" && `gmatch $listDynamicName[$i] "_*_"`){			
-
 			string $curDynName = `substring $listDynamicName[$i] 2 (size($listDynamicName[$i])-1)`;		
 			int $i_dynamicType = `getAttr ($curDynCtr + "." + $curDynName + "_dynamic")`;
 			

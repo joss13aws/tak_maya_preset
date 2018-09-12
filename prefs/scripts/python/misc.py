@@ -821,43 +821,36 @@ for target in targets:
     pm.expression(s="$startFrame = {0};\n$endFrame = 50;\n{1}.aiFrameNumber = (frame+$startFrame) % $endFrame;".format(int(random.uniform(0, 50)), dupShape), o="", ae=1, uc='all')
 
 
-# Save SDK #
+# Set up head ffd rig for D51#
 import pymel.core as pm
-import json
-from collections import OrderedDict
+import tak_misc
+reload(tak_misc)
 
-def saveSDK(filePath, driver, attribute):
-    if isinstance(driver, basestring):
-        driver = pm.PyNode(driver)
+
+# Create ffd
+ffdNodes = pm.lattice(divisions=[3,3,3], objectCentered=True, name='head_ffd')
+pm.group(ffdNodes[1:], n='head_ffd_grp')
+ffdNodes[0].local.set(False)
+pm.select(ffdNodes[1].pt)
+
+# Create ffdControls
+clusterHndls = tak_misc.createFfdControls('head')
+
+for clstHndl in clusterHndls:
+    # Zero out for clusters
+    clstHndlParentTrsf = clstHndl.duplicate(po=True, n=str(clstHndl)+'_zero')[0]
+    clstHndl.setParent(clstHndlParentTrsf)
+
+    # Set clusters relative option
+    clstHndl.listConnections(s=False)[0].relative.set(True)
+
+    # Connect locators translate to cluster handle
+    loc = clstHndl.getParent(generations=2)
+    loc.translate >> clstHndl.translate
     
-    nodeNetworkDict['driver'] = OrderedDict([('name', driver.nodeName()), ('attr', attribute)])
-    nodeNetworkDict['drivens'] = []
-
-    drivens = driver.attr(attribute).connections()
-    for driven in drivens:
-        nodeNetworkDict['drivens'].append(OrderedDict([('nodeName', driven.nodeName()), 
-                                                        ('nodeType', driven.nodeType()), 
-                                                        ('keys', []), 
-                                                        ('outConnection', [str(connection) for connection in driven.output.connections(plugs=True)])
-                                                        ]
-                                                    )
-                                                )
-        for i in xrange(driven.numKeys()):
-            nodeNetworkDict['drivens'][-1]['keys'].append((i, float(driven.getTime(i)), driven.getValue(i)))
-
-    with open(filePath, 'w') as f:
-        json.dump(nodeNetworkDict, f, indent=4)
-
-
-filePath = r'C:\Users\stlee\Desktop\sdk.json'
-driver = pm.selected()[0]
-attribute = 'fistCorrect'
-
-saveSDK(filePath, driver, attribute)
-
-
-def buildSDK(filePath):
-    with open(filePath, 'r') as f:
-        nodeNetworkDict = json.load(filePath)
-    
-    
+    # Inverse locators zero group
+    if loc.getTranslation(space='world').x < 0:
+        locChild = loc.getChildren(type=pm.nodetypes.Transform)[0]
+        locChild.setParent(world=True)
+        loc.scaleX.set(-1)
+        locChild.setParent(loc)

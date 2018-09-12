@@ -14,6 +14,7 @@ import re
 import shutil
 import subprocess
 from functools import partial
+from collections import OrderedDict
 
 import maya.OpenMaya as OpenMaya
 import maya.OpenMayaAnim as OpenMayaAnim
@@ -26,8 +27,6 @@ import tak_createCtrl
 import tak_lib
 import json
 import tak_riggingToolkit.base.control as control
-reload(control)
-reload(tak_lib)
 from OBB.api import OBB
 
 
@@ -2910,11 +2909,13 @@ def setupSoftModCtrl(geometry=None):
 
 def createFfdControls(name):
     ffdPoints = pm.selected(fl=True)
+    clusters = []
     for point in ffdPoints:
         ffdCluster = pm.cluster(point, n='{name}_ffd_{index}_clst'.format(name=name, index=ffdPoints.index(point)))[1]
+        clusters.append(ffdCluster)
         pm.select(ffdCluster, r=True)
         locGrp()
-
+    return clusters
 
 def reconnectIkSplineSolver(ikHandles):
     """
@@ -2937,3 +2938,78 @@ def createAvgCurve(curve1, curve2):
     avgCrv.outputCurve >> resultCurve.create
 
     pm.delete(resultCurve, ch=True)
+
+
+def saveSDK(filePath, driver, attribute):
+    """
+    Save SDK node networks information to json a file
+
+    Parameters:
+        filePath(str): Filepath to save SDK information
+        driver(str): Driver node name
+        attribute(str): Driver attribute name
+    """
+
+    driver = pm.PyNode(driver)
+    
+    nodeNetworkDict = OrderedDict()
+    nodeNetworkDict['driver'] = {'name': driver.nodeName(), 'attr': attribute}
+    nodeNetworkDict['drivens'] = []
+
+    drivens = driver.attr(attribute).connections()
+    for driven in drivens:
+        nodeNetworkDict['drivens'].append(OrderedDict([('nodeName', driven.nodeName()), 
+                                                        ('nodeType', driven.nodeType()), 
+                                                        ('keys', []), 
+                                                        ('outConnections', [str(connection) for connection in driven.output.connections(plugs=True)])
+                                                        ]
+                                                    )
+                                                )
+        if driven.isUnitlessInput():
+            for i in xrange(driven.numKeys()):
+                nodeNetworkDict['drivens'][-1]['keys'].append((driven.getUnitlessInput(i), driven.getValue(i)))
+        else:
+            for i in xrange(driven.numKeys()):
+                nodeNetworkDict['drivens'][-1]['keys'].append((str(driven.getTime(i)), driven.getValue(i)))
+
+    with open(filePath, 'w') as f:
+        json.dump(nodeNetworkDict, f, indent=4)
+
+
+def loadSDK(filePath):
+    """
+    Rebuild SDK node network from a file
+
+    Parameters:
+        filePath(str): Filepath that saved SDK node network information
+    """
+
+    with open(filePath, 'r') as f:
+        nodeNetworkDict = json.load(f)
+    
+    for drivenNode in nodeNetworkDict['drivens']:
+        animNode = pm.createNode(drivenNode['nodeType'], n=drivenNode['nodeName'])
+        
+        # Set keyframe for animCurve node
+        for key in drivenNode['keys']:
+            if animNode.type() in ['animCurveUL', 'animCurveUA', 'animCurveUT', 'animCurveUU']:
+                pm.setKeyframe(animNode, float=key[0], value=key[1])
+            else:
+                pm.setKeyframe(animNode, time=pm.datatypes.Time(key[0]), value=key[1])
+        
+        # Connect input, output
+        driverNode = pm.PyNode(nodeNetworkDict['driver']['name'])
+        driverNode.attr(nodeNetworkDict['driver']['attr']) >> animNode.input
+        for destination in drivenNode['outConnections']:
+            animNode.output >> pm.PyNode(destination)
+
+
+def setDefaultTransform():
+    ctrls = pm.selected()
+    attrs = ['translate', 'rotate', 'scale']
+    for ctrl in ctrls:
+        for attr in attrs:
+            try:
+                ctrl.attr(attr).set(1,1,1) if attr == 'scale' else ctrl.attr(attr).set(0,0,0)
+            except:
+                pass
