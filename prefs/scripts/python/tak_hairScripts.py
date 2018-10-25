@@ -265,6 +265,9 @@ def changeHairSystem(sourceHairSystem, targetHairSystem):
         targetHairSystem(pymel.core.nodetypes.HairSystem): Target hairsystem
     """
 
+    if not isinstance(sourceHairSystem, pm.nodetypes.HairSystem) or not isinstance(targetHairSystem, pm.nodetypes.HairSystem):
+        pm.error('"pymel.core.nodetypes.HairSystem" type needed as input')
+
     availableOutputHairId = tak_lib.findMultiAttributeEmptyIndex(str(targetHairSystem), 'outputHair')
     
     follicles = sourceHairSystem.listConnections(type='follicle', s=False)

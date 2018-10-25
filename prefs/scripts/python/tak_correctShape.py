@@ -165,8 +165,9 @@ class Functions(object):
 			return
 
 		# Add blendshape node
-		bsNode = cmds.blendShape(cls.geo, frontOfChain = True, n = 'correctShape_bs#')[0]
+		bsNode = cmds.blendShape(cls.geo, before = True, n = 'correctShape_bs#')[0]
 
+		'''
 		# Move bsNode to the last order in all inputs.
 		allDfms = tak_lib.getAllDfms(cls.geo)
 
@@ -189,6 +190,7 @@ class Functions(object):
 
 		for dfm in dfmsAfterBsNode:
 			cmds.reorderDeformers(bsNode, dfm, cls.geo)
+		'''
 
 		# Delete and populate blendshape node option menu
 		bsOptItems = cmds.optionMenu(UI.widgets['bsNodeOptMenu'], q = True, itemListLong = True)

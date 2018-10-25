@@ -3013,3 +3013,72 @@ def setDefaultTransform():
                 ctrl.attr(attr).set(1,1,1) if attr == 'scale' else ctrl.attr(attr).set(0,0,0)
             except:
                 pass
+
+
+def setupCorrectiveJointChain(name, rootVtx, midVtx, endVtx, driverJnt):
+    """
+    This function setup corrective joint chain.
+    Corrective joint chain useful on corner area of organic character like elbow, wrist, etc...
+
+    Parameters:
+        name(str): Prefix of corrective chain rig
+        rootVtx(str): Vertex for root joint of chain
+        midVtx(str): Vertex for middle joint of chain
+        endVtx(str): Vertex for end joint of chain
+        driverJnt(str): Joint that driving joint chain
+    """
+
+    # Create pymel nodes
+    rootVtx = pm.PyNode(rootVtx)
+    midVtx = pm.PyNode(midVtx)
+    endVtx = pm.PyNode(endVtx)
+    driverJnt = pm.PyNode(driverJnt)
+    
+    # Create joint chain
+    rootJnt = name+'_root_cor_jnt'
+    midJnt = name+'_mid_cor_jnt'
+    endJnt = name+'_end_cor_jnt'
+    pm.joint(p=rootVtx.getPosition(space='world'), n=rootJnt)
+    pm.joint(p=midVtx.getPosition(space='world'), n=midJnt)
+    pm.joint(p=endVtx.getPosition(space='world'), n=endJnt)
+    cmds.CompleteCurrentTool()
+    pm.select(rootJnt, r=True)
+    pm.joint(e=True, oj='xyz', secondaryAxisOrient='yup', ch=True, zso=True)
+    pm.orientConstraint(driverJnt, midJnt, mo=True)
+
+    # Create groups
+    corJntPosGrp = pm.createNode('transform', n=name+'_corJntPos_grp')
+    pm.delete(pm.parentConstraint(midJnt, corJntPosGrp, mo=False))
+    corJntGrp = corJntPosGrp.duplicate(n=name+'_corJnt_grp')[0]
+    corJntPosGrp.setParent(corJntGrp)
+    pm.parent(rootJnt, corJntPosGrp)
+    pm.parentConstraint(driverJnt.getParent(), corJntGrp, mo=True)
+
+    # Create locators
+    posExtractLoc = pm.spaceLocator(n=name+'_posExtract_loc')
+    pm.delete(pm.parentConstraint(midJnt, posExtractLoc, mo=False))
+    rotExtractLoc = pm.spaceLocator(n=name+'_rotExtract_loc')
+    pm.delete(pm.parentConstraint(endJnt, rotExtractLoc, mo=False))
+    rotExtractLoc.setParent(posExtractLoc)
+    posExtractLoc.setParent(corJntGrp)
+    pm.parentConstraint(driverJnt.getParent(), driverJnt, posExtractLoc, mo=True, skipRotate=['x', 'y', 'z'])
+    pm.parentConstraint(driverJnt.getParent(), driverJnt, rotExtractLoc, mo=True, skipRotate=['x', 'y', 'z'])
+
+    # Create nodes
+    posNormalDotVpr = pm.createNode('vectorProduct', n=name+'_posNormalDot_vpr')
+    normalDotVpr = pm.createNode('vectorProduct', n=name+'_normalDot_vpr')
+    normalDotVpr.input1X.set(1)
+    intersectionMul = pm.createNode('multiplyDivide', n=name+'_intersection_mul')
+    intersectionMul.operation.set(2)
+    distMul = pm.createNode('multiplyDivide', n=name+'_dist_mul')
+    distMul.input1X.set(1)
+
+    # Connect
+    posExtractLoc.translate >> posNormalDotVpr.input1
+    rotExtractLoc.translate >> posNormalDotVpr.input2
+    rotExtractLoc.translate >> normalDotVpr.input2
+    posNormalDotVpr.output >> intersectionMul.input1
+    normalDotVpr.output >> intersectionMul.input2
+    intersectionMul.output >> distMul.input2
+    distMul.output >> corJntPosGrp.translate
+
