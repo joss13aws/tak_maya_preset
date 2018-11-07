@@ -835,11 +835,13 @@ pm.select(ffdNodes[1].pt)
 
 # Create ffdControls
 clusterHndls = tak_misc.createFfdControls('head')
-
+zeroGrps = []
 for clstHndl in clusterHndls:
     # Zero out for clusters
     clstHndlParentTrsf = clstHndl.duplicate(po=True, n=str(clstHndl)+'_zero')[0]
+    zeroGrps.append(clstHndlParentTrsf.getParent(generations=3))
     clstHndl.setParent(clstHndlParentTrsf)
+    clstHndl.visibility.set(False)
 
     # Set clusters relative option
     clstHndl.listConnections(s=False)[0].relative.set(True)
@@ -854,3 +856,73 @@ for clstHndl in clusterHndls:
         locChild.setParent(world=True)
         loc.scaleX.set(-1)
         locChild.setParent(loc)
+
+pm.group(zeroGrps, n='head_ffd_ctrl_grp')
+pm.group('head_ffd_grp', 'head_ffd_ctrl_grp', n='head_ffd_rig_grp')
+
+
+# headFfdCtrlVis
+# jiggleOnOff, jiggleGeoVis, 000JiggleWeight
+
+
+# Replace ass to mdl
+import pymel.core as pm
+import re
+
+assetName = 'tree01'
+mdlPath = r'P:/1801_A71/4.Asset/prp/pansionTree01_v2/mdl/develop/v002/prp_pansionTree01_v2_mdl_v002_stlee.ma'
+abcPath = r'P:/1801_A71/4.Asset/prp/pansionTree01_v2/mdl/develop/v001/abc/tree01_299f.abc'
+
+assetName = 'tree02'
+mdlPath = r'P:\1801_A71\4.Asset\prp\pansionTree02_v2\mdl\develop\v002\prp_pansionTree02_v2_mdl_v002_stlee.ma'
+abcPath = r'P:\1801_A71\4.Asset\prp\pansionTree02_v2\mdl\develop\v001\abc\tree02_299f.abc'
+
+# Get selected ass proxy
+assProxies = pm.selected()
+
+bsNodes = []
+index = 1
+for ass in assProxies:
+    # Referencing mdl
+    refMdl = pm.createReference(mdlPath, r=True, type='mayaAscii', namespace='{0}_{1}'.format(assetName, index))
+    mdlRoot = refMdl.nodes()[0]
+
+    # Referencing abc
+    refAbc = pm.createReference(abcPath, r=True, type='Alembic', namespace='{0}_{1}_abc'.format(assetName, index))
+    abcLod03Grp = refAbc.nodes()[0]
+    abcNode = refAbc.nodes()[-1]
+    
+    # Match transform mdl to ass
+    pm.delete(pm.parentConstraint(ass, mdlRoot, mo=False))
+    pm.delete(pm.scaleConstraint(ass, mdlRoot, mo=False))
+
+    # Set abc
+    expr = ass.getShape().aiFrameNumber.connections()[0]
+    offset = re.search(r'\$startFrame = (\d+);', expr.getString()).group(1)
+    abcNode.cycleType.set(1)
+    abcNode.offset.set(int(offset))
+
+    pm.select(abcLod03Grp, '{0}_{1}:lod03_GRP'.format(assetName, index, r=True))
+    bsNodes.append(pm.blendShape(automatic=True))
+
+    index += 1
+
+pm.select(bsNodes, r=True)
+
+
+
+[[nt.BlendShape(u'blendShape1')],
+ [nt.BlendShape(u'blendShape2')],
+ [nt.BlendShape(u'blendShape3')],
+ [nt.BlendShape(u'blendShape4')],
+ [nt.BlendShape(u'blendShape5')],
+ [nt.BlendShape(u'blendShape6')],
+ [nt.BlendShape(u'blendShape7')],
+ [nt.BlendShape(u'blendShape8')]]
+
+
+ 101 1
+ 115 1.553
+ 126 3
+ 156 1.426
+ 190 1

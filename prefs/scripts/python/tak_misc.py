@@ -2238,8 +2238,10 @@ def copyTexRename(*args):
 
     finalFileNodeLs = []
     for selObj in selObjLs:
+        print selObj
         selObjMat = tak_lib.getMatFromSel(selObj)
-        fileNodes = cmds.ls(cmds.listHistory(selObjMat), type='file')
+        if selObjMat:
+            fileNodes = cmds.ls(cmds.listHistory(selObjMat), type='file')
         if fileNodes:
             for node in fileNodes:
                 finalFileNodeLs.append(node)
@@ -2363,12 +2365,15 @@ def simplePropAutoRigging(name='temp', controlShape='circleX'):
 
             pm.select(jnt, sel, r=True)
             smoothSkinBind()
+            if len(childrenMeshes) > 1:
+                pm.select(sel, childrenMeshes, r=True)
+                addInfCopySkin()
             
             ctrlZeroGrpLs.append(ctrlZeroGrp)
             jntLs.append(str(jnt))
 
             if len(childrenMeshes) > 1:
-                pm.delete(tempMeshes)
+                # pm.delete(tempMeshes)
                 pm.delete(sel)
 
     systemGrp = cmds.group(jntLs, n='{}_system_grp'.format(name))

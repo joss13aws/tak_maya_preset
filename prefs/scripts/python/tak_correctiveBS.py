@@ -1650,7 +1650,6 @@ class Functions(object):
         anglBtwn = cmds.shadingNode('angleBetween', n = trgName + '_anglBtwn', asUtility = True)
         remapVal = cmds.shadingNode('remapValue', n = trgName + '_remapVal', asUtility = True)
         cmds.setAttr('%s.inputMax' %remapVal, 0)
-        cmds.setAttr('%s.value[0].value_Interp' %remapVal, 2)
 
         # connect attributes
         cmds.connectAttr('%s.translate' %triggerLoc, '%s.vector1' %anglBtwn, force = True)
@@ -1685,7 +1684,6 @@ class Functions(object):
         distNode = cmds.shadingNode('distanceBetween', n = trgName + '_DIST', asUtility = True)
         remapVal = cmds.shadingNode('remapValue', n = trgName + '_remapVal', asUtility = True)
         cmds.setAttr('%s.inputMax' %remapVal, 0)
-        cmds.setAttr('%s.value[0].value_Interp' %remapVal, 2)
 
         # connect attributes
         poseLocShp = cmds.listRelatives(poseLoc, s = True)[0]
