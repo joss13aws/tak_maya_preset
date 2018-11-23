@@ -1,6 +1,16 @@
+python("import tak_b2Pipeline_add");
+python("reload(tak_b2Pipeline_add)");
+
+python("import tak_misc_b1");
+python("reload(tak_misc_b1)");
+
+python("import tak_cleanUpAniScene_b1");
+python("reload(tak_cleanUpAniScene_b1)");	
+
+python("import tak_b2Pipeline_xgen");
+python("reload(tak_b2Pipeline_xgen)");
+
 //- animation develop/release 관련 UI 및 실행
-	
-	
 	//- b2SaveAniDevUI //--------------------------------------------------------------------------------------------------------------------------//
 	//기능		: 애니메이션 dev 파일을 저장하는 UI를 표시	
 	global proc b2SaveAniDevUI()
@@ -184,7 +194,7 @@
 	}
 
     // 메세지 보내는 기능 (제작 : 이정훈_jhlee)
-    source "P:/Temp/JHLee/scripts/UniMessage/SendMessageWindow_JHLee.mel";
+    source "N:/b1Env/maya/JHLee/scripts/UniMessage/SendMessageWindow_JHLee.mel";
     global proc SendMessageShotMaya()
     {
         string $project = `optionMenu -query -value projList`;
@@ -247,6 +257,22 @@
 		if ( `checkBox -exists "cb_emailNotification"` && `checkBox -q -value "cb_emailNotification"`) //email checkbox가 on이면.
 			$emailOption = 1;
 
+	    // Remove unknown nodes
+	    string $unknownNodes[] = `ls -type "unknown"`;
+	    if (size($unknownNodes)) {
+		    for ($node in $unknownNodes) {
+		        lockNode -lock false $node;
+		        delete $node;
+		    }
+	    }
+
+		// Remove unknown plugins
+		string $unknownPlugins[] = `unknownPlugin -q -l`;
+		if (size($unknownPlugins)) {
+			for ($plugin in $unknownPlugins) {
+				unknownPlugin -r $plugin;
+			}
+		}
 
 		//스냅샷 체크
 		if( `image -q -image aniSnapshotImg` != "" )
@@ -660,8 +686,6 @@
 					b2DoSaveAniDev "rel";
 
 					// Delete display layers.
-					python("import tak_cleanUpAniScene_b1");
-					python("reload(tak_cleanUpAniScene_b1)");
 					python("tak_cleanUpAniScene_b1.delDpLayers()");
 					
 					//모든 어셋을 lod03으로 변경
@@ -1077,7 +1101,7 @@
 			string $tmpLoc = $locTransform[0];
 			string $tmpNameString = ($assetRoot + "_tmpLoc"); // 로케이터의 이름을 어셋 이름과 맞춤
 			rename $locShape ($tmpNameString + "Shape");	
-			$tmpLoc = `rename $tmpLoc ($tmpNameString)`;	
+			$tmpLoc = `rename $tmpLoc ($tmpNameString)`;
 			parent $tmpLoc $parent[0]; // 로케이터를 어셋의 부모 밑에 parenting
 			float $pvValue[] = `xform -q -piv $assetRoot`; //피봇값 확인
 			xform -piv $pvValue[0] $pvValue[1] $pvValue[2] $tmpLoc;//임시 로케이터에 값 적용
@@ -1357,25 +1381,26 @@
 				string $root;
 				string $filename;
 				string $bakeParameter;
-				if( `match "cam_" $eachAnim` != "" )
+				if (`objExists $eachAnim`)
 				{
-					$root = $eachAnim; //카메라인 경우 카메라를 직접 선택.
-					$filename = $prefix + "_" + $eachAnim + "_" + $suffix;
-					$bakeParameter = "-frameRange " + $start + " " + $end + " -nn -sn -ws -root " + $root + " -file " + $filename;
+					// In case shot camera
+					string $shapes[] = `listRelatives -s $eachAnim`;
+					if(`objectType $shapes[0]` == "camera")
+					{
+						$root = $eachAnim;
+						$filename = $prefix + "_" + $eachAnim + "_" + $suffix;
+						$bakeParameter = "-frameRange " + $start + " " + $end + " " + "-attr panZoomEnabled -attr renderPanZoom -attr horizontalPan -attr verticalPan -attr zoom" + " -nn -sn -ws -root " + $root + " -file " + $filename;
+					}
 				}
 				else
 				{
 					// Parent constraint node in lod03_GRP to the world.
-					python("import tak_b2Pipeline_add");
-					python("reload(tak_b2Pipeline_add)");
 					python("tak_b2Pipeline_add.removeConstraintInLod03GRP('" + $eachAnim + "')");
 
 					// lod03_GRP all shape's visibility set to on.
-					python("import tak_b2Pipeline_add");
-					python("reload(tak_b2Pipeline_add)");
 					python("tak_b2Pipeline_add.lod03AllShpVisOn('" + $eachAnim + "')");	
 
-					$root = $eachAnim + ":lod03_GRP"; //익스포트할 lod03그룹 이름						
+					$root = $eachAnim + ":lod03_GRP"; //익스포트할 lod03그룹 이름
 					string $refFile = `referenceQuery -filename -wcn ($eachAnim + "RN")`;
 					$refFile = `basenameEx $refFile`;
 					// print ("> " + $eachAnim + "\n");
@@ -1385,13 +1410,16 @@
 					string $astName = $astType + "_" + $eachAnim;
 					$filename = $prefix + "_" + $astName + "_" + $suffix;//캐쉬파일 full path
 
-					python("import tak_b2Pipeline_add");
-					python("reload(tak_b2Pipeline_add)");
+					// Release hair curves
+					refresh -su false;
+					python(`format -stringArg $eachAnim -stringArg $relPath -stringArg $fileNameBase -stringArg $astType -stringArg $relVerStr -stringArg $start -stringArg $end "tak_b2Pipeline_xgen.releaseHairCurves(\"^1s\", \"^2s\", \"^3s\", \"^4s\", \"^5s\", ^6s, ^7s)"`);
+					refresh -su true;
+
 					string $customAttrs = `python("tak_b2Pipeline_add.customAttrAbcMel('" + $eachAnim + "')")`;
 
 					$bakeParameter = "-frameRange " + $start + " " + $end + " " + $customAttrs + " -uv -wv -ws -nn -sn -attrPrefix ex_ -root " + $root + " -file " + $filename;
 				}
-				$checkFile[size($checkFile)] = $filename;				
+				$checkFile[size($checkFile)] = $filename;
 				$cmd += " -j \"" + $bakeParameter + "\"";
 			}
 			$cmd = "AbcExport" + $cmd;
@@ -1765,15 +1793,6 @@
 
 		string $fileLst[] = `textScrollList -q -allItems fileList`; //UI에서 파일목록 받아옴.
 		
-		// string $selShotHistoryPath = `textFieldButtonGrp -q -text shtFileLocField`;
-		// python("import tak_b2Pipeline_add");
-		// python("reload(tak_b2Pipeline_add)");
-		// python("tak_b2Pipeline_add.isReleasedWithLatestVer('" + $selShotHistoryPath + "," + stringArrayToString($fileLst, ",") + "')");
-
-		print "$fileLst =\n";
-		print $fileLst;
-		print "\n";
-
 		if (!`pluginInfo -q -l "AbcImport.mll"`)
 		    loadPlugin "AbcImport.mll";
 
@@ -1781,12 +1800,10 @@
 		{
 			print ( "Handling released animation file " + $eachFile + " ......\n" );
 			
-			python("import tak_b2Pipeline_add");
-			python("reload(tak_b2Pipeline_add)");
-			string $pythonStr = `format -stringArg $eachFile "tak_b2Pipeline_add.fileNameIntoBuffer(\"^1s\")"`;		
+			
 			//string $buffer[] = `stringToStringArray $eachFile "_"`;
-			string $listStr = `python($pythonStr)`;
-			string $buffer[] = stringToStringArray($listStr, ","); // Information in buffer: {sequence, shotName, component, layer, assetType, assetName}
+			string $listStr = python(`format -stringArg $eachFile "tak_b2Pipeline_add.fileNameIntoBuffer(\"^1s\")"`);
+			string $buffer[] = stringToStringArray($listStr, ","); // Information in buffer: {sequence, shotName, component, layer, assetType, assetName, numbering, releaseVersion}
 			
 			string $verDir = $buffer[size($buffer) - 1];//파일명에서 릴리즈 번호 확인
 				$verDir = `basenameEx $verDir`;
@@ -1817,8 +1834,6 @@
 			else if( $ext == ".editMA" )
 			{
                 // 애니메이션에서 사용된 어셋으로 설정.
-                python("import tak_b2Pipeline_add");
-                python("reload(tak_b2Pipeline_add)");
                 string $pythonCmdStr = `format -stringArg ($relDirPath + $verDir) -stringArg $buffer[5] "tak_b2Pipeline_add.getFilePathUsedInAni(\"^1s\", \"^2s\")"`;
                 $astFileName = `python($pythonCmdStr)`;
 
@@ -1876,7 +1891,13 @@
 					$conflictingNs = $eachNs;
 				}
 			}
-				
+			
+			if (size($buffer) == 9) // In case hair curve cache. {sequence, shotName, component, layer, assetType, assetName, numbering, xgenDescriptionName, releaseVersion}
+			{
+				python(`format -stringArg $namespace -stringArg $buffer[7] -stringArg $relFileName "tak_b2Pipeline_xgen.setGuideAnimationCache(\"^1s\", \"^2s\", \"^3s\")"`);
+				continue;
+			}
+
 			//어셋 레퍼런싱
 			if( $conflictingNs == "" )//씬에 없는 어셋인 경우
 			{
@@ -1917,7 +1938,7 @@
 						print "\n>>> Referencing Render Model: ";
 						print $relatedRenMdlPath;
 						print "\n";
-						file -loadReference ($namespace + "RN") -type "mayaAscii" -options "v=0" $relatedRenMdlPath;
+						file -loadReference ($namespace + "RN") -type "mayaAscii" -options "v=1" $relatedRenMdlPath;
 					}
 
 					// if (objExists ($abcNs + ":lod03_GRP.renMdlVer"))
@@ -2006,9 +2027,7 @@
 								delete $oldBlendShapeNode[$i];
 							}
 						}
-						
-						python("import tak_b2Pipeline_add");
-						python("reload(tak_b2Pipeline_add)");
+
 						python("tak_b2Pipeline_add.delRenMdlBs('" + $namespace + "')");
 
 						python("tak_b2Pipeline_add.disableParallelBlender('" + $namespace + "')");
@@ -2091,6 +2110,7 @@
 		}
 		deleteUI "b2SubWin1";
 		print "b2DoGetReleaseAni........................................................................................................procedure end\n";
+		python("tak_b2Pipeline_xgen.setPreviewMode()");
 	}
 	//-/
 	
@@ -2912,7 +2932,7 @@
 		for ( $i = 0; $i < size($selectedShot); $i++ )
 		{
 			string $srcDevFile = `b2GetFileName2 $selItems[0] $selectedShot[$i] $selComp $selLayer 0 "develop" 0`;
-			
+		
 			string $filename = $prefix + $selectedSeq[0] + "_" + $selectedShot[$i] + $suffix;
 			
 			string $ext = `fileExtension($srcDevFile)`;
@@ -2953,8 +2973,7 @@
 		{
 			string $srcDevFile = `b2GetFileName2 $selItems[0] $selectedShot[$i] $selComp $selLayer 0 "develop" 0`;
 
-			python("import tak_b2Pipeline_add");
-			python("reload(tak_b2Pipeline_add)");
+			
 			python(`format -stringArg $srcDevFile -stringArg $targetDir "tak_b2Pipeline_add.copyAssetUsedInScene(\"^1s\", \"^2s\")"`);
 		}
 	}
@@ -3083,19 +3102,12 @@
 				select -r $devShotCam;
 				
 				// Bake camera
-				python("import tak_misc_b1");
-				python("reload(tak_misc_b1)");
 				string $bakedCam = python("tak_misc_b1.bakeCam()");
 
 				string $targetFilePath = $dirPath + "/" + $targetBaseName + "_cam.ma";
 
 				select -r $bakedCam;
 				file -force -type "mayaAscii" -exportSelected $targetFilePath;
-
-				python("import tak_b2Pipeline_add");
-				python("reload(tak_b2Pipeline_add)");
-				python("tak_b2Pipeline_add.removeUnusedPluginRequires(\"" + $targetFilePath + "\")");
-
 				delete $bakedCam;
 			}
 		}

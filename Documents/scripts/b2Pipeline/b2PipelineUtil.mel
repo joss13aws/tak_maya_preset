@@ -4,25 +4,92 @@
 	// $type => 어셋이냐 프로젝트냐 샷이냐...기타등등
 	//- b2GetFolderList
 	global proc string[] b2GetFolderList(string $path)
+    {
+	string $path = `b2AddSlash $path`;
+	string $contents[] = `getFileList -folder $path`;
+	string $eachContent;
+	string $folderList[];
+	int $i = 0;
+	for ($eachContent in $contents)
 	{
-		string $path = `b2AddSlash $path`;
-		string $contents[] = `getFileList -folder $path`;
-		string $eachContent;
-		string $folderList[];
-		int $i = 0;
-		for ($eachContent in $contents)
+		string $path1 = ($path + $eachContent + "/" + $eachContent);
+		string $path2 = ($path + $eachContent + "/" + $eachContent + "_def.xml");
+		if (`filetest -r $path2`)
 		{
-			string $path1 = ($path + $eachContent + "/" + $eachContent);
-			string $path2 = ($path + $eachContent + "/" + $eachContent + "_def.xml");
-			if (`filetest -r $path2`)
-			{
+		    // 마야 버전을 확인합니다 (정훈)
+		    if(CheckProjectMayaVersionProc($path2) == true)
+		    {
 				$folderList[$i] = $eachContent;
 				$i += 1;
-			}
+		    }
 		}
-		return $folderList;
+	}
+	return $folderList;
 
 	}
+	
+    // xml 파일 마야버전을 현재 실행한 마야버전과 비교합니다 (정훈)
+    // 버전일치 = return true, 불일치 = return false, 버전정보 없음 = return true
+    global proc int CheckProjectMayaVersionProc(string $filePath)
+    {
+        string $userName = `getenv userName`;
+        
+        switch($userName)
+        {
+            case "gkoh":
+            case "ysson":
+            case "jeseong":
+            case "wmpark":
+                return true;
+            default:
+                break;
+        }
+        
+        // this maya version
+        int $version = `about -version`;
+        
+        // project maya version
+        int $projectMayaVersion = false;
+        
+        string $datas[]; clear $datas;
+        $FileID = `fopen $filePath "r"`;
+        int $i = 0;
+        string $next = `fgetline $FileID`;
+        while(`size($next)` > 0)
+        {
+            $datas[$i] = $next;
+            $next = `fgetline $FileID`;
+            $i++;
+        }
+        fclose $FileID;
+        
+        for($i = 0; $i < `size($datas)`; $i++)
+        {
+            string $reSubString = `substitute "<" $datas[$i] "_"`;
+            $reSubString = `substitute ">" $reSubString "_"`;
+            $reSubString = `substitute "</" $reSubString "_"`;
+            $reSubString = `substitute ">" $reSubString "_"`;
+            
+            string $tokenStrings[]; clear $tokenStrings;
+            tokenize $reSubString "_" $tokenStrings;
+            
+            if($tokenStrings[1] == "mayaVersion")
+            {
+                $projectMayaVersion = int($tokenStrings[2]);
+                break;
+            }
+        }
+        
+        if($projectMayaVersion == false)
+        {
+            return true;
+        }
+        if($projectMayaVersion == $version)
+        {
+            return true;
+        }
+        return false;
+    }
 	//-/
 
 
@@ -540,7 +607,7 @@
 									{
 										string $versionPath = ($devPath + $validFolders[$order] + "/");
 										string $devFile[] = `getFileList -folder $versionPath -filespec "*.ma"`;
-										if (!size($devFile))
+										if (!size($devFile) || size(`match "_cam" $devFile[0]`))
 										{
 											$devFile = `getFileList -folder $versionPath -filespec "*.mb"`;
 										}

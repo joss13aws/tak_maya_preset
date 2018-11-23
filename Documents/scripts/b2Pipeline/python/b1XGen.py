@@ -76,7 +76,7 @@ class B1XGenPublish(B1XGen):
 
     def publishScalp(self):
         pm.select(self.scalpGrp, r=True)
-        pm.system.exportSelected(exportPath=self.publishPath/self.scalpGrp+'.ma', f=True, type='mayaAscii')
+        pm.system.exportSelected(exportPath=self.publishPath/self.scalpGrp+'.mb', f=True, type='mayaBinary')
 
     def publishCollection(self):
         xg.exportPalette(self.collection, str(self.publishPath/self.collection+'.xgen').replace('\\', '/'))
@@ -93,22 +93,25 @@ class B1XGenPublish(B1XGen):
 
         hairShaders = list(set(hairShaders))
         pm.select(hairShaders, r=True)
-        pm.exportSelected(exportPath=self.publishPath/self.collection+'_shaders.ma', f=True, type='mayaAscii')
+        pm.exportSelected(exportPath=self.publishPath/self.collection+'_shaders.mb', f=True, type='mayaBinary')
 
         # Write shader assign information
         with open(self.publishPath/self.collection+'_shaders.json', 'w') as f:
             json.dump(shaderAssignInfo, f, indent=4)
 
 
-class B1XGenRebuild(B1XGen):
+class B1XGenBuild(B1XGen):
     def __init__(self, assetName, sourceDirPath):
-        super(B1XGenRebuild, self).__init__(assetName)
+        super(B1XGenBuild, self).__init__(assetName)
         self.sourceDirPath = pm.Path(sourceDirPath)
+        self.scalpFilePath = self.sourceDirPath / self.scalpGrp + '.mb'
+        self.collectionFilePath = str(self.sourceDirPath/self.collection+'.xgen').replace('\\', '/')
+        self.shaderFilePath = self.sourceDirPath/self.collection+'_shaders.mb'
 
     def importSources(self):
-        pm.importFile(self.sourceDirPath/self.scalpGrp+'.ma')
-        xg.importPalette(str(self.sourceDirPath/self.collection+'.xgen').replace('\\', '/'), '')
-        pm.importFile(self.sourceDirPath/self.collection+'_shaders.ma')
+        pm.importFile(self.scalpFilePath)
+        pm.importFile(self.shaderFilePath)
+        xg.importPalette(self.collectionFilePath, '')
 
     def assignShader(self):
         with open(self.sourceDirPath/self.collection+'_shaders.json', 'r') as f:
@@ -117,3 +120,27 @@ class B1XGenRebuild(B1XGen):
         for description, shader in shaderAssignInfo.items():
             pm.select(description, r=True)
             pm.hyperShade(assign=shader)
+
+
+class B1XGenCache(B1XGenBuild):
+    def __init__(self, assetName, sourceDirPath, cacheDirPath):
+        super(B1XGenCache, self).__init__(assetName, sourceDirPath)
+        self.cacheDirPath = pm.Path(cacheDirPath)
+
+    def importScalp(self):
+        pm.importFile(self.scalpFilePath, namespace=self.assetName)
+
+    def attachToAniModel(self, model):
+        pm.select('{0}:{1}'.format(self.assetName, self.scalpGrp), model, r=True)
+        pm.mel.eval('CreateWrap;')
+
+    def exportCaches(self):
+        scalpGrpRef = pm.PyNode('{0}:{1}'.format(self.assetName, self.scalpGrp))
+        minTime = int(pm.playbackOptions(q=True, minTime=True))
+        maxTime = int(pm.playbackOptions(q=True, maxTime=True))
+        scalpGrpCacheFilePath = (self.cacheDirPath / self.scalpGrp + '.abc').replace('\\', '/')
+        pm.mel.eval('AbcExport -j "-frameRange {minTime} {maxTime} -stripNamespaces -uvWrite -worldSpace -writeVisibility -dataFormat ogawa -root {scalpGrpDagPath} -file {scalpGrpCacheFilePath}";'.format(
+            minTime=minTime, maxTime=maxTime, scalpGrpDagPath=scalpGrpRef.longName(), scalpGrpCacheFilePath=scalpGrpCacheFilePath))
+
+    def attachCaches(self):
+        pm.mel.eval('AbcImport -mode import -fitTimeRange -connect "{0}" "{1}";'.format(self.scalpGrp, (self.cacheDirPath/self.scalpGrp+'.abc').replace('\\', '/')))

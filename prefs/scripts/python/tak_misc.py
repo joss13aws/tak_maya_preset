@@ -1025,7 +1025,6 @@ def loadSel(widget, *args):
 def trackingLoc():
     sel = cmds.ls(sl=True)
     # get frame range
-    # startFrame = cmds.playbackOptions(q = True, min = True)
     startFrame = cmds.currentTime(q=True)
     endFrame = cmds.playbackOptions(q=True, max=True)
     for i in xrange(int(startFrame), int(endFrame) + 1):

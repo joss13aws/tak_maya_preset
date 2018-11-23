@@ -6,10 +6,14 @@
 
     // Sace New Release 전 Clean Model Window 생성
     // 정훈 작업
-    source "P:/Temp/JHLee/scripts/CheckTools/ModellingCleanTools.txt";
-    source "P:/Temp/JHLee/scripts/CheckTools/RiggingCleanTools.txt";
-    source "P:/Temp/JHLee/scripts/CheckTools/PropCleanTools.txt";
-    source "P:/Temp/JHLee/scripts/CheckTools/SetModCleanTools.txt";
+    source "N:/b1Env/maya/JHLee/scripts/CheckTools/ModellingCleanTools.txt";
+    source "N:/b1Env/maya/JHLee/scripts/CheckTools/RiggingCleanTools.txt";
+    source "N:/b1Env/maya/JHLee/scripts/CheckTools/PropCleanTools.txt";
+    source "N:/b1Env/maya/JHLee/scripts/CheckTools/SetModCleanTools.txt";
+
+	python("import tak_b2Pipeline_add");
+	python("reload(tak_b2Pipeline_add)");
+
     global proc SwitchReleaseButton()
     {
         string $types[] = `textScrollList -query -selectItem assetTypeList`;
@@ -160,7 +164,7 @@
 						button -label "New..." -backgroundColor 0.5 0.8 0.5 -command "b2NewAssetTypeWin";
 						button -label "Delete" -backgroundColor 0.8 0.5 0.5 -command "b2RemoveSelected 2 1";
 						button -label "--";
-						button -label "--";
+						button -label "Utility" -command "assetTypeUtilityUI";
 							
 				//- 어셋 네임 리스트
 				setParent assetManagerArea;
@@ -1115,8 +1119,11 @@
 								{ 
 									popupMenu -parent $historyButtonName;
 									menuItem -label "Open" -c "openHistory";
+									menuItem -divider true;
 									menuItem -label "Send to Delivery" -c "b2deliveryCopy";
 									menuItem -label "Send to ..." -c "b2SendAssetUI";
+									menuItem -divider true;
+									menuItem -label "Unzip" -c "b2Unzip";
 									menuItem -label "Delete" -c "b2DelReDev";
 								}
 								if ($type == "sht") 
@@ -1162,8 +1169,11 @@
 									{ 
 										popupMenu -parent $historyButtonName;
 										menuItem -label "Open" -c "openHistory";
+										menuItem -divider true;
 										menuItem -label "Send to Delivery" -c "b2deliveryCopy";
 										menuItem -label "Send to ..." -c "b2SendAssetUI";
+										menuItem -divider true;
+										menuItem -label "Unzip" -c "b2Unzip";
 										menuItem -label "Delete" -c "b2DelReDev";
 									}  
 									if ($type == "sht") 
@@ -1410,7 +1420,14 @@
 		if ($type == "ast") // 어셋인 경우 경로 생성
 		{
 			$filePath = `b2GetFileName 2 $selItem[0] $selItem[1] $selItem[2] 0 $mode $offset`;
-			$dirPath = `dirname $filePath` + "/";
+			if (endsWith($filePath, ".ma"))
+			{
+				$dirPath = `dirname $filePath` + "/";
+			}
+			else
+			{
+				$dirPath = $filePath;
+			}
 		}
 		else if ($type == "sht") // 샷인 경우 경로 생성, info.xml파일 경로 생성
 		{
@@ -1441,6 +1458,12 @@
 				for( $eachChkBox in $chkBoxLst )
 				{
 					string $match = `match "fileChkBox_" $eachChkBox`;
+					
+					if( catch( `checkBox -q -enable $eachChkBox` ) )
+					{
+						continue;
+					}
+
 					int $stat = `checkBox -q -enable $eachChkBox`;
 					if( size($match) && $stat == 1 )
 					{
@@ -1611,6 +1634,7 @@
 		string $targetPath;
 		string $images[];
 		string $movFiles[];
+		string $filesInVersionDir[];
 
 		if ($type == "ast")
 		{
@@ -1629,9 +1653,7 @@
 			$targetPath = `textFieldButtonGrp -q -text "shtFileLocField"`;
 		}
 		$images = `getFileList -folder ($targetPath + "/") -filespec "*.jpg"`;
-		print "$images =\n";
-		print $images;
-		print "\n";
+		$filesInVersionDir = `getFileList -folder ($targetPath + "/")`;
 		$images = `sort $images`;
 		$movFiles = `getFileList -folder ($targetPath + "/") -filespec "*.mov"`;
 		$movFiles = `sort $movFiles`;
@@ -1688,7 +1710,11 @@
 		}
 		else
 		{
-			b2InitPreview $type;
+			string $targetFile = "N:/b1Env/maya/2014/icons/noPreview.jpg";
+			if (size($filesInVersionDir) == 1 && endsWith($filesInVersionDir[0], ".zip")) {
+				$targetFile = "N:/b1Env/maya/2014/icons/archived.jpg";
+			}
+			image -edit -i $targetFile $previewImgControl;
 		}	
 		if (size($movFiles))
 		{
@@ -3690,6 +3716,10 @@
 			string $chkBoxLst[] = `lsUI -type "checkBox"`;
 			for( $eachBox in $chkBoxLst )
 			{
+				if (catch(`checkBox -q -label $eachBox`))
+				{
+					continue;
+				}
 				string $label = `checkBox -q -label $eachBox`;
 			}
 			string $chkBoxCheckedLst[];
@@ -3714,43 +3744,51 @@
 				string $curLabel = `checkBox -q -label $eachItem`;
 				$relFileLst[size($relFileLst)] = `substitute "..." $curLabel $dropString`;			
 			}
+
+			// Sorting files by buffer length
+			string $files = stringArrayToString($relFileLst, ",");
+			$relFileLst = python(`format -stringArg $files "tak_b2Pipeline_add.sortByBufferLength(\"^1s\")"`);
 			
-			//각 파일들에서 최종버전만 추출
-			for( $eachFile in $relFileLst )
-			{
-				//문자열에서 확장자와  버전 부분을 제거하여 비교문자열을 설정
-				string $basename = `basenameEx $eachFile`;
-				int $length = size($basename);
-				int $subNum = 4;
-				$length = $length - $subNum;
-				string $compare1 = `substring $basename 1 $length`;
-				string $buffer[];
-				clear $buffer;				
+			// //각 파일들에서 최종버전만 추출
+			// for( $eachFile in $relFileLst )
+			// {
+			// 	//문자열에서 확장자와  버전 부분을 제거하여 비교문자열을 설정
+			// 	string $basename = `basenameEx $eachFile`;
+			// 	int $length = size($basename);
+			// 	int $subNum = 4;
+			// 	$length = $length - $subNum;
+			// 	string $compare1 = `substring $basename 1 $length`;
+			// 	string $buffer[];
+			// 	clear $buffer;				
 				
-				//릴리즈 파일 목록의 내용과 $compare1을 비교하여 매치되면 버퍼에 저장. 
-				for( $compare2 in $relFileLst )
-				{
-					string $match = `match $compare1 $compare2`;
-					if( size($match) )
-					{
-						$buffer[size($buffer)] = $compare2;
-					}
-				}
-				
-				//버퍼의 내용을 정렬하여 최종버전을 추출
-				$buffer = `sort $buffer`;
-				string $latestVer = $buffer[size($buffer)-1];
-				
-				//최종버전 리스트에 $latestVer의 문자열이 존재하는지 확인하여 없으면 추가
-				int $chkExistence = stringArrayContains( $latestVer, $latestFileLst );
-				if( !$chkExistence )
-				{
-					$latestFileLst[size($latestFileLst)] = $latestVer;
-				}
-				
-			}
+			// 	//릴리즈 파일 목록의 내용과 $compare1을 비교하여 매치되면 버퍼에 저장. 
+			// 	for( $compare2 in $relFileLst )
+			// 	{
+			// 		string $match = `match $compare1 $compare2`;
+			// 		if( size($match) )
+			// 		{
+			// 			$buffer[size($buffer)] = $compare2;
+			// 		}
+			// 	}
 			
-			$latestFileLst = `sort $latestFileLst`;
+			// 	//버퍼의 내용을 정렬하여 최종버전을 추출
+			// 	$buffer = `sort $buffer`;
+			// 	string $latestVer = $buffer[size($buffer)-1];
+
+			// 	print "\n";
+			// 	print $latestVer;
+			// 	print "\n";
+
+			// 	//최종버전 리스트에 $latestVer의 문자열이 존재하는지 확인하여 없으면 추가
+			// 	int $chkExistence = stringArrayContains( $latestVer, $latestFileLst );
+			// 	if( !$chkExistence )
+			// 	{
+			// 		$latestFileLst[size($latestFileLst)] = $latestVer;
+			// 	}
+				
+			// }
+			
+			// $latestFileLst = `sort $latestFileLst`;
 			
 			
 			string $shtDefFilePath;
@@ -3785,7 +3823,12 @@
 			window -e -w 100 -h 100 $window;
 			showWindow $window;
 			
-			for( $file in $latestFileLst )
+			// for( $file in $latestFileLst )
+			// {
+			// 	textScrollList -edit -append $file fileList;
+			// }
+
+			for( $file in $relFileLst )
 			{
 				textScrollList -edit -append $file fileList;
 			}
@@ -3937,8 +3980,8 @@
 				if( !size($match) )
 				{
 					python("import tak_b2Pipeline_add");
-            		python("reload(tak_b2Pipeline_add)");
-            		string $parsedStr = python("tak_b2Pipeline_add.parseAstNamespace('" + $eachRef + "')");
+					python("reload(tak_b2Pipeline_add)");
+					string $parsedStr = python("tak_b2Pipeline_add.parseAstNamespace('" + $eachRef + "')");
 					string $temp[] = `stringToStringArray $parsedStr ","`;
 					if( size($temp) != 2 )
 					{
@@ -4335,6 +4378,20 @@
 		}
 
 
+		global proc assetTypeUtilityUI() {
+			if (`window -exists assetTypeUtilsWin`) {
+				deleteUI assetTypeUtilsWin;
+			}
+
+			window -title "Asset Type Utils" -mnb false -mxb false assetTypeUtilsWin;
+				columnLayout -adj true;
+				button -label "Copy Latest Assets UI" -c copyLatestAssets;
+			
+			window -e -w 10 -h 10 assetTypeUtilsWin;
+			showWindow;
+		}
+
+
 		global proc assetUtilityUI()
 		{
 			if (`window -exists assetUtilsWin`)
@@ -4346,7 +4403,28 @@
 					optionMenu -label "Component:" assetCompoOptMenu;
 					textFieldButtonGrp -label "Target Directory" -text "" -buttonLabel "Browse..." 
 										-columnWidth3 90 240 100 -buttonCommand "b2FileDialog \"dir\" \"none\" \"setPathField\"" setPathField;
-					button -label "Send Latest Assets" -c sendLatestAssets;
+				button -label "Send Latest Assets" -c sendLatestAssets;
+				separator -w 100;
+				rowColumnLayout -numberOfColumns 3;
+				text -label "Keep latest ";
+				intField -value 1 -width 30 keepVerIntFld;
+				text -label " version";
+				setParent ..;
+				button -label "Archive Asset" -c archiveAsset;
+				separator -w 100;
+
+				text -label "Replace String in Asset Files";
+				rowColumnLayout -numberOfColumns 2;
+				textFieldGrp -label "Search: " -text "1601_D46" -columnWidth 1 50 -columnWidth 2 100 assetSearch;
+				textFieldGrp -label "Replace: " -text "1802_D51" -columnWidth 1 50 -columnWidth 2 100 assetReplace;
+				setParent ..;
+				button -label "Replace!" -c replaceStringFiles;
+				separator -w 100;
+				
+				button -label "Remove Unused Plugin Requires" -c removeUnusedPluginRequires;
+				
+
+
 			
 			populateAssetCompoOptMenu();
 			
@@ -4368,6 +4446,19 @@
 		}
 
 
+		global proc copyLatestAssets() {
+			string $selAssetType[] = `textScrollList -q -selectItem assetTypeList`;
+			if (size($selAssetType) == 0) {
+				error("Please select a asset type.");
+			}
+
+			string $arbitraryAssetDirPath = `textFieldButtonGrp -q -text astFileLocField`;
+			python(`format -stringArg $arbitraryAssetDirPath "tak_b2Pipeline_add.copyLatestAssetsUI(\"^1s\")"`);
+
+			deleteUI assetTypeUtilsWin;
+		}
+
+
 		global proc sendLatestAssets()
 		{
 			string $targetDir = `textFieldButtonGrp -q -text setPathField`;
@@ -4383,14 +4474,55 @@
 			for ($asset in $selAssets)
 			{
 				string $assetDirPath = $assetTypeDir + "/" + $asset + "/" + $selCompo + "/release";
-				python("import tak_b2Pipeline_add");
-				python("reload(tak_b2Pipeline_add)");
 				python(`format -stringArg $assetDirPath -stringArg $targetDir "tak_b2Pipeline_add.sendLatestAsset(\"^1s\", \"^2s\")"`);
 			}
 			
 			deleteUI assetUtilsWin;
 		}
 
+		global proc archiveAsset()
+		{
+			string $targetDir = `textFieldButtonGrp -q -text setPathField`;
+			string $selAssets[] = `textScrollList -q -selectItem assetNameList`;
+			int $keepVerNum = `intField -q -v keepVerIntFld`;
+
+			// Get Asset Type directory path
+			string $arbitraryAssetDirPath = `textFieldButtonGrp -q -text astFileLocField`;
+			string $tempStrArray[] = stringToStringArray($arbitraryAssetDirPath, "/");
+			stringArrayRemoveAtIndex(4, $tempStrArray);
+			string $assetTypeDir = stringArrayToString($tempStrArray, "/");
+			
+			string $assetDirPath = "";
+			for ($asset in $selAssets)
+			{
+				$assetDirPath = $assetTypeDir + "/" + $asset;
+				python(`format -stringArg $assetDirPath -stringArg $keepVerNum "tak_b2Pipeline_add.archiveAsset(\"^1s\", \"^2s\")"`);
+			}
+		}
+
+
+		global proc replaceStringFiles()
+		{
+			string $selAssets[] = `textScrollList -q -selectItem  assetNameList`;
+			
+			// Get Asset Type directory path
+			string $arbitraryAssetDirPath = `textFieldButtonGrp -q -text astFileLocField`;
+			string $tempStrArray[] = stringToStringArray($arbitraryAssetDirPath, "/");
+			stringArrayRemoveAtIndex(4, $tempStrArray);
+			string $assetTypeDir = stringArrayToString($tempStrArray, "/");
+
+			string $search = `textFieldGrp -q -text assetSearch`;
+			string $replace = `textFieldGrp -q -text assetReplace`;
+			string $assetFolderPath = `textFieldButtonGrp -q -text astFileLocField`;
+
+			for ($asset in $selAssets)
+			{
+				string $assetDirPath = $assetTypeDir + "/" + $asset;
+				python(`format -stringArg $assetDirPath -stringArg $search -stringArg $replace "tak_b2Pipeline_add.replaceStringForAssetFiles(\"^1s\", \"^2s\", \"^3s\")"`);
+			}
+
+			deleteUI assetUtilsWin;
+		}
 
 		global proc refreshAssetList()
 		{
@@ -4408,5 +4540,26 @@
 			python("reload(tak_b2Pipeline_add)");
 			python(`format -stringArg $inputStr "tak_b2Pipeline_add.refreshShotList(\"^1s\")"`);
 		}
+
+
+		global proc removeUnusedPluginRequires()
+		{
+			string $selAssets[] = `textScrollList -q -selectItem  assetNameList`;
+			
+			// Get Asset Type directory path
+			string $arbitraryAssetDirPath = `textFieldButtonGrp -q -text astFileLocField`;
+			string $tempStrArray[] = stringToStringArray($arbitraryAssetDirPath, "/");
+			stringArrayRemoveAtIndex(4, $tempStrArray);
+			string $assetTypeDir = stringArrayToString($tempStrArray, "/");
+
+			for ($asset in $selAssets)
+			{
+				string $assetDirPath = $assetTypeDir + "/" + $asset;
+				python(`format -stringArg $assetDirPath "tak_b2Pipeline_add.removeUnusedPluginRequires(\"^1s\")"`);
+			}
+
+			deleteUI assetUtilsWin;
+		}
+
 
 print "// load b2PipelineMainUI.mel\n";

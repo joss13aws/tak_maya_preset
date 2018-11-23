@@ -1,3 +1,6 @@
+python("import tak_b2Pipeline_add");
+python("reload(tak_b2Pipeline_add)");
+
 //- 어셋 import/referencing/download 관련 UI 및 실행
 	//- b2GetAssetUI - 어셋을 씬으로 불러들기 UI
 	global proc b2GetAssetUI()
@@ -414,6 +417,27 @@
 		int $result;
 		string $versionString = b2Pad ($version, 3);
 		string $verPrefix;
+
+	    // Remove unknown nodes
+	    string $unknownNodes[] = `ls -type "unknown"`;
+	    if (size($unknownNodes)) {
+		    for ($node in $unknownNodes) {
+		        if (catch(`lockNode -lock false $node`)) {
+		        	print($node + " node can't be unlock");
+		        } else {
+		        	delete $node;
+		        }
+		    }
+	    }
+
+		// Remove unknown plugins
+		string $unknownPlugins[] = `unknownPlugin -q -l`;
+		if (size($unknownPlugins)) {
+			for ($plugin in $unknownPlugins) {
+				unknownPlugin -r $plugin;
+			}
+		}
+		
 		if ($submitType == "dev")
 			$verPrefix = "v";
 		else if ($submitType == "rel")
@@ -485,18 +509,7 @@
 			}
 			file -force -options "v=0;" -type $type -preserveReferences -exportSelected $targetFile;
 		}
-		int $result1 = `filetest -e $targetFile`;
-		if ($result1 == 1)
-		{
-			// Remove unused plugin requires
-			python("import tak_b2Pipeline_add");
-			python("reload(tak_b2Pipeline_add)");
-			python(`format -stringArg $targetFile "tak_b2Pipeline_add.removeUnusedPluginRequires(\"^1s\")"`);
-
-			$result = 1;
-		}
-		else
-			$result = 0;
+		int $result = `filetest -e $targetFile`;
 		print "b2SaveAsset...____________________________________________end of procedure\n";
 		return $result;
 	}
@@ -1649,7 +1662,7 @@
 	}
 
     // 메세지 보내는 기능 (제작 : 이정훈_jhlee)
-    source "P:/Temp/JHLee/scripts/UniMessage/SendMessageWindow_JHLee.mel";
+    source "N:/b1Env/maya/JHLee/scripts/UniMessage/SendMessageWindow_JHLee.mel";
     global proc SendMessageMaya()
     {
         string $project = `optionMenu -query -value projList`;
@@ -1716,7 +1729,7 @@
 		select -r -hi "lod03_GRP";
 		python("import tak_b2Pipeline_add");
 		python("reload(tak_b2Pipeline_add)");
-		python("tak_b2Pipeline_add.chkFaceAssignedMat()");
+		// python("tak_b2Pipeline_add.chkFaceAssignedMat()");
 		python("tak_b2Pipeline_add.setPivotToWsOrigin()");
 
 
@@ -1812,8 +1825,23 @@
 							python("import tak_cleanUpModel_b1");
 							python("reload(tak_cleanUpModel_b1)");
 							python("tak_cleanUpModel_b1.allInOne()");
-						}
 
+							// Correct gamma for texture and color if project is 1701_Animal
+							string $project = `optionMenu -query -value projList`;
+							if ($project == "1701_Animal")
+							{
+								python("import tak_b2Pipeline_add");
+								python("reload(tak_b2Pipeline_add)");
+								python("tak_b2Pipeline_add.enableVrayFileGamma()");
+								python("tak_b2Pipeline_add.setGammaCorrectedColor()");
+							}
+						}
+						
+						if( $selItem[2] == "mdl" && ($selItem[0] == "set"))
+						{
+							python("tak_b2Pipeline_add.setPreviewDivisionLevelToDefault()");
+						}
+						
 						if( $selItem[2] == "rig" )
 						{
 							// Write latest released render model version to 'lod03_GRP.renMdlVer' attribute.

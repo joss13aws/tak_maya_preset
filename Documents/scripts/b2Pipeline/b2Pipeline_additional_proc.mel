@@ -1,5 +1,8 @@
 //add b2pipeline
-
+python("import tak_b2Pipeline_xgen");
+python("reload(tak_b2Pipeline_xgen)");
+python("import tak_b2Pipeline_add");
+python("reload(tak_b2Pipeline_add)");
 
 //지정된 폴더 생성.
 global proc b2makeFolder(string $path) {
@@ -448,7 +451,7 @@ global proc b2deliveryCopy(){
 		$curVer = "1st";
 	else if ((size($history) > 0)){
 		
-		string $lastHistroy = $history[size($history)-1];		
+		string $lastHistroy = $history[size($history)-1];
 
 		string $token[];
 		int $tokenSize = `tokenize $lastHistroy "_" $token`;
@@ -461,7 +464,7 @@ global proc b2deliveryCopy(){
 		else if ($lastVer == "1st")
 			$curVer = "2nd";
 		else if ($lastVer == "2nd")
-			$curVer = "3rd";		
+			$curVer = "3rd";
 		else if ($lastVer == "3rd")
 			$curVer = "4th";
 		else if ($lastVer == "4th")
@@ -477,33 +480,47 @@ global proc b2deliveryCopy(){
 		else if ($lastVer == "9th")
 			$curVer = "10th";
 	}
-	
 
 	string $folderName = ($curDate + "_" + $prjToken[1] + "_" + $assetName + "_" + $compo + "_" + $curVer);
 
-	string $fullPath = ($deliveryPath + $folderName + "/");
-	sysFile -md $fullPath;
-	print ("//result : create new folder : " + $fullPath + "\n"); 
+	string $trgDir = ($deliveryPath + $folderName + "/");
+	sysFile -md $trgDir;
+	print ("//result : create new folder : " + $trgDir + "\n"); 
 
-	//fileCopy and open
 	string $maList[] = `getFileList -folder $srcPath -filespec "*.ma"`;
-	string $texFolder[] = `getFileList -folder $srcPath -filespec "tex"`;
 
 	//tex copy
+	string $texFolder[] = `getFileList -folder $srcPath -filespec "tex"`;
 	if ( size($texFolder) > 0 ){
-		//sysFile -cp ($fullPath + $texFolder[0]) ($srcPath + $texFolder[0]);
 		string $sourceDir = substituteAllString( ($srcPath + $texFolder[0] + "/*.*") , "/" , "\\");
-		print ($sourceDir + "\n");
-		string $targetDir = substituteAllString( ($fullPath + $texFolder[0] + "/") , "/" , "\\");
-		print ($targetDir + "\n");
+		string $targetDir = substituteAllString( ($trgDir + $texFolder[0] + "/") , "/" , "\\");
 		string $copyResult = `system ("xcopy /e /h /k " + $sourceDir + " " + $targetDir )`;
-		print $copyResult;
-		print ("//result : copy tex folder to: " + ($fullPath + $texFolder[0]) + "\n"); 	
-	}	
+	}
 
-	string $mayaFile;
+	//XGen collection copy
+	string $xgenFolder[] = `getFileList -folder $srcPath -filespec "xgen"`;
+	string $targetXgenDir;
+	if ( size($xgenFolder) > 0 ){
+		string $sourceDir = substituteAllString( ($srcPath + $xgenFolder[0] + "/*.*") , "/" , "\\");
+		$targetXgenDir = substituteAllString( ($trgDir + $xgenFolder[0] + "/") , "/" , "\\");
+		string $copyResult = `system ("xcopy /e /h /k " + $sourceDir + " " + $targetXgenDir )`;
+	}
+
+	//XGen file copy
+
+	// string $targetPath;
+	// if ( size($xgenFile) > 0 ){
+	// 	string $sourcePath = $srcPath+$xgenFile[0];
+	// 	b2Print("sourcePath: ", $sourcePath);
+	// 	$targetPath = $trgDir+$xgenFile[0];
+	// 	b2Print("targetPath: ", $targetPath);
+	// 	sysFile -copy $targetPath $sourcePath;
+	// }
+
+
 
 	//ma to mb
+	string $mayaFile;
 	if ( size($maList) == 1 ){
 
 		$mayaFile = $maList[0];
@@ -523,27 +540,36 @@ global proc b2deliveryCopy(){
 	}
 	else {
 		error "ma file is not exist.";
-	}	
+	}
 
-	//save to MB		
+	// //save to MB
 	file -f -open ($srcPath + $mayaFile);
-
-	python("import tak_b2Pipeline_add");
-	python("reload(tak_b2Pipeline_add)");
 	string $pythonStr = `format -stringArg $prjToken[1] -stringArg $mayaFile "tak_b2Pipeline_add.niceNameForDeliver(\"^1s\", \"^2s\")"`;
 	$mayaFile = `python($pythonStr)`;
 	print ($mayaFile + "\n");
 	
-	string $mbFile = `substitute ".ma#" ($fullPath + $mayaFile + "#") ".mb"`;
+	string $mbFile = `substitute ".ma#" ($trgDir + $mayaFile + "#") ".mb"`;
 	
-	file -rename $mbFile;   
+	file -rename $mbFile;
 	file -type "mayaBinary";
 	file -save -type "mayaBinary" ;
 	print ("//result : create mb file: " + $mbFile + "\n"); 
 
-	system ("explorer /select,\"" + toNativePath($mbFile) + "\"");		
+	// //Edit xgen file
+	// string $targetDir = substituteAllString($trgDir, "\\" , "/");
+	// string $xgenFile[] = `getFileList -folder $targetDir -filespec "*.xgen"`;
+	// $targetXgenDir = substituteAllString($targetXgenDir, "\\" , "/");
+	// b2Print("targetDir: ", $targetDir);
+	// b2Print("xgenFile: ", $xgenFile[0]);
+	// b2Print("targetXgenDir: ", $targetXgenDir);
+	// if ( size($xgenFile) > 0 ){
+	// 	string $xgenFilePath = $targetDir + $xgenFile[0];
+	// 	string $pythonStr = `format -stringArg $xgenFilePath -stringArg $targetXgenDir "tak_b2Pipeline_xgen.editXgenFile(\"^1s\", \"^2s\")"`;
+	// 	b2Print("pythonStr: ", $pythonStr);
+	// 	python($pythonStr);
+	// }
 
-
+	system ("explorer /select,\"" + toNativePath($mbFile) + "\"");
 }
 
 
@@ -566,8 +592,6 @@ global proc b2SendAsset(string $srcDir)
 	b2Print("srcDir: ", $srcDir);
 	b2Print("targetDir: ", $targetDir);
 
-	python("import tak_b2Pipeline_add");
-	python("reload(tak_b2Pipeline_add)");
 	python(`format -stringArg $srcDir -stringArg $targetDir "tak_b2Pipeline_add.sendAsset(\"^1s\", \"^2s\")"`);
 
 	deleteUI sendAssetWin;
@@ -664,8 +688,13 @@ global proc openSelLod(){
 // Delete developed or released data
 global proc b2DelReDev(){
 	string $selHistoryPath = `textFieldButtonGrp -q -text astFileLocField`;
-	python("import tak_b2Pipeline_add");
-	python("reload(tak_b2Pipeline_add)");
 	python("tak_b2Pipeline_add.deleteHistory('" + $selHistoryPath + "')");
 	// b2UpdAssetCompoSelected();
+}
+
+
+global proc b2Unzip()
+{
+	string $selHistoryPath = `textFieldButtonGrp -q -text astFileLocField`;
+	python("tak_b2Pipeline_add.unZip('" + $selHistoryPath + "')");
 }
