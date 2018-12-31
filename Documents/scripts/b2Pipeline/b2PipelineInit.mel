@@ -34,7 +34,8 @@ if ((`optionVar -exists "currProj"`) == 0)
 
 global proc string[] b2AssetTypePreset()
 {
-	string $assetTypeList[]= { "cha", "prp", "set", "wep", "veh", "backgroundPrp"};
+	string $assetTypeList[]= { "cha", "prp", "set", "wep", "veh", "setPrp" };
+	$assetTypeList = `sort $assetTypeList`;
 	return $assetTypeList;
 }
 

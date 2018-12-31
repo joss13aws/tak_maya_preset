@@ -693,6 +693,9 @@ python("reload(tak_b2Pipeline_xgen)");
 					b2ChangeLodToHi;
 					print "All assets are now lod03\n";
                     
+					// Turn off parallel evaluation
+					int $mayaVersion = `about -v`;
+					if ($mayaVersion >= 2017){evaluationManager -m "off";}
 					// Disalbe viewport update
 					refresh -su true;
 
@@ -1411,9 +1414,9 @@ python("reload(tak_b2Pipeline_xgen)");
 					$filename = $prefix + "_" + $astName + "_" + $suffix;//캐쉬파일 full path
 
 					// Release hair curves
-					refresh -su false;
+					// refresh -su false;
 					python(`format -stringArg $eachAnim -stringArg $relPath -stringArg $fileNameBase -stringArg $astType -stringArg $relVerStr -stringArg $start -stringArg $end "tak_b2Pipeline_xgen.releaseHairCurves(\"^1s\", \"^2s\", \"^3s\", \"^4s\", \"^5s\", ^6s, ^7s)"`);
-					refresh -su true;
+					// refresh -su true;
 
 					string $customAttrs = `python("tak_b2Pipeline_add.customAttrAbcMel('" + $eachAnim + "')")`;
 
@@ -2110,7 +2113,6 @@ python("reload(tak_b2Pipeline_xgen)");
 		}
 		deleteUI "b2SubWin1";
 		print "b2DoGetReleaseAni........................................................................................................procedure end\n";
-		python("tak_b2Pipeline_xgen.setPreviewMode()");
 	}
 	//-/
 	
@@ -2714,6 +2716,41 @@ python("reload(tak_b2Pipeline_xgen)");
 			file -prompt false -loadReference "aniRN" $filePath;
 			deleteUI "b2SubWin1";
 		}
+	}
+
+
+	global proc b2SeqUtilsUI()
+	{
+		if (`window -exists "b2SeqUtilsWin"`)
+		{
+			deleteUI "b2SeqUtilsWin";
+		}
+
+		string $window = `window -title "b2 Sequence Utils" -mnb false -mxb false b2SeqUtilsWin`;
+			columnLayout -adj true -rowSpacing 3;
+				button -label "Send Sequence to Delivery" -command sendSeqToDelivery;
+		window -e -w 100 -h 100 $window;
+		showWindow $window;
+	}
+
+
+	global proc sendSeqToDelivery(){
+		string $seqDir = `textFieldButtonGrp -q -text shtFileLocField`;
+		//delivery Path 
+		string $proj = `optionMenu -q -v projList`;
+		string $prjToken[];
+		tokenize $proj "_" $prjToken;
+		string $deliveryPath = "\\\\192.168.0.239\\B1delivery\\" + $prjToken[1] + "_delivery/";
+		if (!`filetest -d $deliveryPath`){
+			error "delivery path is not exist.";
+		}
+
+		string $curDate = `date -f YYMMDD`;
+		string $selItem[] = `b2GetCurrentlySelectedItem 3 1`;
+		string $folderName = ($curDate + "_" + $prjToken[1] + "_" + $selItem[0] + "_sequence");
+		string $trgDir = ($deliveryPath + $folderName + "/");
+
+		python(`format -stringArg $seqDir -stringArg $trgDir "tak_b2Pipeline_add.sendSeqToDelivery(\"^1s\", \"^2s\")"`);
 	}
 
 

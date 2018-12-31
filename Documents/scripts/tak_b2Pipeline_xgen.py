@@ -2,7 +2,7 @@
 Author: Sang-tak Lee
 Contact: chst27@gmail.com
 Created: 06/23/2017
-Updated: 10/18/2017
+Updated: 03/07/2018
 
 Description:
 XGen utils for b2Pipeline.
@@ -13,6 +13,11 @@ import pymel.core as pm
 import os
 import re
 import shutil
+
+import xgenm as xg
+import xgenm.xgGlobal as xgg
+import xgenm.XgExternalAPI as xge
+
 
 
 def submitXGen(pathes):
@@ -158,5 +163,25 @@ def downEditMayaFile(filePath, type):
         f.close()
 
 
-if __name__ == "__main__":
-    submitXGen()
+def releaseHairCurves(namespace, releaseDirPath, fileNameBase, assetType, relVerStr, startFrame, endFrame):
+    hairCrvGrp = pm.ls('{0}:lod02_hair_crv_grp'.format(namespace))
+    if hairCrvGrp:
+        descriptionCrvGrps = [crvGrp for crvGrp in hairCrvGrp[0].getChildren()]
+        for descriptionCrvGrp in descriptionCrvGrps:
+            descriptionName = re.search(r'lod02_(.+?)_crv_grp', descriptionCrvGrp.name()).group(1)
+            releaseFilePath = '{releaseDirPath}/{fileNameBase}_{assetType}_{namespace}_{descriptionName}_{relVerStr}.abc'.format(
+                releaseDirPath=releaseDirPath, fileNameBase=fileNameBase, assetType=assetType, namespace=namespace, descriptionName=descriptionName, relVerStr=relVerStr)
+            
+            pm.mel.eval('AbcExport -j "-frameRange {startFrame} {endFrame} -worldSpace -writeVisibility -dataFormat ogawa -root {descriptionCrvGrp} -file {releaseFilePath}";'.format(
+                startFrame=startFrame, endFrame=endFrame, descriptionCrvGrp=descriptionCrvGrp.name(), releaseFilePath=releaseFilePath))
+
+
+def setGuideAnimationCache(namespace, description, cacheFileName):
+    de = xgg.DescriptionEditor
+    collection = str(pm.ls('{0}:*'.format(namespace), type='xgmPalette')[0].name())
+    description = '{0}:{1}'.format(namespace, description)
+    
+    xg.setAttr("useCache", xge.prepForAttribute('true'), collection, description, "SplinePrimitive")
+    xg.setAttr("liveMode", xge.prepForAttribute('false'), collection, description, "SplinePrimitive")
+    xg.setAttr("cacheFileName", xge.prepForAttribute(cacheFileName.replace('\\', '/')), collection, description, "SplinePrimitive")
+

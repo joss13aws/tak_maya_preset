@@ -19,6 +19,8 @@ import shutil
 import glob
 import pprint
 import logging
+import zipfile
+import tak_lib_b1
 
 logging.basicConfig()
 logger = logging.getLogger('tak_b2Pipeline_add_logger')
@@ -46,6 +48,7 @@ def customAttrAbcMel(assetNamespace):
     joinStr = " -attr "
     melCode = "-attr " + joinStr.join(customAttrs)
 
+    print melCode
     return melCode
 
 
@@ -194,7 +197,7 @@ def renameAsset(oriAssetFldrPath):
         newAssetName = cmds.promptDialog(query = True, text = True)
 
         # Rename folders and files
-        for path,dirs,files in os.walk(oriAssetFldrPath):
+        for path,dirs,files in os.walk(oriAssetFldrPath, topdown=False):
             for oriDir in dirs:
                 # Rename folder name.
                 if oriAssetName in oriDir:
@@ -202,8 +205,7 @@ def renameAsset(oriAssetFldrPath):
                     os.rename(path + '\\' + oriDir, path + '\\' + newDirName)
 
             for oriFile in files:
-                # Modify texture file path in maya file.
-                if '.ma' in oriFile and not 'swatches' in oriFile:
+                if '.ma' in oriFile or '.xgen' in oriFile and not 'swatches' in oriFile:
                     filePath = path + '\\' + oriFile
                     fR = open(filePath, 'r')
                     contents = fR.read()
@@ -211,7 +213,7 @@ def renameAsset(oriAssetFldrPath):
 
                     print "> Modifying... %s" %oriFile
                     try:
-                        newFileContents = re.sub(r"/%s/" %oriAssetName, r"/%s/" %newAssetName, unicode(contents, "cp949")) # Convert 'cp949 ascii' format to 'unicode' format.
+                        newFileContents = re.sub(oriAssetName, newAssetName, unicode(contents, "cp949")) # Convert 'cp949 ascii' format to 'unicode' format.
                     except:
                         print 'Check whether the file "%s" is binary. Skipped this file.' %oriFile
                         continue
@@ -236,11 +238,19 @@ def renameAsset(oriAssetFldrPath):
         pass
 
 
+def sortByBufferLength(fileNameStr):
+    """ Sorting filenames by buffer length """
+    fileNames = fileNameStr.split(',')
+    fileNames.sort(key=lambda item: len(fileNameIntoBuffer(item)))
+    return fileNames
+
 def fileNameIntoBuffer(fileName):
     if '_cam_' in fileName:
         matObj = re.match(r'(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+)_(r\d+)\.\w+', fileName) # sequence_shotName_component_layer_assetType_camName_releaseNumber.ext
     else:
         matObj = re.match(r'(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+)_(\d+)_(r\d+)\.\w+', fileName) # sequence_shotName_component_layer_assetType_assetName_Numbering_releaseNumber.ext
+    if not matObj:
+        matObj = re.match(r'(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+)_(\d+)_(.+)_(r\d+)\.\w+', fileName) # sequence_shotName_component_layer_assetType_assetName_Numbering_xgenDescriptionName_releaseNumber.ext
 
     if matObj:
         joinStr = ','
@@ -249,7 +259,7 @@ def fileNameIntoBuffer(fileName):
 
 
 def parsingAssetFileName(baseName):
-    srchObj = re.search(r'(.+?)_(.+)_(rig|mdl)_(.+)', baseName)
+    srchObj = re.search(r'(.+?)_(.+)_(rig|mdl|lod)_(.+)', baseName)
 
     if srchObj:
         joinStr = ','
@@ -664,11 +674,11 @@ def getDevFilePath(relDirPath):
         devFilePath(str): Animation scene file path that work in progress
     """
     publishedType = relDirPath.rsplit('/')[-2]
-    # print 'publishedType: ', publishedType
+    print 'publishedType: ', publishedType
     ver = relDirPath.rsplit('/')[-1]
     # print 'ver: ', ver
     verNum = re.search(r'\D(\d+)', ver).group(1)
-    # print 'verNum: ', verNum
+    print 'verNum: ', verNum
 
     layerPath = '/'.join(relDirPath.rsplit('/')[:-2])
     # print 'layerPath: ', layerPath
@@ -677,16 +687,19 @@ def getDevFilePath(relDirPath):
     with open(infoXmlPath[0], 'r') as f:
         xmlCntns = f.read()
 
+    print 'xmlCntns: ', xmlCntns
+    
     historyInfoLs = re.findall(r'\t<note>.*?</note>\n', xmlCntns, re.DOTALL)
+    print 'historyInfoLs: ', historyInfoLs
     devFilePath = ''
     for historyInfo in historyInfoLs:
         result = re.search(r'.*<event>%s</event>.*<version>%s</version>.*' % (publishedType, verNum), historyInfo, re.DOTALL)
         if result:
-            # print 'historyInfo: ', historyInfo
+            print 'historyInfo: ', historyInfo
             devSceneFileName = re.search(r'.*\.ma', historyInfo).group()
-            # print 'devSceneFileName: ', devSceneFileName
+            print 'devSceneFileName: ', devSceneFileName
             devVer = re.search(r'_(v\d{3})_', devSceneFileName).group(1)
-            # print 'devVer: ', devVer
+            print 'devVer: ', devVer
             devFilePath = layerPath + '/develop/%s/' %devVer + devSceneFileName
         else:
             pass
@@ -706,7 +719,6 @@ def getReferenceInfo(maFilePath):
     """
     refInfoDict = {}
 
-    print "maFilePath: ", maFilePath
     with open(maFilePath, 'r') as f:
         contents = f.read()
 
@@ -720,7 +732,7 @@ def getReferenceInfo(maFilePath):
                 refInfos.remove(refInfo)
 
     for refInfo in refInfos:
-        matchObj = re.search(r'-ns "(.+?)" -rfn "(.+?)".+"(.+?)"', refInfo, re.DOTALL)
+        matchObj = re.search(r'-ns "(.+?)" .+? "(.+?)".+"(.+?)"', refInfo, re.DOTALL)
         
         tmpDict = {}
         tmpDict['namespace'] = matchObj.group(1)
@@ -744,7 +756,7 @@ def getFilePathUsedInAni(relDirPath, assetName):
     filePath = None
 
     devFilePath = getDevFilePath(relDirPath)
-    # print 'devFilePath: ', devFilePath
+    print 'devFilePath: ', devFilePath
     refInfoDict = getReferenceInfo(devFilePath)
     # pprint.pprint(refInfoDict)
     filePath = refInfoDict.get(assetName).get('filePath')
@@ -1055,11 +1067,254 @@ def refreshShotList(searchStr):
             cmds.textScrollList('shotList', e=True, append=shot)
 
 
-def removeUnusedPluginRequires(filePath):
-    with open(filePath, 'r') as f:
-        fileContents = f.read()
+def enableVrayFileGamma():
+    """Add vray file gamma attribute and set to sRGB for all file textures"""
+    if pm.pluginInfo('vrayformaya', q=True, loaded=True):
+        allTextures =  pm.ls(type='file')
+        for tex in allTextures:
+            pm.mel.eval('vray addAttributesFromGroup {0} vray_file_gamma 1;'.format(str(tex)))
+            pm.setAttr('{0}.vrayFileColorSpace'.format(str(tex)), 2)
 
-    modifiedFileContents = re.sub(r'requires ".+;', '', fileContents)
+
+def setGammaCorrectedColor():
+    """Create gamma node and connect to color attribute for all shaders"""
+    allMaterials = pm.ls(mat=True)
+    for mat in allMaterials:
+        colorAttr = 'outColor' if isinstance(mat, pm.nodetypes.SurfaceShader) else 'color'
+        if not pm.objExists(mat.attr(colorAttr)):
+            print '{} has no attribute {}, skip this.'.format(str(mat), mat.attr(colorAttr))
+            continue
+        colorInput = mat.attr(colorAttr).connections(d=False)
+        if not colorInput:
+            color = mat.attr(colorAttr).get()
+            gammaNode = pm.createNode('gammaCorrect')
+            gammaNode.value.set(*color)
+            gammaNode.gamma.set(0.454, 0.454, 0.454)
+            try:
+                gammaNode.outValue >> mat.attr(colorAttr)
+            except:
+                pass
+
+
+def setPreviewDivisionLevelToDefault():
+    """Set display and render subdivision preview to default value"""
+    meshes = pm.ls(type='mesh')
+    for mesh in meshes:
+        if not mesh.smoothLevel.connections():
+            mesh.smoothLevel.set(2)
+
+
+def replaceStringForAssetFiles(assetDir, search, replace):
+    """
+    Search and replace given string for asset files in assetDir
+
+    Parameters:
+        assetDir(str): Asset directory path
+        search(str): A word for searching
+        replace(str): A word to replace
+    """
+
+    # Make a list of '.ma' files
+    maFiles = []
+    for path, dirs, files in os.walk(assetDir):
+        for file in files:
+            if os.path.splitext(file)[-1] == '.ma':
+                maFiles.append(os.path.join(path, file))
+    
+    if maFiles:
+        pm.progressWindow(title=assetDir.split('/')[-1], maxValue=len(maFiles), isInterruptable=True, status='')
+        for maFile in maFiles:
+            if pm.progressWindow(query=True, isCancelled=True):
+                break
+            pm.progressWindow(edit=True, progress=maFiles.index(maFile)+1, status=os.path.basename(maFile))
+
+            with open(maFile, 'r') as f:
+                newContents = f.read().replace(search, replace)
+            with open(maFile, 'w') as f:
+                f.write(newContents)
+
+    pm.progressWindow(endProgress=True)
+
+
+def removeUnusedPluginRequires(assetDir):
+    maFiles = []
+    for path, dirs, files in os.walk(assetDir):
+        for file in files:
+            if os.path.splitext(file)[-1] == '.ma':
+                maFiles.append(os.path.join(path, file))
+
+    if maFiles:
+        pm.progressWindow(title=assetDir.split('/')[-1], maxValue=len(maFiles), isInterruptable=True, status='')
+        for file in maFiles:
+            if pm.progressWindow(query=True, isCancelled=True):
+                break
+            pm.progressWindow(edit=True, progress=maFiles.index(file)+1, status=os.path.basename(file))
+
+            with open(file, 'r') as f:
+                fileContents = f.read()
+
+            modifiedFileContents = re.sub(r'requires ".+;', '', fileContents)
+
+            with open(file, 'w') as f:
+                f.write(modifiedFileContents)
+    
+    pm.progressWindow(endProgress=True)
+
+
+def archiveAsset(assetDir, keepVerNum):
+    assetFiles = os.listdir(assetDir)
+    components = ['mdl', 'rig']
+    historyTypes = ['develop', 'release']
+
+    for component in components:
+        if component in assetFiles:
+            for historyType in historyTypes:
+                versions = os.listdir(os.path.join(assetDir, component, historyType))
+                versions.sort(reverse=True)
+                for version in versions:
+                    versionDir = os.path.join(assetDir, component, historyType, version).replace('\\', '/')
+                    allFiles = getAllFiles(versionDir)
+                        
+                    # Correct texture path
+                    for file in allFiles:
+                        if file.endswith('.ma'):
+                            copyWrongPointedTexture(file)
+                        
+                    if versions.index(version) < int(keepVerNum):
+                        continue
+
+                    # Zip files
+                    zipFileName = os.path.join(assetDir, component, historyType, version, version)+'.zip'
+                    with zipfile.ZipFile(zipFileName, 'w') as zip:
+                        for file in allFiles:
+                            if file == zipFileName:
+                                os.remove(file)
+                            zip.write(file, file.split(version, 1)[-1], zipfile.ZIP_DEFLATED)
+                            
+                            os.remove(file)
+                    
+                    # Remove directories
+                    allDirs = [os.path.join(versionDir, dir) for dir in os.listdir(versionDir) if os.path.isdir(os.path.join(versionDir, dir))]
+                    for dir in allDirs:
+                        shutil.rmtree(dir)
+
+def getAllFiles(dir):
+    allFiles = []
+    for path, dirs, files in os.walk(dir):
+        for file in files:
+            allFiles.append(os.path.join(path, file).replace('\\', '/'))
+
+    return allFiles
+
+def unZip(versionDir):
+    zipFiles = glob.glob('%s/*.zip' %versionDir)
+    for zipFile in zipFiles:
+        with zipfile.ZipFile(zipFile, 'r') as zip:
+            zip.extractall(os.path.dirname(zipFile))
+        os.remove(zipFile)
+
+def copyWrongPointedTexture(filePath):
+    # Read file contents
+    with open(filePath, 'r') as f:
+        contents = f.read()
+        f.seek(0)
+        fileLines = f.readlines()
+
+    # Find texture pathes
+    fileNodeLines = [line for line in fileLines if '.ftn' in line]
+    if fileNodeLines:
+        for line in fileNodeLines:
+            texturePath = re.search(r'.* "(.*)";', line).group(1)
+            textureVerPath = re.search(r'(.*\w\d\d\d).*', texturePath).group(1)
+            fileVerPath = os.path.dirname(filePath)
+
+            # Compare with version texture directory path
+            if os.path.normcase(textureVerPath) != os.path.normcase(fileVerPath):
+                print os.path.normcase(textureVerPath)
+                print os.path.normcase(fileVerPath)
+                print "Texture path '{0}' is pointing another version of asset".format(texturePath)
+                if os.path.exists(texturePath):
+                    correctedPath = texturePath.replace(textureVerPath, fileVerPath)
+                    print "Copy '{0}' to '{1}', and fix path".format(texturePath, correctedPath)
+                    shutil.copy(texturePath, correctedPath)
+                    contents = contents.replace(texturePath, correctedPath)
+                else:
+                    "Texture '{0}' is not exists".format(texturePath)
 
     with open(filePath, 'w') as f:
-        f.write(modifiedFileContents)
+        f.write(contents)
+
+
+
+
+def copyLatestAssetsUI(targetDir):
+    winName = 'copyLatestAssetsWin'
+    if pm.window(winName, q=True, exists=True):
+        pm.deleteUI(winName)
+    win = pm.window(winName, title='Copy Latest Assets', mnb=False, mxb=False)
+    
+    pm.columnLayout(adj=True)
+    pm.textFieldButtonGrp('srcDir', label='Source Directory: ', buttonLabel='...', bc=populateSrcAssetsTxtScrLs)
+    pm.textScrollList('srcAssetsTxtScrLs', allowMultiSelection=True)
+    pm.button(label='Copy', c=lambda *args: copyLatestVer(targetDir))
+
+    pm.window(win, e=True, w=10, h=10)
+    pm.showWindow(win)
+
+def populateSrcAssetsTxtScrLs():
+    tak_lib_b1.loadPath('srcDir')
+
+    srcDir = pm.textFieldButtonGrp('srcDir', q=True, text=True)
+    for dir in [dir for dir in os.listdir(srcDir) if os.path.isdir(os.path.join(srcDir, dir))]:
+        pm.textScrollList('srcAssetsTxtScrLs', e=True, append=dir)
+
+def copyLatestVer(targetDir):
+    sourceDir = pm.textFieldButtonGrp('srcDir', q=True, text=True)
+    selAssets = pm.textScrollList('srcAssetsTxtScrLs', q=True, selectItem=True)
+
+    historyType = ['develop', 'release']
+    for asset in selAssets:
+        for path, dirs, files in os.walk(os.path.join(sourceDir, asset)):
+            for dir in dirs:
+                if dir in historyType:
+                    # Copy latest version directory
+                    latestVer = getLatestVer(os.path.join(path, dir))
+                    srcLatestVer = os.path.join(path, dir, latestVer)
+                    trgLatestVer = srcLatestVer.replace(sourceDir, targetDir)
+                    shutil.copytree(srcLatestVer, trgLatestVer)
+
+                    # Copy '_info' folder and '.xml' file
+                    items = [item for item in os.listdir(path) if not item in historyType]
+                    for item in items:
+                        srcPath = os.path.join(path, item)
+                        trgPath = srcPath.replace(sourceDir, targetDir)
+                        if os.path.exists(trgPath):
+                            continue
+                        if os.path.isdir(srcPath):
+                            shutil.copytree(srcPath, srcPath.replace(sourceDir, targetDir))
+                        else:
+                            shutil.copy(srcPath, srcPath.replace(sourceDir, targetDir))
+
+                    # Copy files in asset directory
+                    assetDir = os.path.join(sourceDir, asset)
+                    files = [item for item in os.listdir(assetDir) if not os.path.isdir(os.path.join(assetDir, item))]
+                    for file in files:
+                      srcFilePath = os.path.join(assetDir, file)
+                      shutil.copy(srcFilePath, srcFilePath.replace(sourceDir, targetDir))
+
+
+def sendSeqToDelivery(seqDir, trgDir):
+    shotDirs = os.listdir(seqDir)
+    
+    historyType = ['develop', 'release']
+
+    for shotDir in shotDirs:
+        for path, dirs, files in os.walk(os.path.join(seqDir, shotDir)):
+            for dir in dirs:
+                if dir in historyType:
+                    # Copy latest version directory
+                    latestVer = getLatestVer(os.path.join(path, dir))
+                    srcLatestVer = os.path.join(path, dir, latestVer)
+                    trgLatestVer = "\\" + srcLatestVer.replace(seqDir, trgDir).replace('\\scenes\\ani\\master', '')
+                    shutil.copytree(srcLatestVer, trgLatestVer)
+                    print trgLatestVer
