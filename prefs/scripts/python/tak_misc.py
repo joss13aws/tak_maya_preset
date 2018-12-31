@@ -2214,6 +2214,12 @@ def copyTexRenameUI():
 
     cmds.textFieldGrp('suffixTxtFldGrp', label='Suffix: ', text='_low', columnAlign=[(1, 'left')],
                       columnWidth=[(1, 40), (2, 50)])
+    
+    cmds.rowColumnLayout(numberOfColumns=3)
+    cmds.text(label='Resize: ')
+    cmds.intField('percentIntFld', v=10, min=1, max=100, w=30)
+    cmds.text(label='%')
+    cmds.setParent('..')
 
     cmds.button(label='Apply', c=copyTexRename, h=25)
 
@@ -2228,6 +2234,7 @@ def copyTexRename(*args):
 
     suffix = cmds.textFieldGrp('suffixTxtFldGrp', q=True, text=True)
     trgDir = cmds.textFieldButtonGrp('trgFldrTxtFldBtnGrp', q=True, text=True)
+    scale = str(cmds.intField('percentIntFld', q=True, v=True) * 0.01)
 
     selObjLs = cmds.ls(sl=True)
 
@@ -2258,7 +2265,7 @@ def copyTexRename(*args):
     cmds.deleteUI('copyTexWin')
     return subprocess.call(
         ['C:/Python27/python.exe', 'D:/Tak/Program_Presets/tak_scripts/python_scripts/cliResizeImage.py', trgDir,
-         '0.25'])
+         scale])
 
 
 def cntShpGeo():
@@ -3030,6 +3037,15 @@ def setupCorrectiveJointChain(name, rootVtx, midVtx, endVtx, driverJnt):
         midVtx(str): Vertex for middle joint of chain
         endVtx(str): Vertex for end joint of chain
         driverJnt(str): Joint that driving joint chain
+    
+    Example:
+        from maya import cmds
+        import tak_misc
+
+        vtxs = cmds.ls(os=True)
+        tak_misc.setupCorrectiveJointChain('Elbow_R_inner_cor_jnt', vtxs[0], vtxs[1], vtxs[2], 'Elbow_R')
+
+
     """
 
     # Create pymel nodes

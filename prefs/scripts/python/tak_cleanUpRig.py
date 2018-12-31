@@ -728,15 +728,15 @@ def cleanUpMdl(*args):
     if cmds.objExists('Main.smoothLevel'):
         cmds.setAttr('Main.smoothLevel', 2)
 
-    # All deformer's envelope of lod03 set to 0.
-    lod03GeoLs = cmds.ls('lod03_GRP', dag = True)
-    lod03GeoLs = [x for x in lod03GeoLs if not 'Shape' in x]
-    for lod03Geo in lod03GeoLs:
-        tak_lib.setAllDefEnvlope(lod03Geo, 0)
-
     # Clean up render model.
     cmds.select('lod03_GRP', hi=True, r=True)
     tak_cleanUpModel.allInOne()
+
+    # # All deformer's envelope of lod03 set to 0.
+    # lod03GeoLs = cmds.ls('lod03_GRP', dag = True)
+    # lod03GeoLs = [x for x in lod03GeoLs if not 'Shape' in x]
+    # for lod03Geo in lod03GeoLs:
+    #     tak_lib.setAllDefEnvlope(lod03Geo, 0)
 
     # Delete rig and 'geo_layer' that display layer.
     rootChldLs = cmds.listRelatives('root', c=True)
@@ -764,9 +764,10 @@ def cleanUpMdl(*args):
         shpPrnt = cmds.listRelatives(shp, p=True)
         cmds.select(shpPrnt, r=True)
         mel.eval('setDisplaySmoothness 3;')
-        cmds.setAttr('%s.useGlobalSmoothDrawType' % shp, 0)
-        cmds.setAttr('%s.smoothDrawType' % shp, 0)
-        cmds.setAttr('%s.smoothLevel' % shp, 2)
+        if cmds.nodeType(shp) == 'mesh':
+            cmds.setAttr('%s.useGlobalSmoothDrawType' % shp, 0)
+            cmds.setAttr('%s.smoothDrawType' % shp, 0)
+            cmds.setAttr('%s.smoothLevel' % shp, 2)
 
     if cmds.objExists('wip_GRP'):
         cmds.delete('wip_GRP')

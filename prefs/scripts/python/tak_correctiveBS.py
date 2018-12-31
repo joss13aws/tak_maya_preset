@@ -529,6 +529,8 @@ class Functions(object):
 
             # Get influence's transform matrix from bind pose matrix.
             for influence in influenceList:
+                if cmds.nodeType(influence) != 'joint':
+                    continue
                 infBindMatrixList = cmds.getAttr('%s.bindPose' %influence)
                 infBindMatrix = OpenMaya.MMatrix()
                 OpenMaya.MScriptUtil.createMatrixFromList(infBindMatrixList, infBindMatrix)
